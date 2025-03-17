@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -220,7 +220,7 @@ const SearchBar = ({ searchQuery, setSearchQuery, appColors, isRTL, t }: SearchB
 };
 
 export default function AdsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { theme, isDarkMode } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -344,7 +344,7 @@ export default function AdsScreen() {
       
       {/* Header */}
       <View style={[styles.header, { backgroundColor: appColors.background }]}>
-        <Text style={[styles.headerTitle, { color: appColors.text }]}>{t('allAds')}</Text>
+        <Text style={[styles.headerTitle, { color: appColors.text }, { fontFamily: 'Cairo-Bold' }]}>{t('allAds')}</Text>
       </View>
       
       {/* Search Bar - تمرير الخصائص المطلوبة */}
@@ -375,7 +375,8 @@ export default function AdsScreen() {
             <Text
               style={[
                 styles.filterButtonText,
-                { color: selectedProvince !== 'all' ? '#fff' : appColors.textSecondary }
+                { color: selectedProvince !== 'all' ? '#fff' : appColors.textSecondary },
+                { fontFamily: 'Cairo-Medium' }
               ]}
             >
               {t(PROVINCES.find(p => p.id === selectedProvince)?.name || 'allIraq')}
@@ -406,7 +407,8 @@ export default function AdsScreen() {
                   styles.filterButtonText,
                   {
                     color: selectedCategory === category.id ? '#fff' : appColors.textSecondary,
-                  }
+                  },
+                  { fontFamily: 'Cairo-Medium' }
                 ]}
               >
                 {t(category.name)}

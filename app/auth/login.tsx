@@ -20,6 +20,8 @@ import { useTheme } from '../context/ThemeContext';
 import AppColors from '../../constants/AppColors';
 import { authAPI } from '../services/api';
 import { useTranslation } from 'react-i18next';
+import { RTL_LANGUAGES } from '../i18n';
+import i18n from '../i18n';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -27,12 +29,16 @@ export default function LoginScreen() {
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const phoneInput = useRef<any>(null);
   const { t } = useTranslation();
+  const isRTL = RTL_LANGUAGES.includes(i18n.language);
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [formattedPhoneNumber, setFormattedPhoneNumber] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState(null);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   // تعديل مثال رقم الهاتف العراقي
   const handleIraqExample = () => {
@@ -41,31 +47,37 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
-    if (!phoneNumber || !password) {
-      Alert.alert('تنبيه', 'الرجاء إدخال رقم الهاتف وكلمة المرور');
-      return;
-    }
-
-    // التحقق من صحة رقم الهاتف
-    if (phoneInput.current?.isValidNumber(phoneNumber)) {
-      try {
-        setLoading(true);
-        const response = await authAPI.login({ 
-          phoneNumber: formattedPhoneNumber, 
-          password 
-        });
-        
-        await AsyncStorage.setItem('userToken', response.token);
-        await AsyncStorage.setItem('userData', JSON.stringify(response.user));
-        
-        router.replace('/(tabs)/ads');
-      } catch (error: any) {
-        Alert.alert('خطأ', error.message);
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      
+      // التحقق من صحة رقم الهاتف
+      if (phoneNumber.length < 9 || phoneNumber.length > 10) {
+        setPhoneError(t('auth.invalidPhoneNumber'));
+        return;
       }
-    } else {
-      Alert.alert('خطأ', 'رقم الهاتف غير صحيح');
+      
+      // التحقق من صحة كلمة المرور
+      if (!password || password.length < 6) {
+        Alert.alert(t('error'), t('invalidPassword'));
+        setLoading(false);
+        return;
+      }
+      
+      // إرسال بيانات تسجيل الدخول
+      const response = await authAPI.login({ 
+        phoneNumber: formattedPhoneNumber, 
+        password 
+      });
+      
+      await AsyncStorage.setItem('userToken', response.token);
+      await AsyncStorage.setItem('userData', JSON.stringify(response.user));
+      
+      router.replace('/(tabs)/ads');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      Alert.alert(t('error'), t('loginFailed'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,7 +113,13 @@ export default function LoginScreen() {
               />
             </TouchableOpacity>
 
-            <Text style={[styles.title, { color: appColors.text }]}>تسجيل الدخول</Text>
+            <Text style={[
+              styles.title, 
+              { color: appColors.text },
+              { textAlign: isRTL ? 'right' : 'left' }
+            ]}>
+              {t('login')}
+            </Text>
             
             {/* تعديل مثال رقم الهاتف */}
             <TouchableOpacity 
@@ -110,7 +128,7 @@ export default function LoginScreen() {
             >
               <View style={styles.exampleContainer}>
                 <Text style={[styles.exampleLabel, { color: appColors.text }]}>
-                  مثال: رقم هاتف
+                  {t('phoneExample')}
                 </Text>
                 <Text style={[styles.exampleText, { color: appColors.text }]}>
                   <Text style={styles.phoneNumberExample}>780 30 18 150</Text>
@@ -121,27 +139,35 @@ export default function LoginScreen() {
             {/* مكون إدخال رقم الهاتف */}
             <CustomPhoneInput
               value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              onChangeFormattedText={setFormattedPhoneNumber}
-              placeholder={t('phoneNumber')}
+              onChangeText={(text) => setPhoneNumber(text)}
+              onChangeFormattedText={(text) => setFormattedPhoneNumber(text)}
+              onChangeCountry={(country) => setSelectedCountry(country)}
+              placeholder={t('auth.phoneNumber')}
+              error={phoneError}
               defaultCode="IQ"
-              containerStyle={styles.phoneInputContainer}
             />
 
             <View style={styles.inputContainer}>
               <TextInput
-                style={[styles.input, { 
-                  backgroundColor: appColors.secondary,
-                  color: appColors.text,
-                }]}
-                placeholder="كلمة المرور"
+                style={[
+                  styles.input, 
+                  { 
+                    backgroundColor: appColors.secondary,
+                    color: appColors.text,
+                    textAlign: isRTL ? 'right' : 'left',
+                  }
+                ]}
+                placeholder={t('password')}
                 placeholderTextColor={appColors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity 
-                style={styles.eyeIcon}
+                style={[
+                  styles.eyeIcon,
+                  { right: isRTL ? undefined : 15, left: isRTL ? 15 : undefined }
+                ]}
                 onPress={() => setShowPassword(!showPassword)}
               >
                 <Ionicons
@@ -154,11 +180,14 @@ export default function LoginScreen() {
 
             {/* إضافة زر نسيت كلمة السر */}
             <TouchableOpacity 
-              style={styles.forgotPasswordButton}
+              style={[
+                styles.forgotPasswordButton,
+                { alignItems: isRTL ? 'flex-end' : 'flex-start' }
+              ]}
               onPress={() => router.push('/auth/forgot-password')}
             >
               <Text style={[styles.forgotPasswordText, { color: appColors.primary }]}>
-                نسيت كلمة السر؟
+                {t('forgotPassword')}
               </Text>
             </TouchableOpacity>
 
@@ -170,7 +199,7 @@ export default function LoginScreen() {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.loginButtonText}>تسجيل الدخول</Text>
+                <Text style={styles.loginButtonText}>{t('login')}</Text>
               )}
             </TouchableOpacity>
 
@@ -179,7 +208,7 @@ export default function LoginScreen() {
               onPress={() => router.push('/auth/register')}
             >
               <Text style={[styles.registerText, { color: appColors.textSecondary }]}>
-                ليس لديك حساب؟ سجل الآن
+                {t('noAccount')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -212,7 +241,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 30,
-    textAlign: 'right',
   },
   inputContainer: {
     marginBottom: 20,
@@ -223,11 +251,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
-    textAlign: 'right',
   },
   eyeIcon: {
     position: 'absolute',
-    left: 15,
     top: 13,
   },
   loginButton: {
@@ -280,7 +306,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   forgotPasswordButton: {
-    alignItems: 'flex-end',
     marginBottom: 20,
     marginTop: -10,
   },

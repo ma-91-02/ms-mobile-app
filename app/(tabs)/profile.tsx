@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Sta
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
@@ -14,6 +14,7 @@ import { User } from '../types/auth';
  * شاشة الملف الشخصي
  */
 export default function ProfileScreen() {
+  const router = useRouter();
   const { t } = useTranslation();
   const { theme, isDarkMode } = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
@@ -54,6 +55,11 @@ export default function ProfileScreen() {
   // Navigate to login screen
   const handleLogin = () => {
     router.push('/auth/login');
+  };
+
+  // Navigate to register screen
+  const handleRegister = () => {
+    router.push('/auth/register');
   };
 
   // Handle logout
@@ -105,7 +111,10 @@ export default function ProfileScreen() {
             <Text style={styles.loginButtonText}>{t('login')}</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.registerButton}>
+          <TouchableOpacity 
+            style={styles.registerButton}
+            onPress={handleRegister}
+          >
             <Text style={[styles.registerButtonText, { color: appColors.primary }]}>{t('createAccount')}</Text>
           </TouchableOpacity>
         </View>

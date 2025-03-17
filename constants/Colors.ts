@@ -16,7 +16,7 @@ export default {
   light: {
     primary: baseColors.primary,
     secondary: baseColors.secondary,
-    background: '#FFFFFF',
+    background: '#f00',
     card: '#F9F9F9',
     text: '#000000',
     textSecondary: '#3C3C43',
