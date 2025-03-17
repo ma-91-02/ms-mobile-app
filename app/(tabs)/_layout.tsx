@@ -25,25 +25,17 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: appColors.primary,
-        tabBarInactiveTintColor: appColors.textSecondary,
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: appColors.background,
+          borderTopColor: appColors.border,
+          borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 85 : 65,
           paddingBottom: Platform.OS === 'ios' ? 30 : 10,
           paddingTop: 10,
-          borderTopWidth: 1,
-          borderTopColor: appColors.border,
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          marginBottom: Platform.OS === 'ios' ? 0 : 5,
-          color: appColors.text,
-        },
-        headerStyle: {
-          backgroundColor: appColors.background,
-        },
-        headerTintColor: appColors.text,
+        tabBarActiveTintColor: appColors.primary,
+        tabBarInactiveTintColor: appColors.textSecondary,
       }}
       initialRouteName="ads"
     >
@@ -59,7 +51,6 @@ export default function TabLayout() {
               style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
             />
           ),
-          headerShown: false,
         }}
       />
       
@@ -74,7 +65,6 @@ export default function TabLayout() {
               color={color} 
             />
           ),
-          headerShown: false,
         }}
       />
       
@@ -89,7 +79,6 @@ export default function TabLayout() {
               color={color} 
             />
           ),
-          headerShown: false,
         }}
       />
     </Tabs>

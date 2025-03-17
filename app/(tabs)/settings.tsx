@@ -9,6 +9,7 @@ import { RTL_LANGUAGES } from '../i18n';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppColors from '../../constants/AppColors';
 import { I18nManager } from 'react-native';
+import { changeLanguage } from '../i18n';
 
 // دالة مساعدة لحساب الأبعاد النسبية
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -35,26 +36,30 @@ export default function Settings() {
   // استخدام ألوان التطبيق الجديدة
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   
-  // Function to change language
-  const changeLanguage = async (lang: string) => {
+  const [isChangingLanguage, setIsChangingLanguage] = useState(false);
+
+  const handleLanguageChange = async (newLanguage: string) => {
+    if (isChangingLanguage) return;
+    
+    setIsChangingLanguage(true);
     try {
-      await AsyncStorage.setItem('selected-language', lang);
-      await AsyncStorage.setItem('has-selected-language', 'true');
+      await changeLanguage(newLanguage);
       
-      const isRTL = RTL_LANGUAGES.includes(lang);
-      if (I18nManager.isRTL !== isRTL) {
-        I18nManager.allowRTL(isRTL);
-        I18nManager.forceRTL(isRTL);
-      }
-      
-      await i18n.changeLanguage(lang);
-      
-      setTimeout(() => {
-        router.replace('/(tabs)/ads');
-      }, 500);
-    } catch (err) {
-      console.warn('Error changing language:', err);
-      Alert.alert(t('error'), t('languageChangeError'));
+      // إظهار رسالة نجاح
+      Alert.alert(
+        t('success'),
+        t('languageChanged'),
+        [{ text: t('ok') }]
+      );
+    } catch (error) {
+      console.error('Error changing language:', error);
+      Alert.alert(
+        t('error'),
+        t('languageChangeError'),
+        [{ text: t('ok') }]
+      );
+    } finally {
+      setIsChangingLanguage(false);
     }
   };
 
@@ -64,9 +69,9 @@ export default function Settings() {
       t('language'),
       t('selectLanguage'),
       [
-        { text: 'English', onPress: () => changeLanguage('en') },
-        { text: 'العربية', onPress: () => changeLanguage('ar') },
-        { text: 'کوردی', onPress: () => changeLanguage('ku') },
+        { text: 'English', onPress: () => handleLanguageChange('en') },
+        { text: 'العربية', onPress: () => handleLanguageChange('ar') },
+        { text: 'کوردی', onPress: () => handleLanguageChange('ku') },
         { text: t('cancel'), style: 'cancel' }
       ]
     );

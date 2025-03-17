@@ -22,7 +22,7 @@ import AppColors from '../constants/AppColors';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './context/ThemeContext';
-import i18n, { RTL_LANGUAGES, loadSavedLanguage } from './i18n';
+import i18n, { RTL_LANGUAGES, loadSavedLanguage, changeLanguage } from './i18n';
 
 // التحقق إذا كان التطبيق في وضع التطوير
 const isDevelopment = __DEV__;
@@ -37,9 +37,8 @@ const FLAGS = {
 export default function LanguageSelect() {
   const { t } = useTranslation();
   const { theme, isDarkMode } = useTheme();
-  const [selectedLanguage, setSelectedLanguage] = useState('');
-  const [isReady, setIsReady] = useState(false);
-  const [isChangingLanguage, setIsChangingLanguage] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('ar');
+  const [loading, setLoading] = useState(false);
   
   // استخدام ألوان التطبيق الجديدة
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
@@ -59,31 +58,14 @@ export default function LanguageSelect() {
   // حساب الهوامش الإضافية للشاشات الصغيرة مثل iPhone SE
   const smallScreenExtraPadding = isSmallScreen ? 12 : 0;
 
-  // تحميل اللغة المحفوظة عند بدء التشغيل
   useEffect(() => {
-    const initApp = async () => {
-      try {
-        const hasSelectedLanguage = await AsyncStorage.getItem('has-selected-language');
-        const savedLanguage = await AsyncStorage.getItem('selected-language');
-        
-        if (savedLanguage && hasSelectedLanguage === 'true') {
-          setSelectedLanguage(savedLanguage);
-          const isRTL = RTL_LANGUAGES.includes(savedLanguage);
-          I18nManager.allowRTL(isRTL);
-          I18nManager.forceRTL(isRTL);
-          await i18n.changeLanguage(savedLanguage);
-          router.replace('/(tabs)/ads');
-          return;
-        }
-        
-        setIsReady(true);
-      } catch (error) {
-        console.error('Error initializing app:', error);
-        setIsReady(true);
+    const initLanguage = async () => {
+      const savedLanguage = await AsyncStorage.getItem('user-language');
+      if (savedLanguage) {
+        setSelectedLanguage(savedLanguage);
       }
     };
-    
-    initApp();
+    initLanguage();
   }, []);
 
   // تأثير لتهيئة state عند تغيير اللغة
@@ -124,35 +106,33 @@ export default function LanguageSelect() {
 
   // إضافة دالة جديدة للتعامل مع زر المتابعة
   const handleContinue = async () => {
-    if (!selectedLanguage) return;
-
-    setIsChangingLanguage(true);
     try {
-      await AsyncStorage.setItem('selected-language', selectedLanguage);
+      setLoading(true);
+      
+      // تغيير وحفظ اللغة
+      await changeLanguage(selectedLanguage);
+      
+      // حفظ حالة اختيار اللغة
       await AsyncStorage.setItem('has-selected-language', 'true');
       
-      const isRTL = RTL_LANGUAGES.includes(selectedLanguage);
-      I18nManager.allowRTL(isRTL);
-      I18nManager.forceRTL(isRTL);
-
-      await i18n.changeLanguage(selectedLanguage);
-
-      setTimeout(() => {
-        router.replace('/(tabs)/ads');
-      }, 500);
-
+      // التحقق من الحفظ
+      const savedLanguage = await AsyncStorage.getItem('user-language');
+      console.log('Verified language after selection:', savedLanguage);
+      
+      if (savedLanguage !== selectedLanguage) {
+        throw new Error('Language save verification failed');
+      }
+      
+      router.replace('/(tabs)/ads');
     } catch (error) {
-      console.error('Error applying language:', error);
+      console.error('Error in handleContinue:', error);
       Alert.alert(
-        selectedLanguage === 'ar' ? 'خطأ' : 
-        selectedLanguage === 'ku' ? 'هەڵە' : 'Error',
-        selectedLanguage === 'ar' ? 'حدث خطأ أثناء تغيير اللغة. الرجاء المحاولة مرة أخرى.' :
-        selectedLanguage === 'ku' ? 'هەڵەیەک ڕوویدا لە کاتی گۆڕینی زمان. تکایە دووبارە هەوڵ بدەوە.' :
-        'An error occurred while changing the language. Please try again.',
-        [{ text: 'OK' }]
+        'خطأ',
+        'حدث خطأ أثناء حفظ اللغة',
+        [{ text: 'حسناً' }]
       );
     } finally {
-      setIsChangingLanguage(false);
+      setLoading(false);
     }
   };
 
@@ -162,15 +142,7 @@ export default function LanguageSelect() {
     return size * scaleFactor;
   };
 
-  if (!isReady) {
-    return (
-      <View style={[styles.container, styles.loadingContainer, { backgroundColor: appColors.background }]}>
-        <ActivityIndicator size="large" color={appColors.primary} />
-      </View>
-    );
-  }
-
-  if (isChangingLanguage) {
+  if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer, { backgroundColor: appColors.background }]}>
         <ActivityIndicator size="large" color={appColors.primary} />

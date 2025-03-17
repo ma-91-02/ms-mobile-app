@@ -8,14 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  avatar?: string; // Optional profile image
-}
+import { User } from '../types/auth';
 
 /**
  * شاشة الملف الشخصي
@@ -24,61 +17,54 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const { theme, isDarkMode } = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<User | null>(null);
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const [isLoading, setIsLoading] = useState(true);
   
   // استخدام ألوان التطبيق الجديدة
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   
   // Check if user is logged in
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const userData = await AsyncStorage.getItem('user-data');
-        if (userData) {
-          setUser(JSON.parse(userData));
-          setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
-        }
-      } catch (error) {
-        console.error('Error checking login status', error);
-        setIsLoggedIn(false);
-      }
-    };
-    
     checkLoginStatus();
   }, []);
 
+  const checkLoginStatus = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const storedUserData = await AsyncStorage.getItem('userData');
+      
+      if (userToken && storedUserData) {
+        setIsLoggedIn(true);
+        setUserData(JSON.parse(storedUserData));
+      } else {
+        setIsLoggedIn(false);
+        setUserData(null);
+      }
+    } catch (err) {
+      console.error('Error checking login status:', err);
+      setIsLoggedIn(false);
+      setUserData(null);
+      Alert.alert('خطأ', 'حدث خطأ أثناء تحميل بيانات المستخدم');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Navigate to login screen
   const handleLogin = () => {
-    // For demo purposes, we'll simulate a login
-    const demoUser: User = {
-      id: '12345',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+1 (555) 123-4567',
-    };
-    
-    setUser(demoUser);
-    setIsLoggedIn(true);
-    
-    // In a real app, you would navigate to a login screen
-    // router.push('/login');
-    
-    // For demo, store the user data
-    AsyncStorage.setItem('user-data', JSON.stringify(demoUser));
+    router.push('/auth/login');
   };
 
   // Handle logout
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('user-data');
-      setUser(null);
+      await AsyncStorage.multiRemove(['userToken', 'userData']);
       setIsLoggedIn(false);
-      Alert.alert(t('logout'), 'You have been logged out successfully');
-    } catch (error) {
-      console.error('Error logging out', error);
+      setUserData(null);
+    } catch (err) {
+      console.error('Error logging out:', err);
+      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الخروج');
     }
   };
 
@@ -90,7 +76,16 @@ export default function ProfileScreen() {
     // router.push(`/${screen}`);
   };
 
-  // Render login prompt if not logged in
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
+        <View style={styles.loginPromptContainer}>
+          <Text style={[styles.loginTitle, { color: appColors.text }]}>جاري التحميل...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (!isLoggedIn) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
@@ -128,21 +123,21 @@ export default function ProfileScreen() {
         <View style={[styles.profileHeader, { backgroundColor: appColors.primary }]}>
           <View style={styles.profileInfo}>
             <View style={styles.avatarContainer}>
-              {user?.avatar ? (
-                <Image source={{ uri: user.avatar }} style={styles.avatar} />
+              {userData?.avatar ? (
+                <Image source={{ uri: userData.avatar }} style={styles.avatar} />
               ) : (
                 <View style={[styles.avatarPlaceholder, { backgroundColor: appColors.secondary }]}>
                   <Text style={[styles.avatarInitial, { color: appColors.primary }]}>
-                    {user?.name.charAt(0) || 'U'}
+                    {userData?.fullName?.charAt(0) || 'U'}
                   </Text>
                 </View>
               )}
             </View>
             
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user?.name || 'User'}</Text>
-              <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
-              <Text style={styles.userPhone}>{user?.phone || '+1 (123) 456-7890'}</Text>
+              <Text style={styles.userName}>{userData?.fullName || 'User'}</Text>
+              <Text style={styles.userEmail}>{userData?.email || 'user@example.com'}</Text>
+              <Text style={styles.userPhone}>{userData?.phoneNumber || '+1 (123) 456-7890'}</Text>
             </View>
           </View>
           
@@ -220,7 +215,7 @@ export default function ProfileScreen() {
         
         {/* Logout Button */}
         <TouchableOpacity 
-          style={[styles.logoutButton, { backgroundColor: theme.error }]} 
+          style={[styles.logoutButton, { backgroundColor: appColors.primary }]} 
           onPress={handleLogout}
         >
           <Text style={styles.logoutButtonText}>{t('logout')}</Text>
