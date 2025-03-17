@@ -1,24 +1,16 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { I18nextProvider } from 'react-i18next';
+import { View } from 'react-native';
+import { ThemeProvider } from './context/ThemeContext';
+import { useTheme } from './context/ThemeContext';
+import i18n, { loadSavedLanguage } from './i18n';
 
-import { useColorScheme } from '@/components/useColorScheme';
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Keep the splash screen visible until we're done
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -33,27 +25,45 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    const prepare = async () => {
+      // Load the saved language preference
+      try {
+        await loadSavedLanguage();
+      } catch (error) {
+        console.error('Error loading language', error);
+      }
+      
+      // Hide the splash screen if fonts are loaded or there's an error
+      if (loaded || error) {
+        await SplashScreen.hideAsync();
+      }
+    };
+    
+    prepare();
+  }, [loaded, error]);
 
   if (!loaded) {
-    return null;
+    return <View />;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <I18nextProvider i18n={i18n}>
+      <ThemeProvider>
+        <RootLayoutNavigator />
+      </ThemeProvider>
+    </I18nextProvider>
   );
 }
+
+function RootLayoutNavigator() {
+  const { theme, isDarkMode } = useTheme();
+  
+  return (
+    <NavigationThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="language-select" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </NavigationThemeProvider>
+  );
+} 

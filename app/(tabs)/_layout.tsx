@@ -1,57 +1,95 @@
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Tabs } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
+import { RTL_LANGUAGES } from '../i18n';
+import AppColors from '../../constants/AppColors';
+import { Platform } from 'react-native';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+/**
+ * هيكل التبويبات الرئيسية للتطبيق
+ * يحتوي على ثلاثة تبويبات: الإعلانات، الملف الشخصي، الإعدادات
+ */
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { t, i18n } = useTranslation();
+  const { isDarkMode } = useTheme();
+  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const appColors = isDarkMode ? AppColors.dark : AppColors.light;
+  
+  // حالة ما إذا كان المستخدم مسجل دخول أم لا
+  // TODO: قم بتنفيذ منطق التحقق من تسجيل الدخول
+  const isLoggedIn = false;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
+        tabBarActiveTintColor: appColors.primary,
+        tabBarInactiveTintColor: appColors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: appColors.background,
+          height: Platform.OS === 'ios' ? 85 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+          paddingTop: 10,
+          borderTopWidth: 1,
+          borderTopColor: appColors.border,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          marginBottom: Platform.OS === 'ios' ? 0 : 5,
+          color: appColors.text,
+        },
+        headerStyle: {
+          backgroundColor: appColors.background,
+        },
+        headerTintColor: appColors.text,
+      }}
+      initialRouteName="ads"
+    >
       <Tabs.Screen
-        name="index"
+        name="ads"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
+          title: t('ads'),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons 
+              name="pricetags-outline" 
+              size={24} 
+              color={color} 
+              style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
+            />
           ),
+          headerShown: false,
         }}
       />
+      
       <Tabs.Screen
-        name="two"
+        name="profile"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: t('profile'),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons 
+              name="person-outline" 
+              size={24} 
+              color={color} 
+            />
+          ),
+          headerShown: false,
+        }}
+      />
+      
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: t('settings'),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons 
+              name="settings-outline" 
+              size={24} 
+              color={color} 
+            />
+          ),
+          headerShown: false,
         }}
       />
     </Tabs>

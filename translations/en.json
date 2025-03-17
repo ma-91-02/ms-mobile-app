@@ -1,0 +1,33 @@
+{
+  "common": {
+    "languageSelection": "Language Selection",
+    "welcome": "Welcome to MS-Mobile App",
+    "continue": "Continue",
+    "changeLanguage": "Change Language",
+    "arabic": "Arabic",
+    "english": "English",
+    "kurdish": "Kurdish",
+    "home": "Home",
+    "settings": "Settings",
+    "profile": "Profile",
+    "language": "Language",
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "system": "System",
+    "chooseYourPreferredLanguage": "Choose your preferred language",
+    "browseAds": "Browse Ads",
+    "selectLanguage": "Select your language",
+    "languageChangeHint": "You can change the language later in settings"
+  },
+  "tabs": {
+    "home": "Home",
+    "two": "Tab Two",
+    "settings": "Settings"
+  },
+  "langSelect": {
+    "title": "Select your language",
+    "subtitle": "You can change the language later in settings",
+    "continue": "Continue"
+  }
+} 

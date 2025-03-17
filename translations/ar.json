@@ -1,0 +1,33 @@
+{
+  "common": {
+    "languageSelection": "اختيار اللغة",
+    "welcome": "مرحباً بك في تطبيق MS-Mobile",
+    "continue": "متابعة",
+    "changeLanguage": "تغيير اللغة",
+    "arabic": "العربية",
+    "english": "الإنجليزية",
+    "kurdish": "الكردية",
+    "home": "الرئيسية",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "dark": "داكن",
+    "light": "فاتح",
+    "system": "حسب النظام",
+    "chooseYourPreferredLanguage": "اختر لغتك المفضلة",
+    "browseAds": "تصفح الإعلانات",
+    "selectLanguage": "اختر لغتك",
+    "languageChangeHint": "يمكنك تغيير اللغة لاحقاً من الإعدادات"
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "two": "الثانية",
+    "settings": "الإعدادات"
+  },
+  "langSelect": {
+    "title": "اختر لغتك",
+    "subtitle": "يمكنك تغيير اللغة لاحقاً من الإعدادات",
+    "continue": "متابعة"
+  }
+} 

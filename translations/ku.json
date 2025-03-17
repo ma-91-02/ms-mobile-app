@@ -1,0 +1,33 @@
+{
+  "common": {
+    "languageSelection": "هەڵبژاردنی زمان",
+    "welcome": "بەخێربێیت بۆ ئەپڵیکەیشنی MS-Mobile",
+    "continue": "بەردەوامبوون",
+    "changeLanguage": "گۆڕینی زمان",
+    "arabic": "عەرەبی",
+    "english": "ئینگلیزی",
+    "kurdish": "کوردی",
+    "home": "سەرەکی",
+    "settings": "ڕێکخستنەکان",
+    "profile": "پرۆفایل",
+    "language": "زمان",
+    "theme": "ڕوونکی",
+    "dark": "تاریک",
+    "light": "ڕووناک",
+    "system": "سیستەم",
+    "chooseYourPreferredLanguage": "زمانی دڵخوازی خۆت هەڵبژێرە",
+    "browseAds": "گەڕان بە ناو ڕێکلامەکان",
+    "selectLanguage": "زمانی خۆت هەڵبژێرە",
+    "languageChangeHint": "دەتوانیت دواتر زمان لە ڕێکخستنەکاندا بگۆڕیت"
+  },
+  "tabs": {
+    "home": "سەرەکی",
+    "two": "دووەم",
+    "settings": "ڕێکخستنەکان"
+  },
+  "langSelect": {
+    "title": "زمانی خۆت هەڵبژێرە",
+    "subtitle": "دەتوانیت دواتر زمان لە ڕێکخستنەکاندا بگۆڕیت",
+    "continue": "بەردەوامبوون"
+  }
+} 
