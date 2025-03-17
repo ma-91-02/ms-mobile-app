@@ -2,7 +2,7 @@ import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
-import { I18nManager } from 'react-native';
+import { I18nManager, Platform } from 'react-native';
 
 // تحديد اللغات التي تستخدم اتجاه RTL
 export const RTL_LANGUAGES = ['ar', 'ku'];
@@ -83,7 +83,40 @@ const resources = {
       jobs: 'Jobs',
       services: 'Services',
       fashion: 'Fashion',
-      other: 'Other'
+      other: 'Other',
+
+      // المناطق
+      allIraq: 'All Iraq',
+      baghdad: 'Baghdad',
+      basra: 'Basra',
+      erbil: 'Erbil',
+      sulaymaniyah: 'Sulaymaniyah',
+      duhok: 'Duhok',
+      kirkuk: 'Kirkuk',
+      najaf: 'Najaf',
+      karbala: 'Karbala',
+      anbar: 'Anbar',
+      diyala: 'Diyala',
+      wasit: 'Wasit',
+      maysan: 'Maysan',
+      babil: 'Babylon',
+      diwaniyah: 'Diwaniyah',
+      dhiqar: 'Dhi Qar',
+      muthanna: 'Muthanna',
+      nineveh: 'Nineveh',
+      salahuddin: 'Salah al-Din',
+
+      // الفئات الإضافية
+      passport: 'Passport',
+      residency: 'Residency',
+      nationalID: 'National ID',
+      drivingLicense: 'Driving License',
+      birthCertificate: 'Birth Certificate',
+      marriageCertificate: 'Marriage Certificate',
+      educationalCertificates: 'Educational Certificates',
+      legalDocuments: 'Legal Documents',
+      medicalDocuments: 'Medical Documents',
+      otherDocuments: 'Other Documents'
     }
   },
   ar: {
@@ -160,7 +193,40 @@ const resources = {
       jobs: 'وظائف',
       services: 'خدمات',
       fashion: 'أزياء',
-      other: 'أخرى'
+      other: 'أخرى',
+
+      // المناطق
+      allIraq: 'كل العراق',
+      baghdad: 'بغداد',
+      basra: 'البصرة',
+      erbil: 'أربيل',
+      sulaymaniyah: 'السليمانية',
+      duhok: 'دهوك',
+      kirkuk: 'كركوك',
+      najaf: 'النجف',
+      karbala: 'كربلاء',
+      anbar: 'الأنبار',
+      diyala: 'ديالى',
+      wasit: 'واسط',
+      maysan: 'ميسان',
+      babil: 'بابل',
+      diwaniyah: 'الديوانية',
+      dhiqar: 'ذي قار',
+      muthanna: 'المثنى',
+      nineveh: 'نينوى',
+      salahuddin: 'صلاح الدين',
+
+      // الفئات الإضافية
+      passport: 'جواز السفر',
+      residency: 'الإقامة',
+      nationalID: 'البطاقة الوطنية',
+      drivingLicense: 'رخصة القيادة',
+      birthCertificate: 'شهادة الميلاد',
+      marriageCertificate: 'عقد الزواج',
+      educationalCertificates: 'الشهادات التعليمية',
+      legalDocuments: 'الوثائق القانونية',
+      medicalDocuments: 'الوثائق الطبية',
+      otherDocuments: 'وثائق أخرى'
     }
   },
   ku: {
@@ -237,7 +303,40 @@ const resources = {
       jobs: 'کار',
       services: 'خزمەتگوزاریەکان',
       fashion: 'جلوبەرگ',
-      other: 'هیتر'
+      other: 'هیتر',
+
+      // المناطق
+      allIraq: 'هەموو عێراق',
+      baghdad: 'بەغدا',
+      basra: 'بەسرە',
+      erbil: 'هەولێر',
+      sulaymaniyah: 'سلێمانی',
+      duhok: 'دهۆک',
+      kirkuk: 'کەرکوک',
+      najaf: 'نەجەف',
+      karbala: 'کەربەلا',
+      anbar: 'ئەنبار',
+      diyala: 'دیالە',
+      wasit: 'واست',
+      maysan: 'مەیسان',
+      babil: 'بابل',
+      diwaniyah: 'دیوانیە',
+      dhiqar: 'زیقار',
+      muthanna: 'موسەننا',
+      nineveh: 'نەینەوا',
+      salahuddin: 'سەڵاحەدین',
+
+      // الفئات الإضافية
+      passport: 'پاسپۆرت',
+      residency: 'نیشتەجێبوون',
+      nationalID: 'ناسنامەی نیشتمانی',
+      drivingLicense: 'مۆڵەتی شوفێری',
+      birthCertificate: 'بڕوانامەی لەدایکبوون',
+      marriageCertificate: 'گرێبەستی هاوسەرگیری',
+      educationalCertificates: 'بڕوانامەی خوێندن',
+      legalDocuments: 'بەڵگەنامە یاساییەکان',
+      medicalDocuments: 'بەڵگەنامە پزیشکییەکان',
+      otherDocuments: 'بەڵگەنامەی تر'
     }
   }
 };
@@ -253,30 +352,8 @@ const getDeviceLanguage = () => {
   }
 };
 
-export const loadSavedLanguage = async () => {
-  try {
-    const savedLanguage = await AsyncStorage.getItem('selected-language');
-    const hasSelectedLanguage = await AsyncStorage.getItem('has-selected-language');
-    
-    let languageToUse = 'en';
-
-    if (savedLanguage && hasSelectedLanguage === 'true') {
-      languageToUse = savedLanguage;
-    } else {
-      languageToUse = getDeviceLanguage();
-    }
-
-    const isRTL = RTL_LANGUAGES.includes(languageToUse);
-    I18nManager.allowRTL(isRTL);
-    I18nManager.forceRTL(isRTL);
-
-    await i18n.changeLanguage(languageToUse);
-    return languageToUse;
-  } catch (error) {
-    console.error('Error loading saved language:', error);
-    return 'en';
-  }
-};
+// تعيين العربية كلغة افتراضية
+const DEFAULT_LANGUAGE = 'ar';
 
 // تهيئة i18n
 const i18n = i18next.createInstance();
@@ -286,7 +363,8 @@ i18n
   .init({
     compatibilityJSON: 'v3',
     resources,
-    fallbackLng: 'en',
+    lng: DEFAULT_LANGUAGE,
+    fallbackLng: DEFAULT_LANGUAGE,
     interpolation: {
       escapeValue: false,
     },
@@ -294,5 +372,123 @@ i18n
       useSuspense: false,
     },
   });
+
+export const loadSavedLanguage = async () => {
+  try {
+    let savedLanguage = await AsyncStorage.getItem('user-language');
+    console.log('Loading saved language:', savedLanguage);
+
+    if (!savedLanguage) {
+      savedLanguage = DEFAULT_LANGUAGE;
+      await AsyncStorage.setItem('user-language', DEFAULT_LANGUAGE);
+    }
+
+    // تطبيق RTL للـ iOS
+    if (Platform.OS === 'ios') {
+      const isRTL = RTL_LANGUAGES.includes(savedLanguage);
+      if (isRTL) {
+        // تطبيق RTL للغات العربية والكردية
+        I18nManager.allowRTL(true);
+        I18nManager.forceRTL(true);
+        // إعادة تشغيل التطبيق إذا كان الاتجاه مختلفاً
+        if (!I18nManager.isRTL) {
+          I18nManager.forceRTL(true);
+          // Updates.reloadAsync(); // إذا كنت تستخدم Expo
+        }
+      } else {
+        // تطبيق LTR للغة الإنجليزية
+        I18nManager.allowRTL(false);
+        I18nManager.forceRTL(false);
+        if (I18nManager.isRTL) {
+          I18nManager.forceRTL(false);
+          // Updates.reloadAsync(); // إذا كنت تستخدم Expo
+        }
+      }
+    }
+
+    // تطبيق اللغة
+    await i18n.changeLanguage(savedLanguage);
+
+    return savedLanguage;
+  } catch (error) {
+    console.error('Error in loadSavedLanguage:', error);
+    return DEFAULT_LANGUAGE;
+  }
+};
+
+export const changeLanguage = async (language: string) => {
+  try {
+    console.log('Starting language change to:', language);
+
+    // حفظ اللغة في AsyncStorage
+    await AsyncStorage.setItem('user-language', language);
+    console.log('Language saved in AsyncStorage');
+
+    // تطبيق RTL للـ iOS
+    if (Platform.OS === 'ios') {
+      const isRTL = RTL_LANGUAGES.includes(language);
+      if (isRTL) {
+        I18nManager.allowRTL(true);
+        I18nManager.forceRTL(true);
+        if (!I18nManager.isRTL) {
+          I18nManager.forceRTL(true);
+          // Updates.reloadAsync(); // إذا كنت تستخدم Expo
+        }
+      } else {
+        I18nManager.allowRTL(false);
+        I18nManager.forceRTL(false);
+        if (I18nManager.isRTL) {
+          I18nManager.forceRTL(false);
+          // Updates.reloadAsync(); // إذا كنت تستخدم Expo
+        }
+      }
+    }
+
+    // تغيير اللغة في i18next
+    await i18n.changeLanguage(language);
+    console.log('Language changed in i18next');
+
+    // التحقق من الحفظ
+    const verifiedLanguage = await AsyncStorage.getItem('user-language');
+    console.log('Verified saved language:', verifiedLanguage);
+
+    if (verifiedLanguage !== language) {
+      throw new Error('Language verification failed');
+    }
+
+    // حفظ حالة اختيار اللغة
+    await AsyncStorage.setItem('has-selected-language', 'true');
+    console.log('Language selection state saved');
+
+    return true;
+  } catch (error) {
+    console.error('Error in changeLanguage:', error);
+    await AsyncStorage.setItem('user-language', DEFAULT_LANGUAGE);
+    await i18n.changeLanguage(DEFAULT_LANGUAGE);
+    throw error;
+  }
+};
+
+// إضافة وظيفة للتحقق من حالة اختيار اللغة
+export const hasSelectedLanguage = async () => {
+  try {
+    return await AsyncStorage.getItem('has-selected-language') === 'true';
+  } catch (error) {
+    console.error('Error checking language selection state:', error);
+    return false;
+  }
+};
+
+// إضافة وظيفة لإعادة تعيين حالة اللغة
+export const resetLanguageState = async () => {
+  try {
+    await AsyncStorage.removeItem('has-selected-language');
+    await AsyncStorage.removeItem('user-language');
+    await i18n.changeLanguage(DEFAULT_LANGUAGE);
+    console.log('Language state reset successfully');
+  } catch (error) {
+    console.error('Error resetting language state:', error);
+  }
+};
 
 export default i18n; 

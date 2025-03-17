@@ -11,7 +11,8 @@ import {
   StatusBar,
   ImageErrorEventData,
   NativeSyntheticEvent,
-  Modal
+  Modal,
+  I18nManager
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
+import AdCard from '../components/AdCard';
 
 // Define interfaces for type safety
 interface Ad {
@@ -47,22 +49,22 @@ interface Province {
 const CATEGORIES: Category[] = [
   { 
     id: '1', 
-    name: 'جواز سفر', 
+    name: 'passport',
     icon: 'document-text-outline' 
   },
   { 
     id: '2', 
-    name: 'بطاقة وطنية', 
+    name: 'nationalID',
     icon: 'card-outline' 
   },
   { 
     id: '3', 
-    name: 'اجازة سوق', 
+    name: 'drivingLicense',
     icon: 'car-sport-outline' 
   },
   { 
     id: '4', 
-    name: 'اخرى', 
+    name: 'otherDocuments',
     icon: 'ellipsis-horizontal-outline' 
   }
 ];
@@ -118,26 +120,104 @@ const DUMMY_ADS: Ad[] = [
 
 // قائمة المحافظات العراقية
 const PROVINCES: Province[] = [
-  { id: 'all', name: 'كل العراق' },
-  { id: 'baghdad', name: 'بغداد' },
-  { id: 'basra', name: 'البصرة' },
-  { id: 'najaf', name: 'النجف' },
-  { id: 'karbala', name: 'كربلاء' },
-  { id: 'erbil', name: 'اربيل' },
-  { id: 'mosul', name: 'الموصل' },
-  { id: 'kirkuk', name: 'كركوك' },
-  { id: 'duhok', name: 'دهوك' },
-  { id: 'sulaymaniyah', name: 'السليمانية' },
-  { id: 'babil', name: 'بابل' },
-  { id: 'diyala', name: 'ديالى' },
-  { id: 'wasit', name: 'واسط' },
-  { id: 'maysan', name: 'ميسان' },
-  { id: 'diwaniyah', name: 'الديوانية' },
-  { id: 'thiqar', name: 'ذي قار' },
-  { id: 'muthanna', name: 'المثنى' },
-  { id: 'anbar', name: 'الأنبار' },
-  { id: 'saladin', name: 'صلاح الدين' },
+  { id: 'all', name: 'allIraq' },
+  { id: 'baghdad', name: 'baghdad' },
+  { id: 'basra', name: 'basra' },
+  { id: 'najaf', name: 'najaf' },
+  { id: 'karbala', name: 'karbala' },
+  { id: 'erbil', name: 'erbil' },
+  { id: 'mosul', name: 'nineveh' },
+  { id: 'kirkuk', name: 'kirkuk' },
+  { id: 'duhok', name: 'duhok' },
+  { id: 'sulaymaniyah', name: 'sulaymaniyah' },
+  { id: 'babil', name: 'babil' },
+  { id: 'diyala', name: 'diyala' },
+  { id: 'wasit', name: 'wasit' },
+  { id: 'maysan', name: 'maysan' },
+  { id: 'diwaniyah', name: 'diwaniyah' },
+  { id: 'thiqar', name: 'dhiqar' },
+  { id: 'muthanna', name: 'muthanna' },
+  { id: 'anbar', name: 'anbar' },
+  { id: 'saladin', name: 'salahuddin' },
 ];
+
+// تعريف واجهة لخصائص مكون SearchBar
+interface SearchBarProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  appColors: any; // يمكن تحديد نوع أكثر دقة إذا كان متاحاً
+  isRTL: boolean;
+  t: (key: string, options?: any) => string;
+}
+
+// إنشاء مكون SearchBar منفصل خارج المكون الرئيسي
+const SearchBar = ({ searchQuery, setSearchQuery, appColors, isRTL, t }: SearchBarProps) => {
+  // استخدام مرجع للحفاظ على التركيز
+  const inputRef = React.useRef<TextInput>(null);
+
+  return (
+    <View style={[
+      styles.searchContainer, 
+      { backgroundColor: appColors.secondary },
+      { flexDirection: isRTL ? 'row-reverse' : 'row' }
+    ]}>
+      <Ionicons 
+        name="search-outline" 
+        size={20} 
+        color={appColors.textSecondary}
+        style={{ padding: 10 }}
+      />
+      <TextInput
+        ref={inputRef}
+        style={[
+          styles.searchInput,
+          { color: appColors.text },
+          { textAlign: isRTL ? 'right' : 'left' },
+          { paddingHorizontal: 12 },
+          { marginLeft: isRTL ? 0 : 4 },
+          { marginRight: isRTL ? 4 : 0 }
+        ]}
+        placeholder={t('search')}
+        placeholderTextColor={appColors.textSecondary}
+        value={searchQuery}
+        onChangeText={(text) => {
+          setSearchQuery(text);
+          // الحفاظ على التركيز بعد تغيير النص
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        }}
+        autoCorrect={false}
+        autoCapitalize="none"
+        keyboardType="default"
+        blurOnSubmit={true}
+        returnKeyType="search"
+        enablesReturnKeyAutomatically={true}
+        clearButtonMode="never"
+        onSubmitEditing={() => {
+          // إخفاء لوحة المفاتيح عند الضغط على زر البحث
+          if (inputRef.current) {
+            inputRef.current.blur();
+          }
+        }}
+      />
+      {searchQuery.length > 0 && (
+        <TouchableOpacity 
+          style={{ padding: 10 }}
+          onPress={() => {
+            setSearchQuery('');
+            // إعادة التركيز بعد المسح
+            if (inputRef.current) {
+              inputRef.current.focus();
+            }
+          }}
+        >
+          <Ionicons name="close-circle" size={20} color={appColors.textSecondary} />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
 
 export default function AdsScreen() {
   const { t } = useTranslation();
@@ -154,6 +234,12 @@ export default function AdsScreen() {
   // تحديد ما إذا كانت اللغة الحالية هي RTL
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
 
+  // تحديث أنماط العناصر التي تتأثر باتجاه اللغة
+  const rtlStyles = {
+    flexDirection: isRTL ? 'row-reverse' : 'row',
+    textAlign: isRTL ? 'right' : 'left',
+  };
+
   // تحديث وظيفة التصفية
   const filteredAds = DUMMY_ADS.filter(ad => {
     // تصفية حسب البحث
@@ -163,10 +249,26 @@ export default function AdsScreen() {
     // تصفية حسب الفئة
     const matchesCategory = !selectedCategory || ad.category === selectedCategory;
     
-    // تصفية حسب المحافظة
-    const matchesProvince = selectedProvince === 'all' || ad.location.includes(PROVINCES.find(p => p.id === selectedProvince)?.name || '');
+    // تصفية حسب المحافظة - تحسين المقارنة
+    const matchesProvince = () => {
+      if (selectedProvince === 'all') return true;
+      
+      // الحصول على اسم المحافظة المختارة بجميع اللغات
+      const selectedProvinceName = PROVINCES.find(p => p.id === selectedProvince)?.name || '';
+      
+      // الحصول على الترجمات لاسم المحافظة
+      const provinceNameAr = t(selectedProvinceName, { lng: 'ar' }).toLowerCase();
+      const provinceNameEn = t(selectedProvinceName, { lng: 'en' }).toLowerCase();
+      const provinceNameKu = t(selectedProvinceName, { lng: 'ku' }).toLowerCase();
+      
+      // مقارنة موقع الإعلان مع جميع الترجمات
+      const adLocation = ad.location.toLowerCase();
+      return adLocation.includes(provinceNameAr) || 
+             adLocation.includes(provinceNameEn) || 
+             adLocation.includes(provinceNameKu);
+    };
     
-    return matchesSearch && matchesCategory && matchesProvince;
+    return matchesSearch && matchesCategory && matchesProvince();
   });
 
   // Handle image loading errors
@@ -184,7 +286,13 @@ export default function AdsScreen() {
     return category.icon;
   };
 
-  // إضافة مكون قائمة المحافظات
+  // تحديث وظيفة اختيار المحافظة
+  const handleProvinceSelect = (provinceId: string) => {
+    setSelectedProvince(provinceId);
+    setShowProvinceFilter(false);
+  };
+
+  // تحديث مكون المودال
   const ProvinceFilterModal = () => (
     <Modal
       visible={showProvinceFilter}
@@ -194,8 +302,13 @@ export default function AdsScreen() {
     >
       <View style={[styles.modalContainer, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
         <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: appColors.text }]}>اختر المحافظة</Text>
+          <View style={[
+            styles.modalHeader,
+            { flexDirection: isRTL ? 'row-reverse' : 'row' }
+          ]}>
+            <Text style={[styles.modalTitle, { color: appColors.text }]}>
+              {t('selectProvince')}
+            </Text>
             <TouchableOpacity onPress={() => setShowProvinceFilter(false)}>
               <Ionicons name="close" size={24} color={appColors.text} />
             </TouchableOpacity>
@@ -208,16 +321,14 @@ export default function AdsScreen() {
                   styles.provinceItem,
                   selectedProvince === province.id && { backgroundColor: appColors.primary }
                 ]}
-                onPress={() => {
-                  setSelectedProvince(province.id);
-                  setShowProvinceFilter(false);
-                }}
+                onPress={() => handleProvinceSelect(province.id)}
               >
                 <Text style={[
                   styles.provinceText,
-                  { color: selectedProvince === province.id ? '#fff' : appColors.text }
+                  { color: selectedProvince === province.id ? '#fff' : appColors.text },
+                  { textAlign: isRTL ? 'right' : 'left' }
                 ]}>
-                  {province.name}
+                  {t(province.name)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -236,22 +347,14 @@ export default function AdsScreen() {
         <Text style={[styles.headerTitle, { color: appColors.text }]}>{t('allAds')}</Text>
       </View>
       
-      {/* Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: appColors.secondary }]}>
-        <Ionicons name="search-outline" size={20} color={appColors.textSecondary} />
-        <TextInput
-          style={[styles.searchInput, { color: appColors.text }]}
-          placeholder={t('search')}
-          placeholderTextColor={appColors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color={appColors.textSecondary} />
-          </TouchableOpacity>
-        )}
-      </View>
+      {/* Search Bar - تمرير الخصائص المطلوبة */}
+      <SearchBar 
+        searchQuery={searchQuery} 
+        setSearchQuery={setSearchQuery} 
+        appColors={appColors} 
+        isRTL={isRTL} 
+        t={t} 
+      />
       
       {/* Filter Section */}
       <View style={styles.filterSection}>
@@ -275,7 +378,7 @@ export default function AdsScreen() {
                 { color: selectedProvince !== 'all' ? '#fff' : appColors.textSecondary }
               ]}
             >
-              {PROVINCES.find(p => p.id === selectedProvince)?.name}
+              {t(PROVINCES.find(p => p.id === selectedProvince)?.name || 'allIraq')}
             </Text>
           </TouchableOpacity>
 
@@ -306,7 +409,7 @@ export default function AdsScreen() {
                   }
                 ]}
               >
-                {category.name}
+                {t(category.name)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -326,40 +429,16 @@ export default function AdsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.adsListContainer}
         renderItem={({ item }) => (
-          <TouchableOpacity style={[styles.adCard, { backgroundColor: appColors.secondary }]}>
-            {/* Image with fallback to placeholder icon */}
-            {imageErrors[item.id] ? (
-              <View style={[styles.adImagePlaceholder, { backgroundColor: appColors.background }]}>
-                <Ionicons 
-                  name={getPlaceholderIcon(item.id) as any} 
-                  size={40} 
-                  color={appColors.primary} 
-                />
-              </View>
-            ) : (
-              <Image 
-                source={item.image} 
-                style={styles.adImage} 
-                onError={() => handleImageError(item.id)}
-                defaultSource={require('../../assets/images/placeholder.png')}
-              />
-            )}
-            
-            <View style={styles.adInfo}>
-              <Text style={[styles.adTitle, { color: appColors.text }]}>{item.title}</Text>
-              <Text style={[styles.adPrice, { color: appColors.primary }]}>{item.price}</Text>
-              <View style={styles.adDetails}>
-                <View style={styles.adLocation}>
-                  <Ionicons name="location-outline" size={14} color={appColors.textSecondary} />
-                  <Text style={[styles.adLocationText, { color: appColors.textSecondary }]}>{item.location}</Text>
-                </View>
-                <Text style={[styles.adDate, { color: appColors.textSecondary }]}>{item.date}</Text>
-              </View>
-            </View>
-            <TouchableOpacity style={styles.favoriteButton}>
-              <Ionicons name="heart-outline" size={20} color={appColors.primary} />
-            </TouchableOpacity>
-          </TouchableOpacity>
+          <AdCard
+            item={item}
+            hasImageError={imageErrors[item.id]}
+            onImageError={() => handleImageError(item.id)}
+            placeholderIcon={getPlaceholderIcon(item.id)}
+            onPress={() => {
+              // يمكنك إضافة وظيفة عند الضغط على الإعلان هنا
+              console.log('Ad pressed:', item.id);
+            }}
+          />
         )}
       />
       
@@ -385,14 +464,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 16,
-    paddingHorizontal: 12,
     borderRadius: 8,
-    height: 40,
+    height: 50,
+    marginBottom: 8,
+    paddingHorizontal: 4,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
     fontSize: 16,
+    height: 50,
+    paddingVertical: 0,
   },
   filterSection: {
     marginTop: 16,
@@ -421,7 +502,6 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
   },
   modalHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -434,6 +514,8 @@ const styles = StyleSheet.create({
   provinceItem: {
     paddingVertical: 12,
     paddingHorizontal: 16,
+    marginHorizontal: 8,
+    borderRadius: 8,
   },
   provinceText: {
     fontSize: 16,
@@ -464,63 +546,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     paddingBottom: 80, // Space for the floating button
-  },
-  adCard: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    marginBottom: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  adImage: {
-    width: 100,
-    height: 100,
-    resizeMode: 'cover',
-  },
-  adImagePlaceholder: {
-    width: 100,
-    height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  adInfo: {
-    flex: 1,
-    padding: 12,
-  },
-  adTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  adPrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  adDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  adLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  adLocationText: {
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  adDate: {
-    fontSize: 12,
-  },
-  favoriteButton: {
-    padding: 10,
-    position: 'absolute',
-    right: 0,
-    top: 0,
   },
 }); 
