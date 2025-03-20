@@ -82,6 +82,9 @@ const AppColors = {
     white: '#FFFFFF',
     black: '#000000',
     tabBar: '#614AE1',
+    // خصائص إضافية مطلوبة لشاشة الملف الشخصي فقط
+    buttonText: '#FFFFFF',
+    error: '#dc3545',
   },
   dark: {
     primary: '#614AE1',
@@ -101,6 +104,9 @@ const AppColors = {
     white: '#FFFFFF',
     black: '#000000',
     tabBar: '#614AE1',
+    // خصائص إضافية مطلوبة لشاشة الملف الشخصي فقط
+    buttonText: '#FFFFFF',
+    error: '#dc3545',
   }
 };
 

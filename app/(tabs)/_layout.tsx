@@ -5,7 +5,7 @@ import { useTheme } from '../../app/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import i18n from '../i18n';
 import { useFonts } from 'expo-font';
 
@@ -19,6 +19,7 @@ export default function TabLayout() {
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const { t } = useTranslation();
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const screenWidth = Dimensions.get('window').width;
 
   // تحميل خط Cairo
   const [fontsLoaded] = useFonts({
@@ -32,31 +33,47 @@ export default function TabLayout() {
   }
 
   // دالة للحصول على الترجمة الصحيحة للتبويبات
-  const getTabLabel = (key) => {
+  const getTabLabel = (key: string): string => {
     // مفاتيح الترجمة الصحيحة
-    const translationKeys = {
-      'ads': 'navigation.ads',
-      'profile': 'navigation.profile',
-      'settings': 'navigation.settings'
+    const translationKeys: Record<string, string> = {
+      'ads': 'tabs.home',
+      'profile': 'common.profile',
+      'settings': 'common.settings'
     };
     
     // القيم الافتراضية في حالة عدم وجود ترجمة
-    const defaultValues = {
+    const defaultValues: Record<string, string> = {
       'ads': 'الإعلانات',
       'profile': 'الملف الشخصي',
       'settings': 'الإعدادات'
     };
     
-    // محاولة استخدام مفتاح الترجمة الصحيح أولاً
-    const translation = t(translationKeys[key]);
-    
-    // إذا كانت الترجمة هي نفس المفتاح، فهذا يعني أن الترجمة غير موجودة
-    // في هذه الحالة، نستخدم القيمة الافتراضية
-    if (translation === translationKeys[key]) {
-      return defaultValues[key];
+    // استخدام المساحة الاسمية المناسبة
+    const key_parts = translationKeys[key].split('.');
+    if (key_parts.length === 2) {
+      const namespace = key_parts[0];
+      const translationKey = key_parts[1];
+      
+      // استخدام t مع المساحة الاسمية المحددة
+      return t(translationKey, { ns: namespace }) || defaultValues[key];
     }
     
-    return translation;
+    // الطريقة البديلة
+    return t(translationKeys[key]) || defaultValues[key];
+  };
+
+  // حساب حجم الخط المناسب حسب عرض الشاشة
+  const getFontSize = () => {
+    if (screenWidth < 350) return 10;
+    if (screenWidth < 400) return 11;
+    return 12;
+  };
+
+  // حساب حجم الأيقونة المناسب حسب عرض الشاشة
+  const getIconSize = () => {
+    if (screenWidth < 350) return 24;
+    if (screenWidth < 400) return 26;
+    return 28;
   };
 
   return (
@@ -64,26 +81,30 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: appColors.tabBar, // #614AE1
+          backgroundColor: appColors.secondary,
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
-          height: 80,
-          paddingHorizontal: 10,
-          paddingVertical: 10,
+          height: screenWidth < 400 ? 70 : 75,
+          paddingHorizontal: screenWidth * 0.025,
+          paddingBottom: 15,
+          paddingTop: 8,
         },
         tabBarItemStyle: {
-          height: 60,
+          height: screenWidth < 400 ? 65 : 70,
+          paddingBottom: 10,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: appColors.primary,
-        tabBarInactiveTintColor: appColors.white,
+        tabBarInactiveTintColor: appColors.textSecondary,
         tabBarLabelStyle: {
           fontFamily: 'Cairo-Regular',
-          fontSize: 14,
+          fontSize: getFontSize(),
+          marginBottom: 6,
         },
       }}
       tabBar={props => (
-        <View style={[styles.tabBarContainer, { backgroundColor: appColors.tabBar }]}>
+        <View style={[styles.tabBarContainer, { backgroundColor: appColors.secondary, height: screenWidth < 400 ? 70 : 75 }]}>
           {props.state.routes.map((route, index) => {
             const { options } = props.descriptors[route.key];
             // استخدام دالة getTabLabel للحصول على الترجمة الصحيحة
@@ -103,7 +124,7 @@ export default function TabLayout() {
             };
 
             // تحديد الأيقونة بناءً على اسم التبويب
-            let iconName;
+            let iconName: keyof typeof Ionicons.glyphMap = 'megaphone';
             if (route.name === 'ads') {
               iconName = 'megaphone-outline';
             } else if (route.name === 'profile') {
@@ -117,23 +138,23 @@ export default function TabLayout() {
                 key={index}
                 activeOpacity={0.7}
                 onPress={onPress}
-                style={[
-                  styles.tabButton,
-                  isFocused ? styles.activeTabButton : null
-                ]}
+                style={styles.tabButton}
               >
                 <View style={styles.tabContent}>
                   <Ionicons
                     name={iconName}
-                    size={24}
-                    color={isFocused ? appColors.primary : appColors.white}
+                    size={getIconSize()}
+                    color={isFocused ? appColors.primary : appColors.textSecondary}
+                    style={styles.tabIcon}
                   />
                   <Text
                     style={[
                       styles.tabLabel,
                       {
-                        color: isFocused ? appColors.primary : appColors.white,
-                        fontFamily: isFocused ? 'Cairo-Bold' : 'Cairo-Regular'
+                        color: isFocused ? appColors.primary : appColors.textSecondary,
+                        fontFamily: 'Cairo-Regular',
+                        fontSize: getFontSize(),
+                        marginBottom: 3,
                       }
                     ]}
                   >
@@ -172,29 +193,29 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
-    height: 80,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(245, 245, 245, 0.1)',
+    paddingBottom: 8,
+    paddingTop: 8,
   },
   tabButton: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 20,
-    marginHorizontal: 5,
-    paddingVertical: 8,
-  },
-  activeTabButton: {
-    backgroundColor: '#FFFFFF',
+    paddingBottom: 5,
+    paddingTop: 5,
   },
   tabContent: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 2,
+  },
+  tabIcon: {
+    marginBottom: 4,
   },
   tabLabel: {
-    fontSize: 14,
-    marginTop: 4,
     textAlign: 'center',
+    paddingBottom: 5,
   },
 });
 

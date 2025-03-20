@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
-import { RTL_LANGUAGES, changeLanguage, reloadTranslations } from '../i18n';
+import { RTL_LANGUAGES, changeLanguage, reloadTranslations, resetLanguage } from '../i18n';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppColors from '../../constants/AppColors';
 import { I18nManager } from 'react-native';
@@ -130,26 +130,48 @@ export default function Settings() {
 
   // إضافة وظيفة لإعادة تحميل الترجمات
   const handleReloadTranslations = async () => {
+    if (!__DEV__) return; // فقط في وضع التطوير
+    
     try {
-      setAlertTitle(t('settings.reloading_translations') || 'جاري إعادة تحميل الترجمات...');
+      // عرض تنبيه أن العملية قيد التنفيذ
+      setAlertTitle(t('reset_language', { ns: 'common' }));
       setAlertMessage('');
-      setAlertButtons([]);
       setAlertShowLoading(true);
       setAlertVisible(true);
       
-      await reloadTranslations();
+      // إعادة تعيين اللغة إلى لغة الجهاز
+      const success = await resetLanguage();
       
-      // إضافة تأخير قصير
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setAlertVisible(false);
+      if (success) {
+        // تحديث التنبيه بأن العملية نجحت
+        setAlertTitle(t('reset_success', { ns: 'common' }));
+        setAlertShowLoading(false);
+        setAlertButtons([
+          {
+            text: t('ok', { ns: 'common' }),
+            onPress: () => {
+              setAlertVisible(false);
+              // إعادة تحميل الصفحة (اختياري)
+              router.replace('/settings');
+            },
+            style: 'default'
+          }
+        ]);
+      } else {
+        throw new Error('لم يتم إعادة تعيين اللغة');
+      }
     } catch (error) {
+      // تحديث التنبيه بأن العملية فشلت
+      setAlertTitle(t('reset_error', { ns: 'common' }));
+      setAlertShowLoading(false);
+      setAlertButtons([
+        {
+          text: t('ok', { ns: 'common' }),
+          onPress: () => setAlertVisible(false),
+          style: 'default'
+        }
+      ]);
       console.error('Error reloading translations:', error);
-      setAlertVisible(false);
-      Alert.alert(
-        t('common.error') || 'خطأ',
-        'Failed to reload translations. Please try again.'
-      );
     }
   };
 
@@ -210,31 +232,31 @@ export default function Settings() {
   // تعريف عناصر الإعدادات
   const settingsItems = [
     {
-      title: t('settings.account_settings'),
+      title: t('account_settings', { ns: 'common' }),
       items: [
         {
           icon: 'person-outline',
-          title: t('settings.account_information'),
+          title: t('account_information', { ns: 'common' }),
           onPress: () => router.push('/account-info' as any),
         },
         {
           icon: 'lock-closed-outline',
-          title: t('settings.change_password'),
+          title: t('change_password', { ns: 'common' }),
           onPress: () => router.push('/change-password' as any),
         },
         {
           icon: 'notifications-outline',
-          title: t('settings.notification_preferences'),
+          title: t('notification_preferences', { ns: 'common' }),
           onPress: () => router.push('/notification-preferences' as any),
         },
       ],
     },
     {
-      title: t('settings.app_settings'),
+      title: t('app_settings', { ns: 'common' }),
       items: [
         {
           icon: 'moon-outline',
-          title: t('settings.dark_mode'),
+          title: t('theme', { ns: 'common' }),
           onPress: null,
           rightElement: (
             <Switch
@@ -249,7 +271,7 @@ export default function Settings() {
         },
         {
           icon: 'notifications-outline',
-          title: t('settings.enable_notifications'),
+          title: t('enable_notifications', { ns: 'common' }),
           onPress: null,
           rightElement: (
             <Switch
@@ -264,7 +286,7 @@ export default function Settings() {
         },
         {
           icon: 'location-outline',
-          title: t('settings.location_services'),
+          title: t('location_services', { ns: 'common' }),
           onPress: null,
           rightElement: (
             <Switch
@@ -279,61 +301,67 @@ export default function Settings() {
         },
         {
           icon: 'language-outline',
-          title: t('settings.language'),
+          title: t('language', { ns: 'common' }),
           onPress: () => setLanguageSelectorVisible(true),
         },
-        {
+        // إضافة زر إعادة تحميل الترجمات في وضع التطوير
+        ...((__DEV__) ? [{
           icon: 'refresh-outline',
-          title: t('settings.reload_translations') || 'إعادة تحميل الترجمات',
+          title: t('reload_translations', { ns: 'common' }),
           onPress: handleReloadTranslations,
-        },
+        }] : []),
       ],
     },
     {
-      title: t('settings.about'),
+      title: t('about', { ns: 'common' }),
       items: [
         {
           icon: 'information-circle-outline',
-          title: t('settings.about_app'),
-          onPress: () => router.push('/about' as any),
-          // إضافة معلومات الإصدار هنا
-          rightElement: (
-            <Text style={[styles.versionText, { color: appColors.textSecondary }, { fontFamily: 'Cairo-Regular' }]}>
-              v1.0.0
-            </Text>
-          ),
+          title: t('about_app', { ns: 'common' }),
+          onPress: () => router.push('/about-app' as any),
         },
         {
           icon: 'help-circle-outline',
-          title: t('settings.help_support'),
+          title: t('help_support', { ns: 'common' }),
           onPress: () => router.push('/help-support' as any),
         },
         {
           icon: 'shield-outline',
-          title: t('settings.privacy_policy'),
+          title: t('privacy_policy', { ns: 'common' }),
           onPress: () => router.push('/privacy-policy' as any),
         },
         {
           icon: 'document-text-outline',
-          title: t('settings.termsOfService'),
+          title: t('terms_of_service', { ns: 'common' }),
           onPress: () => router.push('/terms-of-service' as any),
         },
         {
           icon: 'mail-outline',
-          title: t('settings.contactUs'),
+          title: t('contact_us', { ns: 'common' }),
           onPress: () => router.push('/contact-us' as any),
         },
         {
           icon: 'star-outline',
-          title: t('settings.rate_app'),
+          title: t('rate_app', { ns: 'common' }),
           onPress: () => {
-            // افتح متجر التطبيقات للتقييم
-            Linking.openURL(
-              Platform.OS === 'ios'
-                ? 'https://apps.apple.com/app/id123456789'
-                : 'https://play.google.com/store/apps/details?id=com.yourapp'
-            );
+            // تنفيذ فتح المتجر لتقييم التطبيق
+            // الكود الخاص بفتح متجر التطبيقات
           },
+        },
+        {
+          icon: 'code-outline',
+          title: t('version', { ns: 'common' }),
+          onPress: null,
+          rightElement: (
+            <Text style={{ 
+              color: appColors.textSecondary, 
+              marginRight: isRTL ? normalize(10) : 0,
+              marginLeft: isRTL ? 0 : normalize(10),
+              fontFamily: 'Cairo-Regular'
+            }}>
+              1.0.0
+            </Text>
+          ),
         },
       ],
     },
@@ -345,7 +373,7 @@ export default function Settings() {
       
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: appColors.text }, { fontFamily: 'Cairo-Bold' }]}>
-          {t('navigation.settings')}
+          {t('settings', { ns: 'common' })}
         </Text>
       </View>
       

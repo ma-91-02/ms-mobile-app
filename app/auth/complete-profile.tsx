@@ -20,10 +20,31 @@ import AppColors from '../../constants/AppColors';
 import { useTranslation } from 'react-i18next';
 import { RTL_LANGUAGES } from '../i18n';
 import i18n from '../i18n';
-import { authAPI } from '../services/authAPI';
+import { authAPI } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Button from '../components/Button';
 import Input from '../components/Input';
+
+// تنسيق التاريخ للإرسال إلى API
+const formatDateForAPI = (date: string): string => {
+  // لو كان التاريخ بتنسيق YYYY-MM-DD بالفعل، قم بإعادته كما هو
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+  
+  // محاولة تحويل التاريخ إلى تنسيق YYYY-MM-DD
+  try {
+    const dateObj = new Date(date);
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    // إعادة التاريخ الأصلي إذا فشل التحويل
+    return date;
+  }
+};
 
 export default function CompleteProfileScreen() {
   const router = useRouter();
@@ -185,120 +206,75 @@ export default function CompleteProfileScreen() {
     return isFullNameValid && isLastNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid;
   };
   
-  const handleCompleteRegistration = async () => {
+  const handleSubmit = async () => {
     try {
-      if (!validateForm()) {
+      // التحقق من الإدخال
+      if (!fullName.trim()) {
+        Alert.alert(t('error'), t('auth.pleaseEnterFullName'));
+        return;
+      }
+      
+      if (!lastName.trim()) {
+        Alert.alert(t('error'), t('auth.pleaseEnterLastName'));
+        return;
+      }
+      
+      if (password.length < 6) {
+        Alert.alert(t('error'), t('auth.passwordTooShort'));
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        Alert.alert(t('error'), t('auth.passwordsDoNotMatch'));
+        return;
+      }
+      
+      // إذا تم إدخال بريد إلكتروني، تحقق من صحته
+      if (email.trim() && !validateEmail(email)) {
+        Alert.alert(t('error'), t('auth.invalidEmail'));
+        return;
+      }
+      
+      // اختيار تاريخ الميلاد إلزامي
+      if (!birthDate) {
+        Alert.alert(t('error'), t('auth.pleaseSelectBirthDate'));
         return;
       }
       
       setLoading(true);
       
-      // التحقق من وجود رمز التحقق
-      const token = await AsyncStorage.getItem('userToken');
-      if (!token) {
-        console.warn('No token found, user might not be authenticated');
-        // يمكنك إضافة معالجة خاصة هنا، مثل إعادة التوجيه إلى شاشة تسجيل الدخول
-      }
+      // تحضير بيانات المستخدم للإرسال
+      const userData = {
+        phoneNumber,
+        fullName: fullName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        password,
+        confirmPassword,
+        birthDate: formatDateForAPI(birthDate),
+      };
       
-      // إضافة تأخير قصير لتحسين تجربة المستخدم
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('Completing registration with data:', { ...userData, password: '***' });
       
-      // تجربة في وضع التطوير
-      const devMode = true;
+      // إرسال طلب إكمال التسجيل
+      const response = await authAPI.completeRegistration(userData);
       
-      if (devMode) {
-        console.log('DEV MODE: Simulating profile completion');
-        
-        const userData = {
-          id: 'dev-user-id',
-          phoneNumber,
-          fullName,
-          lastName,
-          email: email || undefined,
-        };
-        
-        const token = 'dev-token-' + Date.now();
-        
-        await AsyncStorage.setItem('userToken', token);
-        await AsyncStorage.setItem('userData', JSON.stringify(userData));
-        await AsyncStorage.setItem('has-selected-language', 'true');
-        
-        Alert.alert(
-          t('success'), 
-          'تم إكمال التسجيل بنجاح (وضع التطوير)',
-          [
-            {
-              text: t('ok'),
-              onPress: () => {
-                router.replace('/(tabs)/ads');
-              }
-            }
-          ],
-          { cancelable: false }
-        );
-        
+      if (!response.success) {
+        Alert.alert(t('error'), response.message || t('auth.registrationFailed'));
+        setLoading(false);
         return;
       }
       
-      const response = await authAPI.completeRegistration({
-        phoneNumber,
-        password,
-        confirmPassword,
-        fullName,
-        lastName,
-        email,
-        birthDate,
-      });
+      console.log('Registration completed successfully');
       
-      if (response.success) {
-        await AsyncStorage.setItem('has-selected-language', 'true');
-        
-        Alert.alert(
-          t('success'), 
-          response.message || 'تم إكمال التسجيل بنجاح',
-          [
-            {
-              text: t('ok'),
-              onPress: () => {
-                router.replace('/(tabs)/ads');
-              }
-            }
-          ],
-          { cancelable: false }
-        );
-      } else {
-        // معالجة خطأ "غير مصرح به"
-        if (response.message && response.message.includes('غير مصرح به')) {
-          Alert.alert(
-            t('error'), 
-            'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.',
-            [
-              {
-                text: t('ok'),
-                onPress: () => {
-                  // حذف البيانات المخزنة
-                  AsyncStorage.multiRemove(['userToken', 'userData']);
-                  // العودة إلى شاشة تسجيل الدخول
-                  router.replace('/auth/login');
-                }
-              }
-            ],
-            { cancelable: false }
-          );
-        } else {
-          Alert.alert(t('error'), response.message || 'فشل إكمال التسجيل');
-        }
-      }
+      // تعيين علامة اختيار اللغة
+      await AsyncStorage.setItem('has-selected-language', 'true');
+      
+      // الانتقال إلى الشاشة الرئيسية
+      router.replace('/(tabs)/ads');
     } catch (error: any) {
-      console.error('Error completing registration:', error);
-      
-      let errorMessage = 'فشل إكمال التسجيل';
-      
-      if (error.message && error.message.includes('Network request failed')) {
-        errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت الخاص بك أو المحاولة لاحقًا.';
-      }
-      
-      Alert.alert(t('error'), errorMessage);
+      console.error('Complete profile error:', error);
+      Alert.alert(t('error'), t('auth.registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -443,14 +419,14 @@ export default function CompleteProfileScreen() {
                 success={confirmPasswordSuccess}
                 secureTextEntry={true}
                 returnKeyType="done"
-                onSubmitEditing={handleCompleteRegistration}
+                onSubmitEditing={handleSubmit}
                 blurOnSubmit={true}
                 inputRef={confirmPasswordRef}
               />
 
               <Button
                 title={t('completeRegistration')}
-                onPress={handleCompleteRegistration}
+                onPress={handleSubmit}
                 loading={loading}
                 disabled={loading}
                 type="primary"

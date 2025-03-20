@@ -19,7 +19,7 @@ import AppColors from '../../constants/AppColors';
 import { useTranslation } from 'react-i18next';
 import { RTL_LANGUAGES } from '../i18n';
 import i18n from '../i18n';
-import { authAPI } from '../services/authAPI';
+import { authAPI } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function VerifyOTPScreen() {
@@ -56,68 +56,37 @@ export default function VerifyOTPScreen() {
   }, [countdown]);
   
   const handleVerifyOTP = async () => {
-    if (!otp || otp.length !== 6) {
-      Alert.alert(t('error'), t('pleaseEnterValidOTP'));
-      return;
-    }
-    
     try {
       setLoading(true);
       
-      // إضافة تأخير قصير لتحسين تجربة المستخدم
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // تجربة في وضع التطوير
-      const devMode = true;
-      
-      if (devMode) {
-        console.log('DEV MODE: Simulating OTP verification');
-        
-        // حفظ رمز تحقق وهمي للاختبار
-        const fakeToken = 'fake-token-' + Date.now();
-        await AsyncStorage.setItem('userToken', fakeToken);
-        
-        // انتقل إلى شاشة إكمال التسجيل
-        router.push({
-          pathname: '/auth/complete-profile',
-          params: { phoneNumber }
-        });
-        
+      // التحقق من إدخال جميع الأرقام
+      if (otp.length !== 6) {
+        Alert.alert(t('error'), t('auth.pleaseEnterFullOTP'));
+        setLoading(false);
         return;
       }
       
+      console.log('Verifying OTP:', otp, 'for phone:', phoneNumber);
+      
+      // إرسال طلب التحقق من الرمز
       const response = await authAPI.verifyOTP(phoneNumber, otp);
       
-      if (response.success) {
-        // تأكد من حفظ الرمز
-        if (response.token) {
-          await AsyncStorage.setItem('userToken', response.token);
-        }
-        
-        if (response.isProfileComplete) {
-          // إذا كان الملف الشخصي مكتمل، انتقل إلى الصفحة الرئيسية
-          await AsyncStorage.setItem('has-selected-language', 'true');
-          router.replace('/(tabs)/ads');
-        } else {
-          // إذا لم يكن الملف الشخصي مكتمل، انتقل إلى شاشة إكمال التسجيل
-          router.push({
-            pathname: '/auth/complete-profile',
-            params: { phoneNumber }
-          });
-        }
-      } else {
-        Alert.alert(t('error'), response.message || 'فشل التحقق من رمز OTP');
+      if (!response.success) {
+        Alert.alert(t('error'), response.message || t('auth.invalidOTP'));
+        setLoading(false);
+        return;
       }
+      
+      console.log('OTP verification successful');
+      
+      // الانتقال إلى صفحة إكمال الملف الشخصي
+      router.push({
+        pathname: '/auth/complete-profile',
+        params: { phoneNumber }
+      });
     } catch (error: any) {
-      console.error('Error verifying OTP:', error);
-      
-      let errorMessage = 'فشل التحقق من رمز OTP';
-      
-      if (error.message && error.message.includes('Network request failed')) {
-        errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت الخاص بك أو المحاولة لاحقًا.';
-      }
-      
-      Alert.alert(t('error'), errorMessage);
+      console.error('Verify OTP error:', error);
+      Alert.alert(t('error'), t('auth.verificationFailed'));
     } finally {
       setLoading(false);
     }

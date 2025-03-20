@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  ScrollView,
+  Keyboard,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,12 +35,36 @@ export default function LoginScreen() {
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [formattedPhoneNumber, setFormattedPhoneNumber] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // إخفاء لوحة المفاتيح عند النقر خارج حقل الإدخال
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   // تعديل مثال رقم الهاتف العراقي
   const handleIraqExample = () => {
@@ -51,31 +77,69 @@ export default function LoginScreen() {
       setLoading(true);
       
       // التحقق من صحة رقم الهاتف
-      if (phoneNumber.length < 9 || phoneNumber.length > 10) {
+      if (!isPhoneValid || phoneNumber.length < 9) {
         setPhoneError(t('auth.invalidPhoneNumber'));
+        setLoading(false);
         return;
       }
       
       // التحقق من صحة كلمة المرور
       if (!password || password.length < 6) {
-        Alert.alert(t('error'), t('invalidPassword'));
+        setPasswordError(t('auth.invalidPassword'));
         setLoading(false);
         return;
       }
       
       // إرسال بيانات تسجيل الدخول
+      console.log('Login with phone number:', formattedPhoneNumber);
+      
+      // استدعاء خدمة تسجيل الدخول
       const response = await authAPI.login({ 
         phoneNumber: formattedPhoneNumber, 
         password 
       });
       
-      await AsyncStorage.setItem('userToken', response.token);
-      await AsyncStorage.setItem('userData', JSON.stringify(response.user));
+      // التحقق من نجاح العملية
+      if (!response.success) {
+        // عرض رسالة الخطأ
+        Alert.alert(t('error'), response.message || t('auth.loginFailed'));
+        setLoading(false);
+        return;
+      }
       
-      router.replace('/(tabs)/ads');
+      console.log('Login response:', response);
+      
+      // التحقق من وجود التوكن وحفظه
+      if (response.token) {
+        console.log('Token received, verifying token storage');
+        // تعيين علامة اختيار اللغة
+        await AsyncStorage.setItem('has-selected-language', 'true');
+        
+        // التحقق من حفظ التوكن
+        const savedToken = await AsyncStorage.getItem('userToken');
+        if (!savedToken) {
+          console.log('Token not found in AsyncStorage, saving token manually');
+          await AsyncStorage.setItem('userToken', response.token);
+          
+          if (response.user) {
+            await AsyncStorage.setItem('userData', JSON.stringify(response.user));
+          }
+        } else {
+          console.log('Token verified in AsyncStorage:', savedToken);
+        }
+        
+        // الانتقال إلى الصفحة الرئيسية
+        console.log('Login successful. Redirecting to home...');
+        router.replace('/(tabs)/ads');
+      } else {
+        // إذا لم يكن هناك توكن
+        console.error('No token received from server');
+        Alert.alert(t('error'), t('auth.loginFailedNoToken'));
+        setLoading(false);
+      }
     } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert(t('error'), t('loginFailed'));
+      Alert.alert(t('error'), t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -145,6 +209,7 @@ export default function LoginScreen() {
               placeholder={t('auth.phoneNumber')}
               error={phoneError}
               defaultCode="IQ"
+              onValidityChange={setIsPhoneValid}
             />
 
             <View style={styles.inputContainer}>

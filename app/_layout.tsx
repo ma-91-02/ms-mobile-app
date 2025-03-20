@@ -5,10 +5,12 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
-import { View, I18nManager, Platform, StatusBar } from 'react-native';
+import { View, I18nManager, Platform } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from './context/ThemeContext';
 import i18n, { loadSavedLanguage, RTL_LANGUAGES } from './i18n';
 import AppFonts from './components/AppFonts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // حفظ شاشة البداية مفتوحة
 SplashScreen.preventAutoHideAsync();
@@ -36,6 +38,29 @@ export default function RootLayout() {
         const isRTL = RTL_LANGUAGES.includes(language);
         if (isRTL !== I18nManager.isRTL) {
           I18nManager.forceRTL(isRTL);
+        }
+
+        // في وضع التطوير، نقوم بمعالجة خاصة لإعادة تحميل الترجمات
+        if (__DEV__) {
+          try {
+            // التحقق من ما إذا كانت هذه هي المرة الأولى لتشغيل التطبيق في وضع التطوير
+            const isFirstDevRun = await AsyncStorage.getItem('dev-first-run') === null;
+            
+            if (isFirstDevRun) {
+              console.log('[DEV] First development run detected, ensuring translations are loaded...');
+              
+              // حفظ إشارة بأن التطبيق قد تم تشغيله مرة واحدة على الأقل في وضع التطوير
+              await AsyncStorage.setItem('dev-first-run', 'true');
+              
+              if (language) {
+                // إعادة تطبيق اللغة للتأكد من تحميل الترجمات بشكل صحيح
+                await i18n.changeLanguage(language);
+                console.log(`[DEV] Reapplied language: ${language}`);
+              }
+            }
+          } catch (devError) {
+            console.error('[DEV] Error initializing translations in development mode:', devError);
+          }
         }
       } catch (e) {
         console.warn('Error preparing app:', e);
@@ -72,34 +97,9 @@ export default function RootLayout() {
             >
               <Stack.Screen name="language-select" />
               <Stack.Screen name="(tabs)" />
-              <Stack.Screen 
-                name="auth/login" 
-                options={{ 
-                  presentation: 'card',
-                  animation: 'none',
-                }} 
-              />
-              <Stack.Screen 
-                name="auth/register" 
-                options={{ 
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                }} 
-              />
-              <Stack.Screen 
-                name="auth/verify-otp" 
-                options={{ 
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                }} 
-              />
-              <Stack.Screen 
-                name="auth/complete-profile" 
-                options={{ 
-                  presentation: 'card',
-                  animation: 'slide_from_right',
-                }} 
-              />
+              <Stack.Screen name="auth" options={{ headerShown: false }} />
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
             </Stack>
           </NavigationThemeProvider>
         </AppFonts>

@@ -15,17 +15,20 @@ import AppColors from '../../constants/AppColors';
 interface AdCardProps {
   item: {
     id: string;
-    title: string;
-    price: string;
-    location: string;
+    title: string; // Document number (itemNumber)
+    ownerName: string; // Owner name
+    price: string; // Type (lost/found)
+    location: string; // Governorate
     image: any;
     date: string;
-    category: string;
+    category: string; // Document type
   };
   onPress?: () => void;
   hasImageError: boolean;
   onImageError: () => void;
   placeholderIcon: string;
+  appColors?: any;
+  isRTL?: boolean;
 }
 
 export default function AdCard({ 
@@ -33,11 +36,14 @@ export default function AdCard({
   onPress, 
   hasImageError, 
   onImageError, 
-  placeholderIcon 
+  placeholderIcon,
+  appColors: propAppColors,
+  isRTL: propIsRTL
 }: AdCardProps) {
   const { isDarkMode } = useTheme();
-  const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { t } = useTranslation();
+  const appColors = propAppColors || (isDarkMode ? AppColors.dark : AppColors.light);
+  const isRTL = propIsRTL !== undefined ? propIsRTL : RTL_LANGUAGES.includes(i18n.language);
 
   return (
     <TouchableOpacity 
@@ -70,6 +76,40 @@ export default function AdCard({
         styles.adInfo,
         { alignItems: isRTL ? 'flex-end' : 'flex-start' }
       ]}>
+        {/* First line: Owner name */}
+        <Text style={[
+          styles.adOwnerName,
+          { color: appColors.text },
+          { textAlign: isRTL ? 'right' : 'left' }
+        ]}>
+          {item.ownerName}
+        </Text>
+        
+        {/* Second line: Document type & status */}
+        <View style={[
+          styles.typeContainer,
+          { flexDirection: isRTL ? 'row-reverse' : 'row' }
+        ]}>
+          <Text style={[
+            styles.adCategory,
+            { color: appColors.textSecondary },
+            { textAlign: isRTL ? 'right' : 'left' }
+          ]}>
+            {t(item.category)}
+          </Text>
+          <Text style={[
+            styles.adPrice,
+            { 
+              color: item.price.includes('مفقود') ? appColors.error : '#27ae60',
+              marginRight: isRTL ? 8 : 0,
+              marginLeft: isRTL ? 0 : 8,
+            }
+          ]}>
+            {item.price}
+          </Text>
+        </View>
+        
+        {/* Third line: Document number */}
         <Text style={[
           styles.adTitle,
           { color: appColors.text },
@@ -77,13 +117,8 @@ export default function AdCard({
         ]}>
           {item.title}
         </Text>
-        <Text style={[
-          styles.adPrice,
-          { color: appColors.primary },
-          { textAlign: isRTL ? 'right' : 'left' }
-        ]}>
-          {item.price}
-        </Text>
+        
+        {/* Fourth line: Location and date */}
         <View style={[
           styles.adDetails,
           { flexDirection: isRTL ? 'row-reverse' : 'row' }
@@ -137,15 +172,30 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
   },
-  adTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  adPrice: {
+  adOwnerName: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
+    fontFamily: 'Cairo-Bold',
+  },
+  typeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  adCategory: {
+    fontSize: 14,
+    fontFamily: 'Cairo-Medium',
+  },
+  adTitle: {
+    fontSize: 14,
+    marginBottom: 6,
+    fontFamily: 'Cairo-Regular',
+  },
+  adPrice: {
+    fontSize: 14,
+    fontWeight: '500',
+    fontFamily: 'Cairo-Medium',
   },
   adDetails: {
     flexDirection: 'row',
@@ -159,8 +209,10 @@ const styles = StyleSheet.create({
   adLocationText: {
     fontSize: 12,
     marginLeft: 4,
+    fontFamily: 'Cairo-Regular',
   },
   adDate: {
     fontSize: 12,
+    fontFamily: 'Cairo-Regular',
   },
 }); 

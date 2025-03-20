@@ -24,8 +24,9 @@ import { useTranslation } from 'react-i18next';
 import { RTL_LANGUAGES } from '../i18n';
 import i18n from '../i18n';
 import CustomPhoneInput from '../components/CustomPhoneInput';
-import { authAPI } from '../services/authAPI';
+import { authAPI } from '../services/api';
 import Button from '../components/Button';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -105,52 +106,43 @@ export default function RegisterScreen() {
   };
 
   const handleSendOTP = async () => {
-    if (!isPhoneValid) {
-      Alert.alert(t('error'), t('pleaseEnterValidPhone'));
-      return;
-    }
+    // تعطيل الزر أثناء التحميل
+    if (loading) return;
     
     try {
-      setLoading(true);
+      // اهتزاز تنبيهي للضغط
+      Vibration.vibrate(50);
       
-      // إضافة تأخير قصير لتحسين تجربة المستخدم
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // تجربة في وضع التطوير
-      const devMode = true;
-      
-      if (devMode) {
-        console.log('DEV MODE: Simulating OTP send');
-        
-        // انتقل إلى شاشة التحقق من رمز التحقق
-        router.push({
-          pathname: '/auth/verify-otp',
-          params: { phoneNumber }
-        });
-        
+      // فحص صحة رقم الهاتف
+      if (!validatePhoneNumber(formattedPhoneNumber)) {
+        Alert.alert(t('error'), t('auth.pleaseEnterValidPhoneNumber'));
         return;
       }
       
-      const response = await authAPI.sendOTP(phoneNumber);
+      setLoading(true);
       
-      if (response.success) {
-        router.push({
-          pathname: '/auth/verify-otp',
-          params: { phoneNumber }
-        });
-      } else {
-        Alert.alert(t('error'), response.message || 'فشل إرسال رمز التحقق');
-      }
-    } catch (error: any) {
-      console.error('Error sending OTP:', error);
+      // طلب إرسال رمز التحقق
+      console.log('Sending OTP to:', formattedPhoneNumber);
+      const response = await authAPI.sendOTP(formattedPhoneNumber);
       
-      let errorMessage = 'فشل إرسال رمز التحقق';
-      
-      if (error.message && error.message.includes('Network request failed')) {
-        errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت الخاص بك أو المحاولة لاحقًا.';
+      if (!response.success) {
+        Alert.alert(t('error'), response.message || t('auth.otpSendFailed'));
+        return;
       }
       
-      Alert.alert(t('error'), errorMessage);
+      console.log('OTP sent successfully');
+      
+      // حفظ رقم الهاتف مؤقتًا
+      await AsyncStorage.setItem('tempPhoneNumber', formattedPhoneNumber);
+      
+      // الانتقال إلى صفحة التحقق من الرمز
+      router.push({
+        pathname: '/auth/verify-otp',
+        params: { phoneNumber: formattedPhoneNumber }
+      });
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      Alert.alert(t('error'), t('auth.otpSendFailed'));
     } finally {
       setLoading(false);
     }
@@ -223,17 +215,14 @@ export default function RegisterScreen() {
               
               <CustomPhoneInput
                 value={phoneNumber}
-                onChangeText={(text) => setPhoneNumber(text)}
+                onChangeText={setPhoneNumber}
+                onChangeFormattedText={setFormattedPhoneNumber}
                 onValidityChange={setIsPhoneValid}
-                containerStyle={[
-                  styles.phoneInputContainer,
-                  { backgroundColor: appColors.secondary }
-                ]}
-                textStyle={{ color: appColors.text, fontFamily: 'Cairo-Regular' }}
-                placeholderTextColor={appColors.textSecondary}
+                placeholder={t('enterPhoneNumber')}
+                containerStyle={styles.phoneInputContainer}
+                textStyle={{ fontFamily: 'Cairo-Regular' }}
                 isRTL={isRTL}
                 defaultCode="IQ"
-                placeholder={t('enterPhoneNumber')}
               />
               
               <TouchableOpacity
