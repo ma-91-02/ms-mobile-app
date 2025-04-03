@@ -5,6 +5,7 @@ export interface User {
   role: string;
   firstName: string;
   lastName: string;
+  fullName: string;
   profileImage?: string;
   createdAt?: string;
   updatedAt?: string;

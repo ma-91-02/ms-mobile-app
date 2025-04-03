@@ -232,26 +232,6 @@ export default function Settings() {
   // تعريف عناصر الإعدادات
   const settingsItems = [
     {
-      title: t('account_settings', { ns: 'common' }),
-      items: [
-        {
-          icon: 'person-outline',
-          title: t('account_information', { ns: 'common' }),
-          onPress: () => router.push('/account-info' as any),
-        },
-        {
-          icon: 'lock-closed-outline',
-          title: t('change_password', { ns: 'common' }),
-          onPress: () => router.push('/change-password' as any),
-        },
-        {
-          icon: 'notifications-outline',
-          title: t('notification_preferences', { ns: 'common' }),
-          onPress: () => router.push('/notification-preferences' as any),
-        },
-      ],
-    },
-    {
       title: t('app_settings', { ns: 'common' }),
       items: [
         {
@@ -317,7 +297,7 @@ export default function Settings() {
       items: [
         {
           icon: 'information-circle-outline',
-          title: t('about_app', { ns: 'common' }),
+          title: t('about', { ns: 'common' }),
           onPress: () => router.push('/about-app' as any),
         },
         {

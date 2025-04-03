@@ -17,11 +17,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import AppColors from '../../constants/AppColors';
 import { authAPI } from '../services/api';
+import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
+  const { t } = useTranslation();
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');

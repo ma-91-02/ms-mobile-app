@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, StatusBar, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,9 @@ import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
 import { User } from '../types/auth';
+import { adsAPI } from '../services/api';
+import { API_BASE_URL } from '../services/api';
+import { useFocusEffect } from '@react-navigation/native';
 
 // مكون عنصر القائمة
 interface ProfileMenuItemProps {
@@ -67,11 +70,12 @@ export default function ProfileScreen() {
   const [userData, setUserData] = useState<User | null>(null);
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
   const [isLoading, setIsLoading] = useState(true);
+  const [userStats, setUserStats] = useState({ adsCount: 0 });
   
   // استخدام ألوان التطبيق الجديدة
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   
-  // Check if user is logged in
+  // Check if user is logged in and load stats
   useEffect(() => {
     checkLoginStatus();
   }, []);
@@ -84,6 +88,8 @@ export default function ProfileScreen() {
       if (userToken && storedUserData) {
         setIsLoggedIn(true);
         setUserData(JSON.parse(storedUserData));
+        // تحميل إحصائيات المستخدم
+        await loadUserStats();
       } else {
         setIsLoggedIn(false);
         setUserData(null);
@@ -95,6 +101,34 @@ export default function ProfileScreen() {
       Alert.alert('خطأ', 'حدث خطأ أثناء تحميل بيانات المستخدم');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // تحميل إحصائيات المستخدم
+  const loadUserStats = async () => {
+    try {
+      // جلب إعلانات المستخدم
+      const myAdsResponse = await adsAPI.getMyAds();
+      console.log('My ads response:', JSON.stringify(myAdsResponse));
+      
+      if (myAdsResponse.success && myAdsResponse.data) {
+        setUserStats(prev => ({
+          ...prev,
+          adsCount: myAdsResponse.data.length
+        }));
+      } else {
+        console.warn('Failed to load my ads:', myAdsResponse.message);
+        setUserStats(prev => ({
+          ...prev,
+          adsCount: 0
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+      setUserStats(prev => ({
+        ...prev,
+        adsCount: 0
+      }));
     }
   };
 
@@ -122,11 +156,61 @@ export default function ProfileScreen() {
 
   // Navigate to specific screens
   const navigateTo = (screen: string) => {
-    // For demo purposes, just show an alert
-    Alert.alert('Navigation', `Navigate to ${screen}`);
-    // In a real app, you would navigate to the screen
-    // router.push(`/${screen}`);
+    switch (screen) {
+      case 'edit-profile':
+        router.push('/auth/edit-profile' as any);
+        break;
+      case 'edit-profile-image':
+        router.push('/auth/edit-profile-image' as any);
+        break;
+      case 'my-ads':
+        router.push({
+          pathname: '/ad-details' as any,
+          params: { type: 'my-ads' }
+        });
+        break;
+      case 'favorites':
+        router.push({
+          pathname: '/ad-details' as any,
+          params: { type: 'favorites' }
+        });
+        break;
+      default:
+        // For other screens, just show an alert
+        Alert.alert('Navigation', `Navigate to ${screen}`);
+    }
   };
+
+  const renderStats = () => (
+    <View style={styles.statsContainer}>
+      <View style={styles.statItem}>
+        <Text style={[styles.statValue, { color: appColors.text }]}>{userStats.adsCount}</Text>
+        <Text style={[styles.statLabel, { color: appColors.textSecondary }]}>{t('myAds')}</Text>
+      </View>
+    </View>
+  );
+
+  // تحميل بيانات المستخدم عند التركيز على الشاشة
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadUserData = async () => {
+        try {
+          const storedUserData = await AsyncStorage.getItem('userData');
+          if (storedUserData) {
+            const user = JSON.parse(storedUserData);
+            setUserData(user);
+            console.log('Stored User Data:', user);
+            console.log('Profile Image Path:', user.profileImage);
+            console.log('Full Image URL:', `${API_BASE_URL}/uploads/${user.profileImage}`);
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        }
+      };
+
+      loadUserData();
+    }, [])
+  );
 
   if (isLoading) {
     return (
@@ -182,7 +266,7 @@ export default function ProfileScreen() {
         <View style={[styles.header, { backgroundColor: appColors.primary }]}>
           <View style={styles.profileImageContainer}>
             <Image
-              source={{ uri: userData?.profileImage || 'https://via.placeholder.com/150' }}
+              source={{ uri: userData?.profileImage ? `${API_BASE_URL}/uploads/${userData.profileImage}` : 'https://via.placeholder.com/150' }}
               style={styles.profileImage}
             />
             <TouchableOpacity 
@@ -193,10 +277,10 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
           <Text style={[styles.userName, { color: appColors.white, fontFamily: 'Cairo-Bold' }]}>
-            {userData?.firstName} {userData?.lastName}
+            {userData?.fullName} {userData?.lastName}
           </Text>
           <Text style={[styles.userInfo, { color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Cairo-Regular' }]}>
-            {userData?.email}
+            {userData?.email || t('no_email', { ns: 'common' })}
           </Text>
           <Text style={[styles.userInfo, { color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Cairo-Regular', marginBottom: 16 }]}>
             {userData?.phoneNumber}
@@ -212,28 +296,7 @@ export default function ProfileScreen() {
         </View>
         
         {/* قسم الإحصائيات */}
-        <View style={[styles.statsContainer, { backgroundColor: appColors.card }]}>
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: appColors.primary, fontFamily: 'Cairo-Bold' }]}>12</Text>
-            <Text style={[styles.statLabel, { color: appColors.textSecondary, fontFamily: 'Cairo-Regular' }]}>
-              {t('myAds', { ns: 'common' })}
-            </Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: appColors.border }]} />
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: appColors.primary, fontFamily: 'Cairo-Bold' }]}>8</Text>
-            <Text style={[styles.statLabel, { color: appColors.textSecondary, fontFamily: 'Cairo-Regular' }]}>
-              {t('favorites', { ns: 'common' })}
-            </Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: appColors.border }]} />
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: appColors.primary, fontFamily: 'Cairo-Bold' }]}>5</Text>
-            <Text style={[styles.statLabel, { color: appColors.textSecondary, fontFamily: 'Cairo-Regular' }]}>
-              {t('messages', { ns: 'common' })}
-            </Text>
-          </View>
-        </View>
+        {renderStats()}
 
         {/* قائمة خيارات الملف الشخصي */}
         <View style={styles.menuSection}>
@@ -253,45 +316,6 @@ export default function ProfileScreen() {
               icon="heart-outline"
               title={t('favorites', { ns: 'common' })}
               onPress={() => navigateTo('favorites')}
-              appColors={appColors}
-              isRTL={isRTL}
-            />
-            <View style={[styles.menuDivider, { backgroundColor: appColors.border }]} />
-            <ProfileMenuItem
-              icon="chatbubble-outline"
-              title={t('messages', { ns: 'common' })}
-              onPress={() => navigateTo('messages')}
-              appColors={appColors}
-              isRTL={isRTL}
-            />
-          </View>
-        </View>
-        
-        <View style={styles.menuSection}>
-          <Text style={[styles.sectionTitle, { color: appColors.text, fontFamily: 'Cairo-Bold' }]}>
-            {t('settings', { ns: 'common' })}
-          </Text>
-          <View style={[styles.menuContainer, { backgroundColor: appColors.card }]}>
-            <ProfileMenuItem
-              icon="notifications-outline"
-              title={t('notifications', { ns: 'common' })}
-              onPress={() => navigateTo('notifications')}
-              appColors={appColors}
-              isRTL={isRTL}
-            />
-            <View style={[styles.menuDivider, { backgroundColor: appColors.border }]} />
-            <ProfileMenuItem
-              icon="shield-outline"
-              title={t('privacy_settings', { ns: 'common' })}
-              onPress={() => navigateTo('privacy-settings')}
-              appColors={appColors}
-              isRTL={isRTL}
-            />
-            <View style={[styles.menuDivider, { backgroundColor: appColors.border }]} />
-            <ProfileMenuItem
-              icon="help-circle-outline"
-              title={t('help_support', { ns: 'common' })}
-              onPress={() => navigateTo('help-support')}
               appColors={appColors}
               isRTL={isRTL}
             />
@@ -445,18 +469,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  statNumber: {
+  statValue: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-  },
-  statDivider: {
-    width: 1,
-    height: '70%',
-    alignSelf: 'center',
   },
   
   // Section Styles

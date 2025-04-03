@@ -5,7 +5,7 @@ import { LoginRequest, LoginResponse } from '../types/auth';
 
 // تعريف عنوان API الأساسي
 // استخدام عنوان مناسب حسب البيئة
-const API_BASE_URL = Platform.OS === 'web' 
+export const API_BASE_URL = Platform.OS === 'web' 
   ? 'http://localhost:3001' 
   : Platform.OS === 'android'
     ? 'http://10.0.2.2:3001' // للمحاكي في Android
@@ -282,6 +282,151 @@ export const authAPI = {
       throw error;
     }
   },
+  
+  // تحديث الملف الشخصي
+  async updateProfile(userData: {
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phoneNumber: string;
+  }): Promise<ApiResponse> {
+    try {
+      console.log('Updating profile with data:', userData);
+      
+      // التحقق من وجود رمز المصادقة
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        console.warn('No authentication token found before updating profile');
+        return {
+          success: false,
+          message: 'لم يتم العثور على رمز المصادقة. يرجى تسجيل الدخول مرة أخرى.'
+        };
+      }
+      
+      // إعداد رأس الطلب
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+      
+      // تحويل البيانات لتتوافق مع توقعات الخادم
+      const dataToSend = {
+        fullName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phoneNumber: userData.phoneNumber
+      };
+      
+      const response = await api.put('/api/mobile/auth/profile', dataToSend, { headers });
+      console.log('Update profile response:', response.data);
+      
+      const data = response.data;
+      
+      if (data.success && data.user) {
+        // تحويل البيانات المستلمة لتتوافق مع توقعات التطبيق
+        const updatedUser = {
+          ...data.user,
+          firstName: data.user.fullName,
+          lastName: data.user.lastName || ''
+        };
+        
+        // تحديث بيانات المستخدم في التخزين المحلي
+        await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+      }
+      
+      return data;
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      
+      if (error.message === 'Network Error') {
+        return {
+          success: false,
+          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+        };
+      }
+      
+      const serverErrorMessage = error.response?.data?.message;
+      return {
+        success: false,
+        message: serverErrorMessage || 'حدث خطأ أثناء تحديث الملف الشخصي',
+      };
+    }
+  },
+  
+  // رفع صورة الملف الشخصي
+  async uploadProfileImage(imageUri: string, onProgress?: (progress: number) => void): Promise<ApiResponse> {
+    try {
+      console.log('بدء رفع الصورة:', imageUri);
+      
+      const formData = new FormData();
+      formData.append('image', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'profile-image.jpg'
+      } as any);
+
+      const response = await api.post(
+        '/api/mobile/auth/upload-profile-image',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${await AsyncStorage.getItem('userToken')}`
+          },
+          timeout: 30000,
+          transformRequest: (data) => {
+            return data instanceof FormData ? data : JSON.stringify(data);
+          },
+          maxBodyLength: 5 * 1024 * 1024,
+          maxContentLength: 5 * 1024 * 1024,
+          onUploadProgress: (progressEvent) => {
+            if (onProgress && progressEvent.total) {
+              const progress = (progressEvent.loaded / progressEvent.total) * 100;
+              onProgress(progress);
+            }
+          }
+        }
+      );
+
+      console.log('استجابة رفع الصورة:', response.data);
+
+      if (response.data.success) {
+        // تحديث بيانات المستخدم في التخزين المحلي
+        const userDataString = await AsyncStorage.getItem('userData');
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          userData.profileImage = response.data.data.profileImage;
+          await AsyncStorage.setItem('userData', JSON.stringify(userData));
+        }
+
+        return {
+          success: true,
+          message: response.data.message,
+          data: {
+            profileImage: response.data.data.profileImage,
+            user: response.data.data.user
+          }
+        };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || 'حدث خطأ أثناء رفع الصورة'
+      };
+    } catch (error: any) {
+      console.error('خطأ في رفع الصورة:', error);
+      if (error.response?.data?.message) {
+        return {
+          success: false,
+          message: error.response.data.message
+        };
+      }
+      return {
+        success: false,
+        message: 'حدث خطأ في الاتصال بالخادم'
+      };
+    }
+  },
 };
 
 // خدمة API للإعلانات
@@ -550,16 +695,21 @@ export const adsAPI = {
       // تحويل معرف الفئة إلى اسم الفئة حسب القيمة المتوقعة من الخادم
       const categoryMap: {[key: string]: string} = {
         '1': 'passport',
-        '2': 'nationalID', 
-        '3': 'drivingLicense',
-        '4': 'otherDocuments'
+        '2': 'national_id', 
+        '3': 'driving_license',
+        '4': 'other'
       };
       
       // تجهيز البيانات للإرسال
       const dataToSend = {
         ...adData,
         // إذا كان معرف الفئة موجود في القائمة، استخدم الاسم المقابل له
-        category: categoryMap[adData.category] || adData.category
+        category: categoryMap[adData.category] || adData.category,
+        // تأكد من أن الموقع في التنسيق الصحيح
+        location: adData.location || {
+          type: 'Point',
+          coordinates: [0, 0] // إحداثيات افتراضية
+        }
       };
       
       console.log('Data being sent to server:', JSON.stringify(dataToSend));
@@ -625,7 +775,15 @@ export const adsAPI = {
     try {
       console.log('Fetching user ads with params:', params);
       
-      const response = await api.get('/api/mobile/ads/user', { params });
+      const response = await api.get('/api/mobile/ads/user/ads', { params });
+      console.log('User ads response:', response.data);
+      
+      // التأكد من أن البيانات هي مصفوفة
+      if (response.data.success && !Array.isArray(response.data.data)) {
+        console.warn('User ads data is not an array:', response.data.data);
+        response.data.data = [];
+      }
+      
       return response.data;
     } catch (error: any) {
       console.error('Error fetching user ads:', error);
@@ -693,7 +851,7 @@ export const adsAPI = {
         message: serverErrorMessage || 'حدث خطأ أثناء حذف الإعلان',
       };
     }
-  }
+  },
 };
 
 // تصدير مثيل axios

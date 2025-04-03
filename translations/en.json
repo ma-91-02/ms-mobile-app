@@ -1,7 +1,7 @@
 {
   "common": {
     "languageSelection": "Language Selection",
-    "welcome": "Welcome to MS-Mobile App",
+    "welcome": "Welcome to Mustamaskaati App",
     "continue": "Continue",
     "changeLanguage": "Change Language",
     "arabic": "Arabic",
@@ -61,6 +61,33 @@
     "reset_language": "Resetting language...",
     "reset_success": "Language reset successfully",
     "reset_error": "Error resetting language",
+    "allAds": "All Ads",
+    "search_by_name_or_doc_number": "Search by name or document number",
+    "all": "All",
+    "lost": "Lost",
+    "found": "Found",
+    "allIraq": "All Iraqi Provinces",
+    "postAd": "Post Ad",
+    "loading_more": "Loading more...",
+    "selectProvince": "Select Province",
+    "lostItem": "Lost Document",
+    "foundItem": "Found Document",
+    "documents": {
+      "passport": "Passport",
+      "nationalID": "National ID",
+      "drivingLicense": "Driving License",
+      "otherDocuments": "Other Documents"
+    },
+    "cities": {
+      "baghdad": "Baghdad",
+      "basra": "Basra",
+      "erbil": "Erbil",
+      "sulaymaniyah": "Sulaymaniyah",
+      "najaf": "Najaf",
+      "karbala": "Karbala",
+      "duhok": "Duhok",
+      "kirkuk": "Kirkuk"
+    },
     "categories": {
       "electronics": "Electronics",
       "vehicles": "Vehicles",
@@ -71,98 +98,28 @@
       "fashion": "Fashion",
       "others": "Others"
     },
-    "cities": {
-      "erbil": "Erbil",
-      "sulaymaniyah": "Sulaymaniyah",
-      "duhok": "Duhok",
-      "baghdad": "Baghdad",
-      "basra": "Basra",
-      "najaf": "Najaf",
-      "karbala": "Karbala",
-      "kirkuk": "Kirkuk"
-    },
     "sort_options": {
-      "newest": "Newest First",
-      "oldest": "Oldest First",
+      "newest": "Newest",
+      "oldest": "Oldest",
       "price_low_high": "Price: Low to High",
       "price_high_low": "Price: High to Low",
       "most_viewed": "Most Viewed"
     },
-    "login": "Login",
-    "register": "Register",
-    "logout": "Logout",
-    "profile": "Profile",
-    "settings": "Settings",
-    "home": "Home",
-    "search": "Search",
-    "categories": "Categories",
-    "myAds": "My Ads",
-    "favorites": "Favorites",
-    "messages": "Messages",
-    "notifications": "Notifications",
-    "edit": "Edit",
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "confirm": "Confirm",
-    "yes": "Yes",
-    "no": "No",
-    "ok": "OK",
-    "done": "Done",
-    "loading": "Loading...",
-    "error": "Error",
-    "success": "Success",
-    "warning": "Warning",
-    "info": "Info",
-    "about": "About",
-    "language": "Language",
-    "theme": "Theme",
-    "dark_mode": "Dark Mode",
-    "light_mode": "Light Mode",
-    "login_required": "Login Required",
-    "please_login_to_view_profile": "Please log in to view your profile and manage your ads",
-    "privacy_settings": "Privacy Settings",
-    "help_support": "Help & Support",
-    "reset_language": "Resetting language...",
-    "reset_success": "Language reset successfully",
-    "reset_error": "Error resetting language",
-    "reload_translations": "Reload Translations",
-    "account_settings": "Account Settings",
-    "account_information": "Account Information",
-    "change_password": "Change Password",
-    "notification_preferences": "Notification Preferences",
-    "app_settings": "App Settings",
-    "enable_notifications": "Enable Notifications",
-    "location_services": "Location Services",
-    "about_app": "About App",
-    "privacy_policy": "Privacy Policy",
-    "terms_of_service": "Terms of Service",
-    "contact_us": "Contact Us",
-    "rate_app": "Rate App",
-    "version": "Version",
-    "filter": "Filter",
-    "sort": "Sort",
-    "filter_options": "Filter Options",
-    "sort_options": "Sort Options",
-    "price_range": "Price Range",
-    "min": "Min",
-    "max": "Max",
-    "city": "City",
-    "reset": "Reset",
-    "apply": "Apply",
-    "post_ad": "Post Ad",
-    "no_ads_found": "No ads found",
-    "try_different_search": "Try a different search or change your filter criteria",
-    "allAds": "All Ads",
-    "allIraq": "All Iraqi Provinces",
-    "passport": "Passport",
-    "nationalID": "National ID",
-    "drivingLicense": "Driving License",
-    "otherDocuments": "Other Documents"
+    "provinces": {
+      "baghdad": "Baghdad",
+      "basra": "Basra",
+      "erbil": "Erbil",
+      "sulaymaniyah": "Sulaymaniyah",
+      "najaf": "Najaf",
+      "karbala": "Karbala",
+      "duhok": "Duhok",
+      "kirkuk": "Kirkuk"
+    },
+    "selectCountry": "Select Country"
   },
   "tabs": {
-    "home": "Ads",
-    "two": "Second",
+    "home": "Home",
+    "profile": "Profile",
     "settings": "Settings"
   },
   "langSelect": {
@@ -192,5 +149,145 @@
     "sulaymaniyah": "Sulaymaniyah",
     "duhok": "Duhok",
     "kirkuk": "Kirkuk"
+  },
+  "about": {
+    "title": "About App",
+    "description": "Mustamaskaati is an integrated platform for managing lost and found documents in Iraq. We aim to facilitate the process of searching for lost documents and connecting them with their owners.",
+    "mission": "Our Mission",
+    "missionText": "We strive to provide an effective solution for the problem of lost documents in Iraq by creating an easy-to-use platform that enables citizens to add and search for lost documents easily.",
+    "features": "App Features",
+    "feature1": "Quick and efficient search for lost documents",
+    "feature2": "Easy addition and management of lost documents",
+    "feature3": "Instant notifications when a matching document is found",
+    "feature4": "Direct communication between document owner and finder",
+    "version": "Version 1.0.0",
+    "developedBy": "Developed by Mustamaskaati Team",
+    "copyright": "All rights reserved © 2024"
+  },
+  "help": {
+    "title": "Help & Support",
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "How can I add a lost document?",
+      "a1": "You can add a lost document by pressing the + button on the home screen and filling out the form with the required information.",
+      "q2": "How can I search for a document?",
+      "a2": "You can use the search feature on the home screen and enter the document number or owner's name.",
+      "q3": "How can I contact the document owner?",
+      "a3": "You can contact the document owner through the phone number provided in the document details."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "email": "Email: support@mustamaskaati.com",
+      "phone": "Phone: +964 XXX XXX XXXX"
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last Updated: March 1, 2024",
+    "sections": {
+      "dataCollection": {
+        "title": "Data Collection",
+        "content": "We only collect necessary personal data to operate the app and provide required services."
+      },
+      "dataUsage": {
+        "title": "Data Usage",
+        "content": "We use your data only for managing documents and facilitating the search and connection process."
+      },
+      "dataProtection": {
+        "title": "Data Protection",
+        "content": "We are committed to protecting your personal data and use the latest technologies to secure it."
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last Updated: March 1, 2024",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "content": "By using the app, you agree to comply with these terms."
+      },
+      "userObligations": {
+        "title": "User Obligations",
+        "content": "Users must provide accurate and true information when using the app."
+      },
+      "serviceModification": {
+        "title": "Service Modification",
+        "content": "The app reserves the right to modify or discontinue the service at any time."
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "We're here to help. You can reach us through:",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "workingHours": "Working Hours",
+    "socialMedia": "Social Media",
+    "form": {
+      "title": "Send us a Message",
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "send": "Send"
+    }
+  },
+  "rate": {
+    "title": "Rate App",
+    "description": "We'd love to hear your feedback about the app. Your rating helps us improve.",
+    "rateNow": "Rate Now",
+    "thankYou": "Thank you for your rating!",
+    "later": "Maybe Later"
+  },
+  "auth": {
+    "loginFailed": "Login failed. Please check your phone number and password.",
+    "loginFailedNoToken": "Login failed: No authentication token received from server.",
+    "invalidPhoneNumber": "Invalid phone number",
+    "invalidPassword": "Password must be at least 6 characters",
+    "otpSendFailed": "Failed to send verification code. Please try again.",
+    "phoneNumber": "Phone Number",
+    "createAccount": "Create Account",
+    "enterPhoneToRegister": "Enter your phone number to register",
+    "enterPhoneNumber": "Enter phone number",
+    "sendVerificationCode": "Send Verification Code",
+    "alreadyHaveAccount": "Already have an account?",
+    "completeProfile": "Complete Profile",
+    "completeProfileInfo": "Please fill in the following information to complete your profile",
+    "firstName": "First Name",
+    "enterFirstName": "Enter first name",
+    "lastName": "Last Name",
+    "enterLastName": "Enter last name",
+    "email": "Email",
+    "enterEmail": "Enter email",
+    "password": "Password",
+    "enterPassword": "Enter password",
+    "confirmPassword": "Confirm Password",
+    "reEnterPassword": "Re-enter password",
+    "completeRegistration": "Complete Registration",
+    "registrationDisclaimer": "By registering, you agree to our Terms of Service and Privacy Policy",
+    "phoneExample": "Example: +9647XXXXXXXX",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "registerNow": "Register Now",
+    "enterPhoneAndPassword": "Please enter your phone number and password"
+  },
+  "profile": {
+    "edit_profile": "Edit Profile",
+    "first_name": "First Name",
+    "enter_first_name": "Enter first name",
+    "last_name": "Last Name",
+    "enter_last_name": "Enter last name",
+    "email": "Email",
+    "enter_email": "Enter email",
+    "optional": "Optional",
+    "phone": "Phone",
+    "enter_phone": "Enter phone number",
+    "phone_will_be_verified": "Phone number will be verified",
+    "edit_profile_image": "Edit Profile Image",
+    "no_image": "No Image",
+    "choose_from_gallery": "Choose from Gallery",
+    "take_photo": "Take Photo",
+    "my_account": "My Account"
   }
 } 

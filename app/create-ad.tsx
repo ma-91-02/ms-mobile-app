@@ -122,17 +122,24 @@ export default function CreateAdScreen() {
             setLoading(true);
             
             try {
+              // تحويل معرف الفئة إلى اسم الفئة
+              const categoryMap: {[key: string]: string} = {
+                '1': 'passport',
+                '2': 'national_id',
+                '3': 'driving_license',
+                '4': 'other'
+              };
+              
               // تجهيز بيانات الإعلان
               const adData = {
                 type: adType,
-                category,
+                category: categoryMap[category] || category,
                 governorate: province,
                 ownerName,
                 itemNumber,
                 description,
                 contactPhone,
                 hideContactInfo,
-                // إضافة موقع افتراضي بناءً على المحافظة (يمكن تحسين هذا لاحقًا)
                 location: {
                   type: "Point",
                   coordinates: getCoordinatesForProvince(province)
