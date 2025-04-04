@@ -50,7 +50,7 @@ export default function CompleteProfileScreen() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const { t } = useTranslation();
+  const { t } = useTranslation(['auth', 'common']);
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
   const params = useLocalSearchParams();
   
@@ -107,13 +107,13 @@ export default function CompleteProfileScreen() {
   
   const validateFullName = (name: string) => {
     if (!name.trim()) {
-      setFullNameError(t('pleaseEnterFirstName'));
+      setFullNameError(t('pleaseEnterFirstName', { ns: 'auth' }));
       setFullNameSuccess(false);
       return false;
     }
     
     if (name.trim().length < 2) {
-      setFullNameError(t('firstNameTooShort'));
+      setFullNameError(t('firstNameTooShort', { ns: 'auth' }));
       setFullNameSuccess(false);
       return false;
     }
@@ -125,13 +125,13 @@ export default function CompleteProfileScreen() {
   
   const validateLastName = (name: string) => {
     if (!name.trim()) {
-      setLastNameError(t('pleaseEnterLastName'));
+      setLastNameError(t('pleaseEnterLastName', { ns: 'auth' }));
       setLastNameSuccess(false);
       return false;
     }
     
     if (name.trim().length < 2) {
-      setLastNameError(t('lastNameTooShort'));
+      setLastNameError(t('lastNameTooShort', { ns: 'auth' }));
       setLastNameSuccess(false);
       return false;
     }
@@ -150,7 +150,7 @@ export default function CompleteProfileScreen() {
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailError(t('invalidEmail'));
+      setEmailError(t('invalidEmail', { ns: 'auth' }));
       setEmailSuccess(false);
       return false;
     }
@@ -162,13 +162,13 @@ export default function CompleteProfileScreen() {
   
   const validatePassword = (password: string) => {
     if (!password) {
-      setPasswordError(t('pleaseEnterPassword'));
+      setPasswordError(t('pleaseEnterPassword', { ns: 'auth' }));
       setPasswordSuccess(false);
       return false;
     }
     
     if (password.length < 6) {
-      setPasswordError(t('passwordTooShort'));
+      setPasswordError(t('passwordTooShort', { ns: 'auth' }));
       setPasswordSuccess(false);
       return false;
     }
@@ -180,13 +180,13 @@ export default function CompleteProfileScreen() {
   
   const validateConfirmPassword = (confirmPassword: string) => {
     if (!confirmPassword) {
-      setConfirmPasswordError(t('pleaseConfirmPassword'));
+      setConfirmPasswordError(t('pleaseConfirmPassword', { ns: 'auth' }));
       setConfirmPasswordSuccess(false);
       return false;
     }
     
     if (confirmPassword !== password) {
-      setConfirmPasswordError(t('passwordsDoNotMatch'));
+      setConfirmPasswordError(t('passwordsDoNotMatch', { ns: 'auth' }));
       setConfirmPasswordSuccess(false);
       return false;
     }
@@ -210,34 +210,34 @@ export default function CompleteProfileScreen() {
     try {
       // التحقق من الإدخال
       if (!fullName.trim()) {
-        Alert.alert(t('error'), t('auth.pleaseEnterFullName'));
+        Alert.alert(t('error', { ns: 'common' }), t('pleaseEnterFirstName', { ns: 'auth' }));
         return;
       }
       
       if (!lastName.trim()) {
-        Alert.alert(t('error'), t('auth.pleaseEnterLastName'));
+        Alert.alert(t('error', { ns: 'common' }), t('pleaseEnterLastName', { ns: 'auth' }));
         return;
       }
       
       if (password.length < 6) {
-        Alert.alert(t('error'), t('auth.passwordTooShort'));
+        Alert.alert(t('error', { ns: 'common' }), t('passwordTooShort', { ns: 'auth' }));
         return;
       }
       
       if (password !== confirmPassword) {
-        Alert.alert(t('error'), t('auth.passwordsDoNotMatch'));
+        Alert.alert(t('error', { ns: 'common' }), t('passwordsDoNotMatch', { ns: 'auth' }));
         return;
       }
       
       // إذا تم إدخال بريد إلكتروني، تحقق من صحته
       if (email.trim() && !validateEmail(email)) {
-        Alert.alert(t('error'), t('auth.invalidEmail'));
+        Alert.alert(t('error', { ns: 'common' }), t('invalidEmail', { ns: 'auth' }));
         return;
       }
       
       // اختيار تاريخ الميلاد إلزامي
       if (!birthDate) {
-        Alert.alert(t('error'), t('auth.pleaseSelectBirthDate'));
+        Alert.alert(t('error', { ns: 'common' }), t('pleaseSelectBirthDate', { ns: 'auth' }));
         return;
       }
       
@@ -260,7 +260,7 @@ export default function CompleteProfileScreen() {
       const response = await authAPI.completeRegistration(userData);
       
       if (!response.success) {
-        Alert.alert(t('error'), response.message || t('auth.registrationFailed'));
+        Alert.alert(t('error', { ns: 'common' }), response.message || t('registrationFailed', { ns: 'auth' }));
         setLoading(false);
         return;
       }
@@ -274,7 +274,7 @@ export default function CompleteProfileScreen() {
       router.replace('/(tabs)/ads');
     } catch (error: any) {
       console.error('Complete profile error:', error);
-      Alert.alert(t('error'), t('auth.registrationFailed'));
+      Alert.alert(t('error', { ns: 'common' }), t('registrationFailed', { ns: 'auth' }));
     } finally {
       setLoading(false);
     }
@@ -322,7 +322,7 @@ export default function CompleteProfileScreen() {
               { color: appColors.text },
               { textAlign: isRTL ? 'right' : 'left' }
             ]}>
-              {t('completeProfile')}
+              {t('completeProfile', { ns: 'auth' })}
             </Text>
             
             <Text style={[
@@ -330,18 +330,18 @@ export default function CompleteProfileScreen() {
               { color: appColors.textSecondary },
               { textAlign: isRTL ? 'right' : 'left' }
             ]}>
-              {t('completeProfileInfo')}
+              {t('completeProfileInfo', { ns: 'auth' })}
             </Text>
 
             <View style={styles.formContainer}>
               <Input
-                label={t('firstName') + ' *'}
+                label={t('firstName', { ns: 'auth' }) + ' *'}
                 value={fullName}
                 onChangeText={(text) => {
                   setFullName(text);
                   validateFullName(text);
                 }}
-                placeholder={t('enterFirstName')}
+                placeholder={t('enterFirstName', { ns: 'auth' })}
                 error={fullNameError}
                 success={fullNameSuccess}
                 autoCapitalize="words"
@@ -352,13 +352,13 @@ export default function CompleteProfileScreen() {
               />
               
               <Input
-                label={t('lastName') + ' *'}
+                label={t('lastName', { ns: 'auth' }) + ' *'}
                 value={lastName}
                 onChangeText={(text) => {
                   setLastName(text);
                   validateLastName(text);
                 }}
-                placeholder={t('enterLastName')}
+                placeholder={t('enterLastName', { ns: 'auth' })}
                 error={lastNameError}
                 success={lastNameSuccess}
                 autoCapitalize="words"
@@ -369,13 +369,13 @@ export default function CompleteProfileScreen() {
               />
               
               <Input
-                label={t('email')}
+                label={t('email', { ns: 'auth' })}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
                   validateEmail(text);
                 }}
-                placeholder={t('enterEmail')}
+                placeholder={t('enterEmail', { ns: 'auth' })}
                 error={emailError}
                 success={emailSuccess}
                 optional={true}
@@ -388,7 +388,7 @@ export default function CompleteProfileScreen() {
               />
               
               <Input
-                label={t('password') + ' *'}
+                label={t('password', { ns: 'auth' }) + ' *'}
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -397,7 +397,7 @@ export default function CompleteProfileScreen() {
                     validateConfirmPassword(confirmPassword);
                   }
                 }}
-                placeholder={t('enterPassword')}
+                placeholder={t('enterPassword', { ns: 'auth' })}
                 error={passwordError}
                 success={passwordSuccess}
                 secureTextEntry={true}
@@ -408,13 +408,13 @@ export default function CompleteProfileScreen() {
               />
               
               <Input
-                label={t('confirmPassword') + ' *'}
+                label={t('confirmPassword', { ns: 'auth' }) + ' *'}
                 value={confirmPassword}
                 onChangeText={(text) => {
                   setConfirmPassword(text);
                   validateConfirmPassword(text);
                 }}
-                placeholder={t('reEnterPassword')}
+                placeholder={t('reEnterPassword', { ns: 'auth' })}
                 error={confirmPasswordError}
                 success={confirmPasswordSuccess}
                 secureTextEntry={true}
@@ -425,7 +425,7 @@ export default function CompleteProfileScreen() {
               />
 
               <Button
-                title={t('completeRegistration')}
+                title={t('completeRegistration', { ns: 'auth' })}
                 onPress={handleSubmit}
                 loading={loading}
                 disabled={loading}
@@ -442,7 +442,7 @@ export default function CompleteProfileScreen() {
                 { textAlign: 'center' },
                 { marginTop: 16 }
               ]}>
-                {t('registrationDisclaimer')}
+                {t('registrationDisclaimer', { ns: 'auth' })}
               </Text>
             </View>
           </View>

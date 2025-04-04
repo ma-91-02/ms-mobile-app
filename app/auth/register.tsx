@@ -32,7 +32,7 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const { t } = useTranslation();
+  const { t } = useTranslation(['auth', 'common']);
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
 
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -115,18 +115,33 @@ export default function RegisterScreen() {
       
       // فحص صحة رقم الهاتف
       if (!validatePhoneNumber(formattedPhoneNumber)) {
-        Alert.alert(t('error'), t('auth.pleaseEnterValidPhoneNumber'));
+        Alert.alert(t('error', { ns: 'common' }), t('pleaseEnterValidPhoneNumber', { ns: 'auth' }));
         return;
       }
       
       setLoading(true);
       
-      // طلب إرسال رمز التحقق
+      // طلب إرسال رمز التحقق - مع تحديد أن هذه عملية تسجيل
       console.log('Sending OTP to:', formattedPhoneNumber);
-      const response = await authAPI.sendOTP(formattedPhoneNumber);
+      const response = await authAPI.sendOTP(formattedPhoneNumber, true);
       
       if (!response.success) {
-        Alert.alert(t('error'), response.message || t('auth.otpSendFailed'));
+        // التحقق مما إذا كان الخطأ بسبب وجود المستخدم بالفعل
+        if (response.userExists) {
+          Alert.alert(
+            t('accountExists', { ns: 'common' }),
+            t('accountAlreadyExists', { ns: 'common' }),
+            [
+              {
+                text: t('login', { ns: 'common' }),
+                onPress: () => router.replace('/auth/login')
+              }
+            ]
+          );
+          return;
+        }
+
+        Alert.alert(t('error', { ns: 'common' }), response.message || t('otpSendFailed', { ns: 'auth' }));
         return;
       }
       
@@ -142,7 +157,7 @@ export default function RegisterScreen() {
       });
     } catch (error) {
       console.error('Send OTP error:', error);
-      Alert.alert(t('error'), t('auth.otpSendFailed'));
+      Alert.alert(t('error', { ns: 'common' }), t('otpSendFailed', { ns: 'auth' }));
     } finally {
       setLoading(false);
     }
@@ -191,7 +206,7 @@ export default function RegisterScreen() {
               { textAlign: isRTL ? 'right' : 'left' },
               { fontFamily: 'Cairo-Bold' }
             ]}>
-              {t('createAccount')}
+              {t('createAccount', { ns: 'auth' })}
             </Text>
             
             <Text style={[
@@ -200,7 +215,7 @@ export default function RegisterScreen() {
               { textAlign: isRTL ? 'right' : 'left' },
               { fontFamily: 'Cairo-Regular' }
             ]}>
-              {t('enterPhoneToRegister')}
+              {t('enterPhoneToRegister', { ns: 'auth' })}
             </Text>
 
             <View style={styles.formContainer}>
@@ -210,7 +225,7 @@ export default function RegisterScreen() {
                 { textAlign: isRTL ? 'right' : 'left' },
                 { fontFamily: 'Cairo-Medium' }
               ]}>
-                {t('phoneNumber')}
+                {t('phoneNumber', { ns: 'auth' })}
               </Text>
               
               <CustomPhoneInput
@@ -218,7 +233,7 @@ export default function RegisterScreen() {
                 onChangeText={setPhoneNumber}
                 onChangeFormattedText={setFormattedPhoneNumber}
                 onValidityChange={setIsPhoneValid}
-                placeholder={t('enterPhoneNumber')}
+                placeholder={t('enterPhoneNumber', { ns: 'auth' })}
                 containerStyle={styles.phoneInputContainer}
                 textStyle={{ fontFamily: 'Cairo-Regular' }}
                 isRTL={isRTL}
@@ -246,7 +261,7 @@ export default function RegisterScreen() {
                       styles.buttonText,
                       { fontFamily: 'Cairo-Bold' }
                     ]}>
-                      {t('sendVerificationCode')}
+                      {t('sendVerificationCode', { ns: 'auth' })}
                     </Text>
                     <Ionicons 
                       name={isRTL ? "arrow-back" : "arrow-forward"} 
@@ -267,7 +282,7 @@ export default function RegisterScreen() {
                   { color: appColors.textSecondary },
                   { fontFamily: 'Cairo-Regular' }
                 ]}>
-                  {t('alreadyHaveAccount')}
+                  {t('alreadyHaveAccount', { ns: 'auth' })}
                 </Text>
                 <TouchableOpacity onPress={() => router.push('/auth/login')}>
                   <Text style={[
@@ -275,7 +290,7 @@ export default function RegisterScreen() {
                     { color: appColors.primary },
                     { fontFamily: 'Cairo-Bold' }
                   ]}>
-                    {t('login')}
+                    {t('login', { ns: 'auth' })}
                   </Text>
                 </TouchableOpacity>
               </View>

@@ -65,12 +65,49 @@ export default function AdDetails() {
         { 
           text: t('confirm'), 
           onPress: async () => {
-            // في المستقبل، يمكن إضافة استدعاء API لإرسال طلب التواصل
-            Alert.alert(
-              t('requestSent'),
-              t('requestSentMessage'),
-              [{ text: t('ok') }]
-            );
+            try {
+              // إرسال طلب التواصل إلى الخادم
+              const contactData = {
+                advertisementId: id as string,
+                reason: "أود التواصل مع صاحب الإعلان للاستفسار عن تفاصيل المستند المفقود"
+              };
+              
+              // عرض مؤشر التحميل
+              setLoading(true);
+              
+              // استدعاء واجهة برمجة التطبيق لإرسال طلب التواصل
+              const response = await adsAPI.sendContactRequest(contactData);
+              
+              // إخفاء مؤشر التحميل
+              setLoading(false);
+              
+              if (response.success) {
+                // عرض رسالة نجاح
+                Alert.alert(
+                  t('requestSent'),
+                  t('requestSentMessage'),
+                  [{ text: t('ok') }]
+                );
+              } else {
+                // عرض رسالة خطأ
+                Alert.alert(
+                  t('error'),
+                  response.message || t('errorContactingAdvertiser'),
+                  [{ text: t('ok') }]
+                );
+              }
+            } catch (error) {
+              // إخفاء مؤشر التحميل
+              setLoading(false);
+              
+              // عرض رسالة خطأ عامة
+              console.error('Error sending contact request:', error);
+              Alert.alert(
+                t('error'),
+                t('errorContactingAdvertiser'),
+                [{ text: t('ok') }]
+              );
+            }
           }
         }
       ]

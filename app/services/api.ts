@@ -10,6 +10,8 @@ export const API_BASE_URL = Platform.OS === 'web'
   : Platform.OS === 'android'
     ? 'http://10.0.2.2:3001' // للمحاكي في Android
     : 'http://localhost:3001'; // لأجهزة iOS
+    // تنبيه مهم: إذا كنت تستخدم جهازًا حقيقيًا (غير محاكي)، يجب استبدال العنوان بعنوان IP للخادم
+    // مثال: 'http://192.168.1.100:3001' أو 'https://api.yourserver.com'
 
 // تحقق من العنوان
 console.log('Using API URL:', API_BASE_URL);
@@ -24,13 +26,33 @@ const api = axios.create({
   }
 });
 
+// قائمة بالطرق (endpoints) التي لا تتطلب توكن مصادقة
+const publicEndpoints = [
+  '/api/mobile/auth/login',
+  '/api/mobile/auth/send-otp',
+  '/api/mobile/auth/verify-otp',
+  '/api/mobile/auth/complete-registration',
+  '/api/mobile/auth/reset-password-request',
+  '/api/mobile/auth/verify-reset-code',
+  '/api/mobile/auth/reset-password'
+];
+
 // إضافة معترض للطلبات لإضافة رمز المصادقة
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('userToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // التحقق مما إذا كان المسار من الطرق العامة التي لا تتطلب توكن
+    const isPublicEndpoint = publicEndpoints.some(endpoint => 
+      config.url?.includes(endpoint)
+    );
+    
+    // إذا كان المسار يتطلب توكن، نقوم بإضافته
+    if (!isPublicEndpoint) {
+      const token = await AsyncStorage.getItem('userToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+    
     return config;
   },
   (error) => {
@@ -46,6 +68,7 @@ interface ApiResponse<T = any> {
   token?: string;
   user?: any;
   isProfileComplete?: boolean;
+  userExists?: boolean;
 }
 
 // واجهة الإعلان
@@ -79,12 +102,12 @@ export interface Ad {
 // خدمة API للمصادقة
 export const authAPI = {
   // إرسال رمز التحقق OTP
-  async sendOTP(phoneNumber: string): Promise<ApiResponse> {
+  async sendOTP(phoneNumber: string, isRegistration: boolean = false): Promise<ApiResponse> {
     try {
-      console.log(`Sending OTP to ${phoneNumber}`);
+      console.log(`Sending OTP to ${phoneNumber}, isRegistration: ${isRegistration}`);
       console.log(`API URL: ${API_BASE_URL}/api/mobile/auth/send-otp`);
       
-      const response = await api.post('/api/mobile/auth/send-otp', { phoneNumber });
+      const response = await api.post('/api/mobile/auth/send-otp', { phoneNumber, isRegistration });
       console.log('Response data:', response.data);
       
       return response.data;
@@ -269,6 +292,258 @@ export const authAPI = {
       return {
         success: false,
         message: serverErrorMessage || 'حدث خطأ أثناء تسجيل الدخول',
+      };
+    }
+  },
+  
+  // استعادة كلمة المرور - إرسال طلب الاستعادة
+  async requestPasswordReset(phoneNumber: string): Promise<ApiResponse> {
+    try {
+      console.log(`Requesting password reset for phone number: ${phoneNumber}`);
+      
+      // التحقق من وجود رقم الهاتف
+      if (!phoneNumber) {
+        console.error('Missing phone number for password reset');
+        return {
+          success: false,
+          message: 'رقم الهاتف غير محدد',
+        };
+      }
+      
+      // تفعيل وضع التطوير مؤقتًا للتحقق من المشكلة
+      const devMode = false; // استخدام الخادم الحقيقي
+      
+      if (devMode) {
+        console.log('Using development mode for password reset request');
+        // تأخير وهمي للمحاكاة
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        return {
+          success: true,
+          message: 'تم إرسال رمز التحقق إلى رقم هاتفك',
+        };
+      }
+      
+      // طلب إعادة تعيين كلمة المرور من الخادم
+      console.log(`Sending API request to ${API_BASE_URL}/api/mobile/auth/reset-password-request`);
+      console.log('Request payload:', { phoneNumber });
+      
+      const response = await api.post('/api/mobile/auth/reset-password-request', { phoneNumber });
+      console.log('Password reset request response status:', response.status);
+      console.log('Password reset request response data:', response.data);
+      
+      // تحقق من استجابة API
+      if (!response.data) {
+        console.error('Empty response data from server');
+        return {
+          success: false,
+          message: 'استجابة فارغة من الخادم',
+        };
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Password reset request error:', error);
+      
+      // تفاصيل أكثر عن الخطأ
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        response: error.response ? {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        } : 'No response data'
+      });
+      
+      if (error.message === 'Network Error') {
+        return {
+          success: false,
+          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+        };
+      }
+      
+      if (error.code === 'ECONNABORTED') {
+        return {
+          success: false,
+          message: 'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.',
+        };
+      }
+      
+      // إذا كان هناك استجابة من الخادم تحتوي على رسالة
+      if (error.response && error.response.data) {
+        console.error('Server error response:', error.response.data);
+        const serverErrorMessage = error.response.data.message;
+        return {
+          success: false,
+          message: serverErrorMessage || `خطأ من الخادم (${error.response.status})`,
+        };
+      }
+      
+      return {
+        success: false,
+        message: error.message || 'حدث خطأ أثناء طلب إعادة تعيين كلمة المرور',
+      };
+    }
+  },
+  
+  // التحقق من رمز إعادة تعيين كلمة المرور
+  async verifyResetCode(phoneNumber: string, otp: string): Promise<ApiResponse> {
+    try {
+      console.log(`Verifying reset code for ${phoneNumber}, OTP: ${otp}`);
+      
+      // التحقق من المعلمات
+      if (!phoneNumber || !otp) {
+        console.error('Missing parameters for verifyResetCode', { phoneNumber, otp });
+        return {
+          success: false,
+          message: 'رقم الهاتف أو رمز التحقق غير مُحدد',
+        };
+      }
+      
+      // تفعيل وضع التطوير مؤقتًا للتحقق من المشكلة
+      const devMode = false; // استخدام الخادم الحقيقي
+      
+      if (devMode) {
+        console.log('Using development mode for reset code verification');
+        // تأخير وهمي للمحاكاة
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const mockResetToken = 'mock-reset-token-' + Date.now();
+        console.log('Generated mock reset token:', mockResetToken);
+        
+        return {
+          success: true,
+          message: 'تم التحقق من رمز إعادة التعيين بنجاح',
+          data: {
+            resetToken: mockResetToken
+          }
+        };
+      }
+      
+      // التحقق من رمز إعادة التعيين
+      const response = await api.post('/api/mobile/auth/verify-reset-code', { phoneNumber, otp });
+      console.log('Reset code verification response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Reset code verification error:', error);
+      
+      if (error.message === 'Network Error') {
+        return {
+          success: false,
+          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+        };
+      }
+      
+      const serverErrorMessage = error.response?.data?.message;
+      return {
+        success: false,
+        message: serverErrorMessage || 'حدث خطأ أثناء التحقق من رمز إعادة التعيين',
+      };
+    }
+  },
+  
+  // إنشاء كلمة مرور جديدة
+  async resetPassword(data: { phoneNumber: string; resetToken: string; newPassword: string; confirmPassword: string }): Promise<ApiResponse> {
+    try {
+      console.log('Resetting password with data:', { 
+        phoneNumber: data.phoneNumber, 
+        resetToken: data.resetToken,
+        passwordLength: data.newPassword?.length,
+        confirmPasswordLength: data.confirmPassword?.length
+      });
+      
+      // التحقق من المعلمات
+      if (!data.phoneNumber || !data.resetToken || !data.newPassword || !data.confirmPassword) {
+        console.error('Missing parameters for resetPassword', { 
+          hasPhoneNumber: !!data.phoneNumber, 
+          hasResetToken: !!data.resetToken,
+          hasNewPassword: !!data.newPassword,
+          hasConfirmPassword: !!data.confirmPassword
+        });
+        return {
+          success: false,
+          message: 'جميع المعلمات مطلوبة لإعادة تعيين كلمة المرور',
+        };
+      }
+      
+      // التحقق من تطابق كلمة المرور
+      if (data.newPassword !== data.confirmPassword) {
+        return {
+          success: false,
+          message: 'كلمة المرور وتأكيدها غير متطابقين',
+        };
+      }
+      
+      // تفعيل وضع التطوير مؤقتًا للتحقق من المشكلة
+      const devMode = false; // استخدام الخادم الحقيقي
+      
+      if (devMode) {
+        console.log('Using development mode for password reset');
+        // تأخير وهمي للمحاكاة
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Mock successful password reset');
+        
+        const mockToken = 'dev-token-' + Date.now();
+        const mockUser = {
+          id: '1',
+          phoneNumber: data.phoneNumber,
+          name: 'مستخدم تجريبي'
+        };
+        
+        console.log('Generated mock token:', mockToken);
+        
+        // حفظ بيانات المستخدم في وضع التطوير
+        await AsyncStorage.setItem('userToken', mockToken);
+        await AsyncStorage.setItem('userData', JSON.stringify(mockUser));
+        
+        // التحقق من حفظ البيانات
+        const savedToken = await AsyncStorage.getItem('userToken');
+        console.log('Verified saved token:', savedToken);
+        
+        return {
+          success: true,
+          message: 'تم إعادة تعيين كلمة المرور بنجاح',
+          token: mockToken,
+          user: mockUser
+        };
+      }
+      
+      // إرسال طلب إعادة تعيين كلمة المرور
+      const response = await api.post('/api/mobile/auth/reset-password', data);
+      console.log('Password reset response:', response.data);
+      const responseData = response.data;
+      
+      // حفظ بيانات المستخدم عند نجاح إعادة التعيين
+      if (responseData.success && responseData.token) {
+        console.log('Saving token and user data after password reset');
+        await AsyncStorage.setItem('userToken', responseData.token);
+        
+        if (responseData.user) {
+          await AsyncStorage.setItem('userData', JSON.stringify(responseData.user));
+        }
+        
+        // التحقق من حفظ البيانات
+        const savedToken = await AsyncStorage.getItem('userToken');
+        console.log('Verified saved token:', savedToken);
+      }
+      
+      return responseData;
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      
+      if (error.message === 'Network Error') {
+        return {
+          success: false,
+          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+        };
+      }
+      
+      const serverErrorMessage = error.response?.data?.message;
+      return {
+        success: false,
+        message: serverErrorMessage || 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
       };
     }
   },
@@ -849,6 +1124,67 @@ export const adsAPI = {
       return {
         success: false,
         message: serverErrorMessage || 'حدث خطأ أثناء حذف الإعلان',
+      };
+    }
+  },
+
+  // إرسال طلب تواصل بخصوص إعلان
+  async sendContactRequest(data: {
+    advertisementId: string;
+    reason: string;
+  }): Promise<ApiResponse> {
+    try {
+      console.log('Sending contact request for ad:', data.advertisementId);
+      console.log('Contact request data:', data);
+      
+      // التحقق من وجود التوكن قبل الطلب
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        console.warn('No authentication token found before sending contact request');
+        return {
+          success: false,
+          message: 'لم يتم العثور على رمز المصادقة. يرجى تسجيل الدخول مرة أخرى.'
+        };
+      }
+      
+      // إعداد الطلب مع رأس مصادقة صريح
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+      
+      // إرسال البيانات للخادم
+      const response = await api.post('/api/mobile/contact-requests', data, { headers });
+      console.log('Contact request response status:', response.status);
+      console.log('Contact request response data:', JSON.stringify(response.data));
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Error sending contact request:', error);
+      
+      // التحقق من نوع الخطأ وعرض المزيد من المعلومات
+      if (error.message === 'Network Error') {
+        console.error('Network error while sending contact request');
+        return {
+          success: false,
+          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+        };
+      }
+      
+      // تفاصيل استجابة الخطأ إذا كانت متاحة
+      if (error.response) {
+        console.error('Server error response:', error.response.status, JSON.stringify(error.response.data));
+        const serverErrorMessage = error.response.data?.message;
+        return {
+          success: false,
+          message: serverErrorMessage || `خطأ من الخادم (${error.response.status}): ${JSON.stringify(error.response.data)}`,
+        };
+      }
+      
+      // خطأ عام
+      return {
+        success: false,
+        message: `حدث خطأ أثناء إرسال طلب التواصل: ${error.message}`,
       };
     }
   },

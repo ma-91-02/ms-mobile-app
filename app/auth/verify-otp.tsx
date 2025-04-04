@@ -26,11 +26,12 @@ export default function VerifyOTPScreen() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const { t } = useTranslation();
+  const { t } = useTranslation(['auth', 'common']);
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
   const params = useLocalSearchParams();
   
   const phoneNumber = params.phoneNumber as string;
+  const isResetPassword = params.resetPassword === 'true';
   
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,12 @@ export default function VerifyOTPScreen() {
   
   // مراجع لحقول إدخال OTP
   const inputRefs = Array(6).fill(0).map(() => useRef<TextInput>(null));
+  
+  // طباعة معلومات التشخيص
+  useEffect(() => {
+    console.log('Verify OTP screen - phoneNumber:', phoneNumber);
+    console.log('Verify OTP screen - isResetPassword:', isResetPassword);
+  }, [phoneNumber, isResetPassword]);
   
   // بدء العد التنازلي
   useEffect(() => {
@@ -61,18 +68,52 @@ export default function VerifyOTPScreen() {
       
       // التحقق من إدخال جميع الأرقام
       if (otp.length !== 6) {
-        Alert.alert(t('error'), t('auth.pleaseEnterFullOTP'));
+        Alert.alert(t('error', { ns: 'common' }), t('pleaseEnterFullOTP', { ns: 'auth' }));
         setLoading(false);
         return;
       }
       
       console.log('Verifying OTP:', otp, 'for phone:', phoneNumber);
+      console.log('Is this a password reset?', isResetPassword ? 'Yes' : 'No');
       
-      // إرسال طلب التحقق من الرمز
+      // إذا كانت العملية هي إعادة تعيين كلمة المرور
+      if (isResetPassword) {
+        console.log('Processing password reset verification');
+        // استدعاء API للتحقق من رمز إعادة تعيين كلمة المرور
+        const response = await authAPI.verifyResetCode(phoneNumber, otp);
+        
+        console.log('Reset verification response:', response);
+        
+        if (!response.success) {
+          Alert.alert(t('error', { ns: 'common' }), response.message || t('invalidOTP', { ns: 'auth' }));
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Reset code verification successful');
+        console.log('Reset token received:', response.data?.resetToken);
+        
+        // الانتقال إلى شاشة إعادة تعيين كلمة المرور
+        console.log('Navigating to reset password screen');
+        router.push({
+          pathname: '/auth/reset-password',
+          params: { 
+            phoneNumber, 
+            resetToken: response.data?.resetToken
+          }
+        });
+        
+        return;
+      }
+      
+      // إرسال طلب التحقق من الرمز لتسجيل الدخول العادي
+      console.log('Processing regular OTP verification');
       const response = await authAPI.verifyOTP(phoneNumber, otp);
       
+      console.log('OTP verification response:', response);
+      
       if (!response.success) {
-        Alert.alert(t('error'), response.message || t('auth.invalidOTP'));
+        Alert.alert(t('error', { ns: 'common' }), response.message || t('invalidOTP', { ns: 'auth' }));
         setLoading(false);
         return;
       }
@@ -80,13 +121,14 @@ export default function VerifyOTPScreen() {
       console.log('OTP verification successful');
       
       // الانتقال إلى صفحة إكمال الملف الشخصي
+      console.log('Navigating to complete profile screen');
       router.push({
         pathname: '/auth/complete-profile',
         params: { phoneNumber }
       });
     } catch (error: any) {
       console.error('Verify OTP error:', error);
-      Alert.alert(t('error'), t('auth.verificationFailed'));
+      Alert.alert(t('error', { ns: 'common' }), t('verificationFailed', { ns: 'auth' }));
     } finally {
       setLoading(false);
     }
@@ -96,8 +138,8 @@ export default function VerifyOTPScreen() {
     try {
       setLoading(true);
       
-      // تفعيل وضع التطوير دائمًا للاختبار
-      const devMode = true; // يمكنك تغييره إلى false عندما يكون الخادم جاهزًا
+      // استخدام الخادم الحقيقي (وضع الإنتاج)
+      const devMode = false;
       
       if (devMode) {
         console.log('DEV MODE: Skipping actual API call for resend');
@@ -106,7 +148,7 @@ export default function VerifyOTPScreen() {
         setCountdown(60);
         setCanResend(false);
         
-        Alert.alert(t('success'), 'تم إعادة إرسال رمز التحقق (وضع التطوير)');
+        Alert.alert(t('success', { ns: 'common' }), t('otpResent', { ns: 'auth' }));
         setLoading(false);
         return;
       }
@@ -118,18 +160,18 @@ export default function VerifyOTPScreen() {
       setCountdown(60);
       setCanResend(false);
       
-      Alert.alert(t('success'), response.message || 'تم إعادة إرسال رمز التحقق');
+      Alert.alert(t('success', { ns: 'common' }), response.message || t('otpResent', { ns: 'auth' }));
     } catch (error: any) {
       console.error('Error resending OTP:', error);
       
       // عرض رسالة خطأ أكثر تفصيلاً
-      let errorMessage = 'فشل إعادة إرسال الرمز';
+      let errorMessage = t('resendFailed', { ns: 'auth' });
       
       if (error.message && error.message.includes('Network request failed')) {
-        errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت الخاص بك أو المحاولة لاحقًا.';
+        errorMessage = t('networkError', { ns: 'auth' });
       }
       
-      Alert.alert(t('error'), errorMessage);
+      Alert.alert(t('error', { ns: 'common' }), errorMessage);
     } finally {
       setLoading(false);
     }
@@ -180,7 +222,7 @@ export default function VerifyOTPScreen() {
             { color: appColors.text },
             { textAlign: isRTL ? 'right' : 'left' }
           ]}>
-            التحقق من رقم الهاتف
+            {t('verifyPhoneNumber', { ns: 'auth' })}
           </Text>
           
           <Text style={[
@@ -188,7 +230,7 @@ export default function VerifyOTPScreen() {
             { color: appColors.textSecondary },
             { textAlign: isRTL ? 'right' : 'left' }
           ]}>
-            تم إرسال رمز التحقق إلى {phoneNumber}
+            {t('otpSentTo', { phoneNumber, ns: 'auth' })}
           </Text>
 
           <View style={styles.otpContainer}>
@@ -225,23 +267,23 @@ export default function VerifyOTPScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.verifyButtonText}>التحقق من الرمز</Text>
+              <Text style={styles.verifyButtonText}>{t('verifyCode', { ns: 'auth' })}</Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.resendContainer}>
             <Text style={[styles.resendText, { color: appColors.textSecondary }]}>
-              لم تستلم الرمز؟
+              {t('didntReceiveCode', { ns: 'auth' })}
             </Text>
             {canResend ? (
               <TouchableOpacity onPress={handleResendOTP} disabled={loading}>
                 <Text style={[styles.resendLink, { color: appColors.primary }]}>
-                  إعادة الإرسال
+                  {t('resend', { ns: 'auth' })}
                 </Text>
               </TouchableOpacity>
             ) : (
               <Text style={[styles.countdownText, { color: appColors.textSecondary }]}>
-                إعادة الإرسال بعد {countdown} ثانية
+                {t('resendIn', { seconds: countdown, ns: 'auth' })}
               </Text>
             )}
           </View>
