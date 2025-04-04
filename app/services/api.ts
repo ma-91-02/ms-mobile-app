@@ -6,12 +6,11 @@ import { LoginRequest, LoginResponse } from '../types/auth';
 // تعريف عنوان API الأساسي
 // استخدام عنوان مناسب حسب البيئة
 export const API_BASE_URL = Platform.OS === 'web' 
-  ? 'http://localhost:3001' 
+  ? 'https://api.mafqodat-server.com' 
   : Platform.OS === 'android'
-    ? 'http://10.0.2.2:3001' // للمحاكي في Android
-    : 'http://localhost:3001'; // لأجهزة iOS
-    // تنبيه مهم: إذا كنت تستخدم جهازًا حقيقيًا (غير محاكي)، يجب استبدال العنوان بعنوان IP للخادم
-    // مثال: 'http://192.168.1.100:3001' أو 'https://api.yourserver.com'
+    ? 'https://api.mafqodat-server.com' // للمحاكي والأجهزة الحقيقية في Android
+    : 'https://api.mafqodat-server.com'; // للأجهزة iOS
+    // ملاحظة: استبدل 'api.mafqodat-server.com' بعنوان خادم API الفعلي الخاص بك
 
 // تحقق من العنوان
 console.log('Using API URL:', API_BASE_URL);
