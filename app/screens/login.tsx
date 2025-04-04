@@ -18,6 +18,7 @@ import { useTheme } from '../context/ThemeContext';
 import AppColors from '../../constants/AppColors';
 import { authAPI } from '../services/api';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,6 +26,18 @@ export default function LoginScreen() {
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const { t } = useTranslation();
 
+  // إضافة سجلات لتصحيح الأخطاء
+  console.log('Translation test - warning:', t('common.warning'));
+  console.log('Translation test - error:', t('common.error'));
+  console.log('Translation test - login:', t('common.login'));
+  console.log('Translation test - phone:', t('common.phoneNumber'));
+  console.log('Translation test - password:', t('auth.password'));
+  console.log('Translation test - no account:', t('auth.noAccount'));
+  console.log('Translation test - register now:', t('auth.registerNow'));
+  console.log('Current i18n namespaces:', i18n.options?.ns);
+  console.log('Current i18n language:', i18n.language);
+  console.log('Translation test - enterPhoneAndPassword:', t('auth.enterPhoneAndPassword'));
+  
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +45,9 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
-      Alert.alert('تنبيه', 'الرجاء إدخال رقم الهاتف وكلمة المرور');
+      // استخدام نصوص ثابتة للتنبيهات مؤقتًا
+      console.log('Translation test - would use:', t('common.warning'), t('auth.enterPhoneAndPassword'));
+      Alert.alert('تحذير', 'الرجاء إدخال رقم الهاتف وكلمة المرور');
       return;
     }
 
@@ -47,6 +62,8 @@ export default function LoginScreen() {
       // إعادة توجيه المستخدم إلى الصفحة الرئيسية
       router.replace('/(tabs)/ads');
     } catch (error: any) {
+      // استخدام نصوص ثابتة للتنبيهات مؤقتًا
+      console.log('Translation test - would use:', t('common.error'));
       Alert.alert('خطأ', error.message);
     } finally {
       setLoading(false);
@@ -60,7 +77,7 @@ export default function LoginScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          <Text style={[styles.title, { color: appColors.text }]}>تسجيل الدخول</Text>
+          <Text style={[styles.title, { color: appColors.text }]}>{t('common.login')}</Text>
           
           <View style={styles.inputContainer}>
             <TextInput
@@ -68,7 +85,7 @@ export default function LoginScreen() {
                 backgroundColor: appColors.secondary,
                 color: appColors.text,
               }]}
-              placeholder="رقم الهاتف"
+              placeholder={t('common.phoneNumber')}
               placeholderTextColor={appColors.textSecondary}
               value={phoneNumber}
               onChangeText={setPhoneNumber}
@@ -83,7 +100,7 @@ export default function LoginScreen() {
                 backgroundColor: appColors.secondary,
                 color: appColors.text,
               }]}
-              placeholder="كلمة المرور"
+              placeholder={t('auth.password')}
               placeholderTextColor={appColors.textSecondary}
               value={password}
               onChangeText={setPassword}
@@ -109,16 +126,16 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.loginButtonText}>تسجيل الدخول</Text>
+              <Text style={styles.loginButtonText}>{t('common:login')}</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.registerLink}
-            onPress={() => router.push('/register')}
+            onPress={() => router.push('/register' as any)}
           >
             <Text style={[styles.registerText, { color: appColors.textSecondary }]}>
-              ليس لديك حساب؟ سجل الآن
+              {t('auth:noAccount')} {t('auth:registerNow')}
             </Text>
           </TouchableOpacity>
         </View>

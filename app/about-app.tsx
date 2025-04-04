@@ -21,60 +21,10 @@ const normalize = (size: number): number => {
 };
 
 export default function AboutAppScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['about', 'common']);
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
-
-  const currentLanguage = i18n.language;
-
-  // تحديد النصوص مباشرة حسب اللغة
-  let aboutTexts = {
-    title: "About App",
-    description: "MS is an integrated platform for managing lost and found documents in Iraq.",
-    mission: "Our Mission",
-    missionText: "We strive to provide an effective solution for the problem of lost documents in Iraq.",
-    features: "App Features",
-    feature1: "Quick and efficient search for lost documents",
-    feature2: "Easy addition and management of lost documents",
-    feature3: "Instant notifications when a matching document is found",
-    feature4: "Direct communication between document owner and finder",
-    version: "Version 1.0.0",
-    developedBy: "Developed by MS Team",
-    copyright: "All rights reserved © 2024"
-  };
-
-  if (currentLanguage === 'ar') {
-    aboutTexts = {
-      title: "حول التطبيق",
-      description: "تطبيق MS هو منصة متكاملة لإدارة المستمسكات المفقودة في العراق.",
-      mission: "مهمتنا",
-      missionText: "نسعى لتوفير حل فعال لمشكلة المستمسكات المفقودة في العراق.",
-      features: "مميزات التطبيق",
-      feature1: "بحث سريع وفعال عن المستمسكات المفقودة",
-      feature2: "إضافة وإدارة المستمسكات المفقودة بسهولة",
-      feature3: "إشعارات فورية عند العثور على مستمسك مطابق",
-      feature4: "تواصل مباشر بين مالك المستمسك ومن وجده",
-      version: "الإصدار 1.0.0",
-      developedBy: "تم التطوير بواسطة فريق MS",
-      copyright: "جميع الحقوق محفوظة © 2024"
-    };
-  } else if (currentLanguage === 'ku') {
-    aboutTexts = {
-      title: "دەربارەی ئەپڵیکەیشن",
-      description: "ئەپڵیکەیشنی MS پلاتفۆرمێکی یەکخراوە بۆ بەڕێوەبردنی بەڵگەنامە گمبووەکان لە عێراق.",
-      mission: "ئامانجمان",
-      missionText: "ئێمە هەوڵ دەدەین چارەسەرێکی کارامە دابین بکەین بۆ کێشەی بەڵگەنامە گمبووەکان لە عێراق.",
-      features: "تایبەتمەندیەکانی ئەپڵیکەیشن",
-      feature1: "گەڕان بە خێرایی و کارامە بۆ بەڵگەنامە گمبووەکان",
-      feature2: "زیادکردن و بەڕێوەبردنی ئاسانی بەڵگەنامە گمبووەکان",
-      feature3: "ئاگادارکردنەوەی دەستەبەجێ کاتێک بەڵگەنامەیەکی گونجاو دۆزرایەوە",
-      feature4: "پەیوەندی ڕاستەوخۆ لە نێوان خاوەنی بەڵگەنامە و دۆزەرەوە",
-      version: "وەشان 1.0.0",
-      developedBy: "پەرەپێدراوە لەلایەن تیمی MS",
-      copyright: "هەموو مافەکان پارێزراون © 2024"
-    };
-  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
@@ -99,7 +49,7 @@ export default function AboutAppScreen() {
           />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: appColors.text }]}>
-          {t('about.title')}
+          {t('title', { ns: 'about', defaultValue: 'حول التطبيق' })}
         </Text>
       </View>
 
@@ -118,58 +68,58 @@ export default function AboutAppScreen() {
 
         <View style={[styles.section, { backgroundColor: appColors.secondary }]}>
           <Text style={[styles.description, { color: appColors.text }]}>
-            {t('about.description')}
+            {t('description', { ns: 'about', defaultValue: 'تطبيق مستمسكاتي هو منصة متكاملة لإدارة المستمسكات المفقودة في العراق.' })}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: appColors.secondary }]}>
           <Text style={[styles.sectionTitle, { color: appColors.text }]}>
-            {t('about.mission')}
+            {t('mission', { ns: 'about', defaultValue: 'مهمتنا' })}
           </Text>
           <Text style={[styles.sectionText, { color: appColors.text }]}>
-            {t('about.missionText')}
+            {t('missionText', { ns: 'about', defaultValue: 'نسعى لتوفير حل فعال لمشكلة المستمسكات المفقودة في العراق.' })}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: appColors.secondary }]}>
           <Text style={[styles.sectionTitle, { color: appColors.text }]}>
-            {t('about.features')}
+            {t('features', { ns: 'about', defaultValue: 'مميزات التطبيق' })}
           </Text>
           <View style={styles.featureItem}>
             <Ionicons name="search" size={24} color={appColors.primary} />
             <Text style={[styles.featureText, { color: appColors.text }]}>
-              {t('about.feature1')}
+              {t('feature1', { ns: 'about', defaultValue: 'بحث سريع وفعال عن المستمسكات المفقودة' })}
             </Text>
           </View>
           <View style={styles.featureItem}>
             <Ionicons name="document-text" size={24} color={appColors.primary} />
             <Text style={[styles.featureText, { color: appColors.text }]}>
-              {t('about.feature2')}
+              {t('feature2', { ns: 'about', defaultValue: 'إضافة وإدارة المستمسكات المفقودة بسهولة' })}
             </Text>
           </View>
           <View style={styles.featureItem}>
             <Ionicons name="notifications" size={24} color={appColors.primary} />
             <Text style={[styles.featureText, { color: appColors.text }]}>
-              {t('about.feature3')}
+              {t('feature3', { ns: 'about', defaultValue: 'إشعارات فورية عند العثور على مستمسك مطابق' })}
             </Text>
           </View>
           <View style={styles.featureItem}>
             <Ionicons name="people" size={24} color={appColors.primary} />
             <Text style={[styles.featureText, { color: appColors.text }]}>
-              {t('about.feature4')}
+              {t('feature4', { ns: 'about', defaultValue: 'تواصل مباشر بين صاحب المستمسك والشخص الذي عثر عليه' })}
             </Text>
           </View>
         </View>
 
         <View style={[styles.section, { backgroundColor: appColors.secondary }]}>
           <Text style={[styles.version, { color: appColors.text }]}>
-            {t('about.version')}
+            {t('version', { ns: 'about', defaultValue: 'الإصدار 1.0.0' })}
           </Text>
           <Text style={[styles.developedBy, { color: appColors.textSecondary }]}>
-            {t('about.developedBy')}
+            {t('developedBy', { ns: 'about', defaultValue: 'تم التطوير بواسطة فريق مستمسكاتي' })}
           </Text>
           <Text style={[styles.copyright, { color: appColors.textSecondary }]}>
-            {t('about.copyright')}
+            {t('copyright', { ns: 'about', defaultValue: 'جميع الحقوق محفوظة © 2024' })}
           </Text>
         </View>
       </ScrollView>

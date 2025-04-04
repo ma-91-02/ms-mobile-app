@@ -11,7 +11,7 @@ import AppColors from '../../constants/AppColors';
 import { I18nManager } from 'react-native';
 import Card from '../components/Card';
 import LanguageSelector from '../components/LanguageSelector';
-import CustomAlert from '../components/CustomAlert';
+import Layout from '../../constants/Layout';
 
 // دالة مساعدة لحساب الأبعاد النسبية
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -43,17 +43,6 @@ export default function Settings() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
   
-  // متغيرات للتنبيه المخصص
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
-  const [alertShowLoading, setAlertShowLoading] = useState(true);
-  const [alertButtons, setAlertButtons] = useState<Array<{
-    text: string;
-    onPress: () => void;
-    style?: 'default' | 'cancel' | 'destructive';
-  }>>([]);
-
   // تحميل إعدادات الإشعارات والموقع
   useEffect(() => {
     const loadSettings = async () => {
@@ -98,28 +87,16 @@ export default function Settings() {
     try {
       setChangingLanguage(true);
       
-      // إعادة تعيين حالة التنبيه
-      setAlertMessage('');
-      setAlertButtons([]);
-      setAlertShowLoading(true);
-      
-      // إظهار التنبيه المخصص
-      setAlertTitle(t('settings.applyingLanguage'));
-      setAlertVisible(true);
+      // إضافة تأخير بسيط قبل تغيير اللغة
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // تغيير اللغة
       await changeLanguage(languageCode);
       
-      // إضافة تأخير إضافي لمحاكاة عملية تحديث اللغة كما في iOS
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // إغلاق التنبيه بعد اكتمال تحديث اللغة
-      setAlertVisible(false);
       setChangingLanguage(false);
       
     } catch (error) {
       console.error('Error changing language:', error);
-      setAlertVisible(false);
       setChangingLanguage(false);
       Alert.alert(
         t('common.error'),
@@ -133,45 +110,53 @@ export default function Settings() {
     if (!__DEV__) return; // فقط في وضع التطوير
     
     try {
-      // عرض تنبيه أن العملية قيد التنفيذ
-      setAlertTitle(t('reset_language', { ns: 'common' }));
-      setAlertMessage('');
-      setAlertShowLoading(true);
-      setAlertVisible(true);
-      
       // إعادة تعيين اللغة إلى لغة الجهاز
       const success = await resetLanguage();
       
       if (success) {
-        // تحديث التنبيه بأن العملية نجحت
-        setAlertTitle(t('reset_success', { ns: 'common' }));
-        setAlertShowLoading(false);
-        setAlertButtons([
-          {
-            text: t('ok', { ns: 'common' }),
-            onPress: () => {
-              setAlertVisible(false);
-              // إعادة تحميل الصفحة (اختياري)
-              router.replace('/settings');
-            },
-            style: 'default'
-          }
-        ]);
+        Alert.alert(
+          t('reset_success', { ns: 'common' }),
+          '',
+          [{ text: t('ok', { ns: 'common' }) }]
+        );
       } else {
         throw new Error('لم يتم إعادة تعيين اللغة');
       }
     } catch (error) {
-      // تحديث التنبيه بأن العملية فشلت
-      setAlertTitle(t('reset_error', { ns: 'common' }));
-      setAlertShowLoading(false);
-      setAlertButtons([
-        {
-          text: t('ok', { ns: 'common' }),
-          onPress: () => setAlertVisible(false),
-          style: 'default'
-        }
-      ]);
+      Alert.alert(
+        t('reset_error', { ns: 'common' }),
+        '',
+        [{ text: t('ok', { ns: 'common' }) }]
+      );
       console.error('Error reloading translations:', error);
+    }
+  };
+
+  // إضافة وظيفة لإعادة تحميل الترجمات فقط
+  const handleRefreshTranslations = async () => {
+    try {
+      // إعادة تحميل الترجمات
+      const success = await reloadTranslations();
+      
+      // إضافة تأخير بسيط
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      if (success) {
+        Alert.alert(
+          'عملية ناجحة',
+          'تم إعادة تحميل الترجمات بنجاح',
+          [{ text: t('ok', { ns: 'common' }) }]
+        );
+      } else {
+        throw new Error('فشل إعادة تحميل الترجمات');
+      }
+    } catch (error) {
+      Alert.alert(
+        'حدث خطأ',
+        'فشل إعادة تحميل الترجمات، يرجى المحاولة مرة أخرى',
+        [{ text: t('ok', { ns: 'common' }) }]
+      );
+      console.error('Error refreshing translations:', error);
     }
   };
 
@@ -284,12 +269,6 @@ export default function Settings() {
           title: t('language', { ns: 'common' }),
           onPress: () => setLanguageSelectorVisible(true),
         },
-        // إضافة زر إعادة تحميل الترجمات في وضع التطوير
-        ...((__DEV__) ? [{
-          icon: 'refresh-outline',
-          title: t('reload_translations', { ns: 'common' }),
-          onPress: handleReloadTranslations,
-        }] : []),
       ],
     },
     {
@@ -321,14 +300,6 @@ export default function Settings() {
           onPress: () => router.push('/contact-us' as any),
         },
         {
-          icon: 'star-outline',
-          title: t('rate_app', { ns: 'common' }),
-          onPress: () => {
-            // تنفيذ فتح المتجر لتقييم التطبيق
-            // الكود الخاص بفتح متجر التطبيقات
-          },
-        },
-        {
           icon: 'code-outline',
           title: t('version', { ns: 'common' }),
           onPress: null,
@@ -349,13 +320,7 @@ export default function Settings() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={appColors.background} />
-      
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: appColors.text }, { fontFamily: 'Cairo-Bold' }]}>
-          {t('settings', { ns: 'common' })}
-        </Text>
-      </View>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={appColors.background} />
       
       <ScrollView 
         style={styles.scrollView} 
@@ -385,9 +350,6 @@ export default function Settings() {
             </Card>
           </View>
         ))}
-        
-        {/* إضافة مساحة في الأسفل */}
-        <View style={styles.bottomSpace} />
       </ScrollView>
       
       {/* مكون اختيار اللغة */}
@@ -395,16 +357,6 @@ export default function Settings() {
         isVisible={languageSelectorVisible}
         onClose={() => setLanguageSelectorVisible(false)}
         onLanguageChange={handleLanguageChange}
-      />
-      
-      {/* التنبيه المخصص */}
-      <CustomAlert
-        visible={alertVisible}
-        title={alertTitle}
-        message={alertMessage}
-        showLoading={alertShowLoading}
-        buttons={alertButtons}
-        onClose={() => setAlertVisible(false)}
       />
     </SafeAreaView>
   );
@@ -418,11 +370,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContent: {
-    padding: normalize(16),
-    paddingBottom: normalize(32),
+    padding: Layout.contentPadding,
+    paddingBottom: Layout.contentBottomPadding,
   },
   card: {
-    marginBottom: normalize(16),
+    marginBottom: normalize(10),
     borderRadius: normalize(16),
     shadowColor: "#000",
     shadowOffset: {
@@ -501,16 +453,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   section: {
-    marginBottom: normalize(24),
+    marginBottom: normalize(14),
   },
   divider: {
     height: 0.5,
     backgroundColor: '#E0E0E0',
     marginHorizontal: normalize(16),
-  },
-  bottomSpace: {
-    height: normalize(32),
-  },
+  }
 });
 
 // إضافة مستمع لتغيير حجم الشاشة

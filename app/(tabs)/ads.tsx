@@ -29,6 +29,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { adsAPI, Ad as AdType } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { normalize } from '../../utils/normalize';
+import Layout from '../../constants/Layout';
 
 // Define interfaces for type safety
 interface Ad {
@@ -462,11 +464,6 @@ export default function AdsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={appColors.background} />
       
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: appColors.background }]}>
-        <Text style={[styles.headerTitle, { color: appColors.text, fontFamily: 'Cairo-Bold' }]}>{t('allAds')}</Text>
-      </View>
-      
       {/* Search Bar - تمرير الخصائص المطلوبة */}
       <SearchBar
         placeholder={t('search_by_name_or_doc_number', { ns: 'common' })}
@@ -589,8 +586,12 @@ export default function AdsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.adsListContainer}
           ListEmptyComponent={renderEmpty}
-          ListFooterComponent={renderFooter}
-          refreshing={loading}
+          ListFooterComponent={loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color={appColors.primary} size="small" />
+            </View>
+          ) : null}
+          refreshing={false}
           onRefresh={fetchAds}
           renderItem={({ item }) => (
             <AdCard
@@ -688,13 +689,13 @@ const styles = StyleSheet.create({
   },
   adsListContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 100, // Extra padding for FAB
+    paddingBottom: Layout.contentBottomPadding,
   },
   fab: {
     position: 'absolute',
     margin: 16,
     right: 0,
-    bottom: 0,
+    bottom: Layout.tabBarHeight,
     borderRadius: 28,
     padding: 16,
     flexDirection: 'row',
@@ -708,6 +709,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    zIndex: 999,
   },
   modalContainer: {
     flex: 1,
@@ -741,12 +743,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   footer: {
-    padding: 20,
+    padding: 10,
     alignItems: 'center',
   },
   footerText: {
-    marginTop: 8,
-    fontSize: 14,
+    marginTop: 5,
+    fontSize: 12,
   },
   errorContainer: {
     flex: 1,
@@ -782,16 +784,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Cairo-Medium',
   },
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    paddingVertical: 10,
     alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    textAlign: 'center',
-    fontFamily: 'Cairo-Medium',
   },
   modalOverlay: {
     flex: 1,
@@ -868,5 +862,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Cairo-Medium',
     fontSize: 14,
     color: '#333',
+  },
+  scrollViewContent: {
+    padding: Layout.contentPadding,
+    paddingBottom: Layout.contentBottomPadding,
   },
 }); 

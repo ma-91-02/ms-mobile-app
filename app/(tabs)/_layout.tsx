@@ -5,9 +5,11 @@ import { useTheme } from '../../app/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import i18n from '../i18n';
 import { useFonts } from 'expo-font';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
 /**
  * هيكل التبويبات الرئيسية للتطبيق
@@ -82,13 +84,21 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: appColors.secondary,
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(0, 0, 0, 0.05)',
+          elevation: 8,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
           height: screenWidth < 400 ? 70 : 75,
           paddingHorizontal: screenWidth * 0.025,
-          paddingBottom: 15,
+          paddingBottom: 0,
           paddingTop: 8,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarItemStyle: {
           height: screenWidth < 400 ? 65 : 70,
@@ -105,6 +115,37 @@ export default function TabLayout() {
       }}
       tabBar={props => (
         <View style={[styles.tabBarContainer, { backgroundColor: appColors.secondary, height: screenWidth < 400 ? 70 : 75 }]}>
+          {Platform.OS === 'ios' ? (
+            <BlurView
+              intensity={25}
+              tint={isDarkMode ? 'dark' : 'light'}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderTopWidth: 1,
+                borderTopColor: 'rgba(255, 255, 255, 0.1)',
+              }}
+            />
+          ) : (
+            <LinearGradient
+              colors={[
+                isDarkMode ? 'rgba(30, 30, 35, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                isDarkMode ? 'rgba(25, 25, 30, 0.97)' : 'rgba(245, 245, 250, 0.97)'
+              ]}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderTopWidth: 1,
+                borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+              }}
+            />
+          )}
           {props.state.routes.map((route, index) => {
             const { options } = props.descriptors[route.key];
             // استخدام دالة getTabLabel للحصول على الترجمة الصحيحة
@@ -194,9 +235,18 @@ const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(245, 245, 245, 0.1)',
-    paddingBottom: 8,
+    borderTopColor: 'rgba(0, 0, 0, 0.05)',
+    paddingBottom: 0,
     paddingTop: 8,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   tabButton: {
     flex: 1,

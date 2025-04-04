@@ -12,6 +12,8 @@ import { User } from '../types/auth';
 import { adsAPI } from '../services/api';
 import { API_BASE_URL } from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
+import { normalize } from '../../utils/normalize';
+import Layout from '../../constants/Layout';
 
 // مكون عنصر القائمة
 interface ProfileMenuItemProps {
@@ -114,7 +116,7 @@ export default function ProfileScreen() {
       if (myAdsResponse.success && myAdsResponse.data) {
         setUserStats(prev => ({
           ...prev,
-          adsCount: myAdsResponse.data.length
+          adsCount: myAdsResponse.data?.length || 0
         }));
       } else {
         console.warn('Failed to load my ads:', myAdsResponse.message);
@@ -259,9 +261,13 @@ export default function ProfileScreen() {
   // Render profile if logged in
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={appColors.background} />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={appColors.background} />
       
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* رأس الصفحة مع معلومات المستخدم */}
         <View style={[styles.header, { backgroundColor: appColors.primary }]}>
           <View style={styles.profileImageContainer}>
@@ -337,7 +343,8 @@ export default function ProfileScreen() {
           />
         </TouchableOpacity>
         
-        <View style={{ height: 30 }} />
+        {/* إضافة مساحة في الأسفل لتفادي تداخل المحتوى مع شريط التبويب */}
+        <View style={{ height: 80 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -351,7 +358,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContent: {
-    paddingBottom: 24,
+    padding: Layout.contentPadding,
+    paddingBottom: Layout.contentBottomPadding,
   },
   
   // Login Prompt Styles

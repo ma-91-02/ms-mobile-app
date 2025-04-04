@@ -12,24 +12,166 @@ import ku from '../translations/ku.json';
 // اللغات التي تستخدم اتجاه RTL
 export const RTL_LANGUAGES = ['ar', 'ku'];
 
-// موارد الترجمة باستخدام الملفات المستوردة
-const resources = {
-  ar: {
-    common: ar.common,
-    tabs: ar.tabs,
-    langSelect: ar.langSelect
-  },
-  en: {
-    common: en.common,
-    tabs: en.tabs,
-    langSelect: en.langSelect
-  },
-  ku: {
-    common: ku.common,
-    tabs: ku.tabs,
-    langSelect: ku.langSelect
+// تعريف أنواع البيانات للترجمات
+type TranslationSection = Record<string, any>;
+type TranslationData = Record<string, TranslationSection>;
+
+/**
+ * دالة مساعدة للتأكد من تحميل جميع الأقسام من ملفات الترجمة
+ * كل قسم في ملف الترجمة يتم تحميله بشكل منفصل
+ * ويتم دمج المفاتيح المفقودة في قسم common لضمان توفر جميع الترجمات
+ */
+const loadAllSections = (translations: any): TranslationData => {
+  const sections = ['common', 'tabs', 'langSelect', 'about', 'help', 'privacy', 'terms', 'contact', 'rate'];
+  const result: TranslationData = {};
+  
+  // نسخ كل الأقسام إلى result
+  sections.forEach(section => {
+    if (translations[section]) {
+      result[section] = translations[section];
+    } else {
+      // إنشاء قسم فارغ إذا لم يكن موجودًا
+      result[section] = {};
+    }
+  });
+  
+  // الترجمات المفقودة المضافة يدويًا
+  const missingKeys = {
+    tabs: {
+      ar: {
+        'home': 'الرئيسية',
+        'profile': 'الملف الشخصي',
+        'settings': 'الإعدادات'
+      },
+      en: {
+        'home': 'Home',
+        'profile': 'Profile',
+        'settings': 'Settings'
+      },
+      ku: {
+        'home': 'سەرەکی',
+        'profile': 'پڕۆفایل',
+        'settings': 'ڕێکخستنەکان'
+      }
+    },
+    common: {
+      ar: {
+        'passport': 'جواز سفر',
+        'nationalID': 'بطاقة وطنية',
+        'lost': 'مفقود',
+        'found': 'معثور عليه',
+        'lostItem': 'مستمسك مفقود',
+        'foundItem': 'مستمسك معثور عليه',
+        'national_id': 'بطاقة وطنية',
+        'selectProvince': 'اختر المحافظة',
+        'allIraq': 'كل العراق',
+        'baghdad': 'بغداد',
+        'basra': 'البصرة',
+        'erbil': 'أربيل',
+        'sulaymaniyah': 'السليمانية',
+        'najaf': 'النجف',
+        'karbala': 'كربلاء',
+        'duhok': 'دهوك',
+        'allAds': 'كل الإعلانات',
+        'search_by_name_or_doc_number': 'بحث بالاسم أو رقم المستمسك',
+        'all': 'الكل',
+        'postAd': 'نشر إعلان',
+        'drivingLicense': 'رخصة قيادة',
+        'otherDocuments': 'مستمسكات أخرى',
+        'loading_more': 'جاري تحميل المزيد...',
+        'profile': 'الملف الشخصي',
+        'settings': 'الإعدادات'
+      },
+      en: {
+        'passport': 'Passport',
+        'nationalID': 'National ID',
+        'lost': 'Lost',
+        'found': 'Found',
+        'lostItem': 'Lost Document',
+        'foundItem': 'Found Document',
+        'national_id': 'National ID',
+        'selectProvince': 'Select Province',
+        'allIraq': 'All Iraq',
+        'baghdad': 'Baghdad',
+        'basra': 'Basra',
+        'erbil': 'Erbil',
+        'sulaymaniyah': 'Sulaymaniyah',
+        'najaf': 'Najaf',
+        'karbala': 'Karbala',
+        'duhok': 'Duhok',
+        'allAds': 'All Listings',
+        'search_by_name_or_doc_number': 'Search by name or document number',
+        'all': 'All',
+        'postAd': 'Post Ad',
+        'drivingLicense': 'Driving License',
+        'otherDocuments': 'Other Documents',
+        'loading_more': 'Loading more...',
+        'profile': 'Profile',
+        'settings': 'Settings'
+      },
+      ku: {
+        'passport': 'پاسپۆرت',
+        'nationalID': 'ناسنامەی نیشتمانی',
+        'lost': 'گمبوو',
+        'found': 'دۆزراوەتەوە',
+        'lostItem': 'بەڵگەنامەی گمبوو',
+        'foundItem': 'بەڵگەنامەی دۆزراوە',
+        'national_id': 'ناسنامەی نیشتمانی',
+        'selectProvince': 'پارێزگا هەڵبژێرە',
+        'allIraq': 'هەموو عێراق',
+        'baghdad': 'بەغدا',
+        'basra': 'بەسرە',
+        'erbil': 'هەولێر',
+        'sulaymaniyah': 'سلێمانی',
+        'najaf': 'نەجەف',
+        'karbala': 'کەربەلا',
+        'duhok': 'دهۆک',
+        'allAds': 'هەموو ڕیکلامەکان',
+        'search_by_name_or_doc_number': 'گەڕان بەپێی ناو یان ژمارەی بەڵگەنامە',
+        'all': 'هەموو',
+        'postAd': 'بڵاوکردنەوەی ڕیکلام',
+        'drivingLicense': 'مۆڵەتی لێخوڕین',
+        'otherDocuments': 'بەڵگەنامەکانی تر',
+        'loading_more': 'زیادکردنی زیاتر...',
+        'profile': 'پڕۆفایل',
+        'settings': 'ڕێکخستنەکان'
+      }
+    }
+  };
+
+  // إضافة الترجمات المفقودة
+  const currentLang = translations.lang || 'ar';
+  
+  // إضافة مفاتيح tabs المفقودة
+  if (result.tabs && missingKeys.tabs[currentLang as keyof typeof missingKeys.tabs]) {
+    result.tabs = {
+      ...result.tabs,
+      ...missingKeys.tabs[currentLang as keyof typeof missingKeys.tabs]
+    };
   }
+  
+  // إضافة مفاتيح common المفقودة
+  if (result.common && missingKeys.common[currentLang as keyof typeof missingKeys.common]) {
+    result.common = {
+      ...result.common,
+      ...missingKeys.common[currentLang as keyof typeof missingKeys.common]
+    };
+  }
+  
+  return result;
 };
+
+// هنا نقوم بتحميل موارد الترجمة مرة واحدة عند بدء التشغيل
+const resources = {
+  ar: loadAllSections({...ar, lang: 'ar'}),
+  en: loadAllSections({...en, lang: 'en'}),
+  ku: loadAllSections({...ku, lang: 'ku'})
+};
+
+// عرض موارد الترجمة في وضع التطوير
+if (__DEV__) {
+  console.log('i18n initialization - loaded resources:', resources);
+}
 
 // تحديد لغة الجهاز
 export const getDeviceLanguage = (): string => {
@@ -53,27 +195,81 @@ export const getDeviceLanguage = (): string => {
   }
 };
 
-// تهيئة i18next
-i18next.use(initReactI18next).init({
-  resources,
-  lng: 'ar', // اللغة الافتراضية
-  fallbackLng: 'ar',
-  interpolation: {
-    escapeValue: false, // عدم التهرب من HTML في الترجمات
-  },
-  compatibilityJSON: 'v4',
-  react: {
-    useSuspense: false
-  },
-  defaultNS: 'common',
-  ns: ['common', 'tabs', 'langSelect'],
-  debug: __DEV__, // تمكين وضع التصحيح في وضع التطوير
-  returnNull: false,
-  returnEmptyString: false,
-  returnObjects: true,
-  fallbackNS: 'common',
-  keySeparator: '.'
-});
+// تهيئة i18next مرة واحدة فقط
+let isInitialized = false;
+
+const initI18n = () => {
+  if (isInitialized) {
+    console.log('i18next already initialized, skipping');
+    return;
+  }
+  
+  i18next.use(initReactI18next).init({
+    resources,
+    lng: 'ar', // اللغة الافتراضية
+    fallbackLng: 'ar',
+    interpolation: {
+      escapeValue: false, // عدم التهرب من HTML في الترجمات
+    },
+    compatibilityJSON: 'v4',
+    react: {
+      useSuspense: false
+    },
+    defaultNS: 'common',
+    ns: ['common', 'tabs', 'langSelect', 'about', 'help', 'privacy', 'terms', 'contact', 'rate', 'auth', 'profile', 'sort_options', 'cities'],
+    debug: __DEV__, // تمكين وضع التصحيح في وضع التطوير
+    returnNull: false,
+    returnEmptyString: false,
+    returnObjects: true,
+    fallbackNS: 'common',
+    keySeparator: false,
+    nsSeparator: ':'
+  });
+  
+  isInitialized = true;
+};
+
+// تنفيذ التهيئة
+initI18n();
+
+// وظيفة مباشرة للتحقق من وجود المفاتيح
+export const hasTranslation = (key: string, namespace: string = 'common'): boolean => {
+  const lang = i18next.language;
+  const nsResources = i18next.getResourceBundle(lang, namespace);
+  if (!nsResources) return false;
+  
+  // التحقق من وجود المفتاح باستخدام lodash get أو تنفيذ مشابه
+  const keyParts = key.split('.');
+  let current = nsResources;
+  
+  for (const part of keyParts) {
+    if (current && typeof current === 'object' && part in current) {
+      current = current[part];
+    } else {
+      return false;
+    }
+  }
+  
+  return current !== undefined && current !== null;
+};
+
+// دالة مساعدة للحصول على ترجمة مع نص احتياطي
+export const getTranslation = (key: string, fallback: string, namespace: string = 'common'): string => {
+  try {
+    // محاولة أولى باستخدام دالة الترجمة العادية
+    const translation = i18next.t(key, { ns: namespace });
+    
+    // إذا كان الترجمة هي مفتاح الترجمة نفسه (لم يتم ترجمته) أو قيمة فارغة
+    if (translation === key || !translation) {
+      return fallback;
+    }
+    
+    return translation;
+  } catch (error) {
+    console.error(`Error getting translation for ${key}:`, error);
+    return fallback;
+  }
+};
 
 // وظيفة لتحميل اللغة المحفوظة
 export const loadSavedLanguage = async (): Promise<string> => {
@@ -139,6 +335,9 @@ export const reloadTranslations = async () => {
   try {
     const savedLanguage = await AsyncStorage.getItem('user-language');
     if (savedLanguage) {
+      console.log(`Reloading translations for: ${savedLanguage}`);
+      
+      // إعادة تطبيق اللغة
       await i18next.changeLanguage(savedLanguage);
       console.log(`Translations reloaded successfully: ${savedLanguage}`);
       
@@ -179,28 +378,6 @@ export const resetLanguage = async (): Promise<boolean> => {
   }
 };
 
-// وظيفة جديدة لتهيئة الترجمات في وضع التطوير عند بدء التشغيل الأول
-export const initDevTranslations = async () => {
-  if (__DEV__) {
-    try {
-      // التحقق من ما إذا كانت هذه هي المرة الأولى لتشغيل التطبيق في وضع التطوير
-      const isFirstDevRun = await AsyncStorage.getItem('dev-first-run') === null;
-      
-      if (isFirstDevRun) {
-        console.log('[DEV] First development run detected, initializing translations...');
-        
-        // حفظ إشارة بأن التطبيق قد تم تشغيله مرة واحدة على الأقل في وضع التطوير
-        await AsyncStorage.setItem('dev-first-run', 'true');
-        
-        // إعادة ضبط اللغة إلى لغة الجهاز في وضع التطوير
-        await resetLanguage();
-      }
-    } catch (error) {
-      console.error('[DEV] Error initializing dev translations:', error);
-    }
-  }
-};
-
 // تحميل اللغة المحفوظة عند بدء التشغيل
 loadSavedLanguage().then(lang => {
   console.log(`Loaded language at startup: ${lang}`);
@@ -212,7 +389,5 @@ loadSavedLanguage().then(lang => {
   }
 });
 
-// تنفيذ وظيفة تهيئة الترجمات للتطوير إذا كنا في وضع التطوير
-initDevTranslations();
-
+// تصدير i18next كمتغير افتراضي
 export default i18next; 

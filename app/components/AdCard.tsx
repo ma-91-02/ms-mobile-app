@@ -76,7 +76,7 @@ export default function AdCard({
         styles.adInfo,
         { alignItems: isRTL ? 'flex-end' : 'flex-start' }
       ]}>
-        {/* First line: Owner name */}
+        {/* First line: Owner name - عرض اسم المالك كما هو من API بدون ترجمة */}
         <Text style={[
           styles.adOwnerName,
           { color: appColors.text },
@@ -100,7 +100,7 @@ export default function AdCard({
           <Text style={[
             styles.adPrice,
             { 
-              color: item.price.includes('مفقود') ? appColors.error : '#27ae60',
+              color: item.price.includes('مفقود') || item.price.includes('Lost') ? appColors.error : '#27ae60',
               marginRight: isRTL ? 8 : 0,
               marginLeft: isRTL ? 0 : 8,
             }
@@ -118,7 +118,7 @@ export default function AdCard({
           {item.title}
         </Text>
         
-        {/* Fourth line: Location and date */}
+        {/* Fourth line: Location and date - عرض المحافظة كما هي من API بدون ترجمة */}
         <View style={[
           styles.adDetails,
           { flexDirection: isRTL ? 'row-reverse' : 'row' }

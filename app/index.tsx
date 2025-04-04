@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import '../translations/i18n';
+import './i18n';
 import Colors from '../constants/Colors';
 
 export default function Index() {
