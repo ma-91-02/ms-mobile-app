@@ -6,11 +6,11 @@ import { LoginRequest, LoginResponse } from '../types/auth';
 // تعريف عنوان API الأساسي
 // استخدام عنوان مناسب حسب البيئة
 export const API_BASE_URL = Platform.OS === 'web' 
-  ? 'https://api.mafqodat-server.com' 
+  ? 'https://ms-bg.com' 
   : Platform.OS === 'android'
-    ? 'https://api.mafqodat-server.com' // للمحاكي والأجهزة الحقيقية في Android
-    : 'https://api.mafqodat-server.com'; // للأجهزة iOS
-    // ملاحظة: استبدل 'api.mafqodat-server.com' بعنوان خادم API الفعلي الخاص بك
+    ? 'https://ms-bg.com' // للمحاكي والأجهزة الحقيقية في Android
+    : 'https://ms-bg.com'; // للأجهزة iOS
+    // ملاحظة: تم تغيير عنوان السيرفر الى العنوان الفعلي
 
 // تحقق من العنوان
 console.log('Using API URL:', API_BASE_URL);
