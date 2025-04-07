@@ -21,6 +21,7 @@ import { authAPI } from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { RTL_LANGUAGES } from '../i18n';
 import i18n from '../i18n';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -32,10 +33,41 @@ export default function ResetPasswordScreen() {
   
   // استرجاع المعلمات من الـ params
   const phoneNumber = params.phoneNumber as string;
-  const resetToken = params.resetToken as string;
+  const [resetToken, setResetToken] = useState<string | null>(params.resetToken as string);
   
-  console.log('Reset password screen - phoneNumber:', phoneNumber);
-  console.log('Reset password screen - resetToken:', resetToken);
+  console.log('Reset password screen - Initial phoneNumber:', phoneNumber);
+  console.log('Reset password screen - Initial resetToken:', resetToken);
+  
+  // قم باسترجاع الرمز من التخزين المحلي إذا لم يتم تمريره عبر الباراميترات
+  React.useEffect(() => {
+    const fetchResetToken = async () => {
+      if (!resetToken) {
+        try {
+          const storedToken = await AsyncStorage.getItem('temp_reset_token');
+          if (storedToken) {
+            console.log('Reset password screen - Found resetToken in AsyncStorage:', storedToken);
+            setResetToken(storedToken);
+          } else {
+            console.error('Reset password screen - No resetToken found in AsyncStorage');
+            Alert.alert(
+              t('error', { ns: 'common' }),
+              'لم يتم العثور على رمز إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.',
+              [
+                {
+                  text: t('ok', { ns: 'common' }),
+                  onPress: () => router.replace('/auth/forgot-password')
+                }
+              ]
+            );
+          }
+        } catch (error) {
+          console.error('Reset password screen - Error fetching resetToken from AsyncStorage:', error);
+        }
+      }
+    };
+    
+    fetchResetToken();
+  }, [resetToken]);
   
   // حالات الشاشة
   const [newPassword, setNewPassword] = useState('');
@@ -80,6 +112,29 @@ export default function ResetPasswordScreen() {
         return;
       }
       
+      // معلومات تشخيصية عن البيانات الموجودة
+      console.log('=============== معلومات تشخيصية إعادة تعيين كلمة المرور ===============');
+      console.log('رقم الهاتف المستلم:', phoneNumber);
+      console.log('نوع بيانات رقم الهاتف:', typeof phoneNumber);
+      console.log('طول رقم الهاتف:', phoneNumber?.length);
+      console.log('رمز إعادة التعيين:', resetToken ? `${resetToken.substring(0, 15)}...` : 'غير موجود');
+      console.log('================================================================');
+      
+      // التحقق من وجود الرمز
+      if (!resetToken) {
+        Alert.alert(
+          t('error', { ns: 'common' }),
+          'لم يتم العثور على رمز إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.',
+          [
+            {
+              text: t('ok', { ns: 'common' }),
+              onPress: () => router.replace('/auth/forgot-password')
+            }
+          ]
+        );
+        return;
+      }
+      
       setLoading(true);
       console.log('Resetting password for:', phoneNumber);
       console.log('Using reset token:', resetToken);
@@ -87,7 +142,7 @@ export default function ResetPasswordScreen() {
       // استدعاء API لإعادة تعيين كلمة المرور
       const response = await authAPI.resetPassword({
         phoneNumber,
-        resetToken,
+        resetToken: resetToken,
         newPassword,
         confirmPassword
       });
@@ -95,6 +150,16 @@ export default function ResetPasswordScreen() {
       console.log('Reset password API response:', response);
       
       if (!response.success) {
+        // التحقق من نوع الخطأ
+        if (response.isNetworkError) {
+          Alert.alert(
+            t('noInternetConnection'), 
+            t('noInternetMessage')
+          );
+          setLoading(false);
+          return;
+        }
+        
         Alert.alert(t('error', { ns: 'common' }), response.message || t('passwordResetFailed', { ns: 'auth' }));
         setLoading(false);
         return;
@@ -116,8 +181,17 @@ export default function ResetPasswordScreen() {
         [
           {
             text: t('ok', { ns: 'common' }),
-            onPress: () => {
+            onPress: async () => {
               console.log('Navigating to login screen after password reset');
+              
+              // تنظيف رمز إعادة تعيين كلمة المرور من التخزين المحلي
+              try {
+                await AsyncStorage.removeItem('temp_reset_token');
+                console.log('Reset token removed from AsyncStorage');
+              } catch (error) {
+                console.error('Error removing temp_reset_token from AsyncStorage:', error);
+              }
+              
               router.replace('/auth/login');
             }
           }
@@ -173,11 +247,20 @@ export default function ResetPasswordScreen() {
           <Text style={[
             styles.subtitle, 
             { color: appColors.textSecondary },
-            { textAlign: isRTL ? 'right' : 'left' },
-            { fontFamily: 'Cairo-Regular' }
+            { textAlign: isRTL ? 'right' : 'left' }
           ]}>
-            {t('setupNewPasswordSubtitle', { ns: 'auth' })}
+            {t('auth:setupNewPasswordSubtitle')}
           </Text>
+
+          {__DEV__ && (
+            <Text style={[
+              styles.devModeText,
+              { color: appColors.primary },
+              { textAlign: isRTL ? 'right' : 'left' }
+            ]}>
+              {t('auth:devModeReset')}
+            </Text>
+          )}
 
           <View style={styles.formContainer}>
             {/* حقل كلمة المرور الجديدة */}
@@ -331,6 +414,10 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     marginBottom: 32,
+  },
+  devModeText: {
+    fontSize: 12,
+    marginTop: 16,
   },
   formContainer: {
     width: '100%',

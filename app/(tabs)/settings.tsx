@@ -141,15 +141,19 @@ export default function Settings() {
       // إضافة تأخير بسيط
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      if (success) {
-        Alert.alert(
-          'عملية ناجحة',
-          'تم إعادة تحميل الترجمات بنجاح',
-          [{ text: t('ok', { ns: 'common' }) }]
-        );
-      } else {
-        throw new Error('فشل إعادة تحميل الترجمات');
-      }
+      // اختبار ترجمات المحافظات
+      const provincesTest = `
+      محافظة الكل: ${t('provinces.all')}
+      محافظة بغداد: ${t('provinces.baghdad')}
+      محافظة نينوى: ${t('provinces.nineveh')}
+      `;
+      
+      Alert.alert(
+        'نتيجة إعادة تحميل الترجمات',
+        provincesTest,
+        [{ text: t('ok', { ns: 'common' }) }]
+      );
+      
     } catch (error) {
       Alert.alert(
         'حدث خطأ',
@@ -217,7 +221,22 @@ export default function Settings() {
   // تعريف عناصر الإعدادات
   const settingsItems = [
     {
-      title: t('app_settings', { ns: 'common' }),
+      title: t('account_settings', { ns: 'settings' }),
+      items: [
+        {
+          icon: 'person-outline',
+          title: t('account_information', { ns: 'settings' }),
+          onPress: () => router.push('/profile/edit' as any),
+        },
+        {
+          icon: 'lock-closed-outline',
+          title: t('change_password', { ns: 'settings' }),
+          onPress: () => router.push('/auth/reset-password' as any),
+        },
+      ],
+    },
+    {
+      title: t('app_settings', { ns: 'settings' }),
       items: [
         {
           icon: 'moon-outline',
@@ -268,6 +287,11 @@ export default function Settings() {
           icon: 'language-outline',
           title: t('language', { ns: 'common' }),
           onPress: () => setLanguageSelectorVisible(true),
+        },
+        {
+          icon: 'sync-outline',
+          title: t('reload_translations', { ns: 'common' }),
+          onPress: handleReloadTranslations,
         },
       ],
     },

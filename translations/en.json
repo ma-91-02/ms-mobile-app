@@ -117,7 +117,17 @@
     },
     "selectCountry": "Select Country",
     "accountExists": "Account Exists",
-    "accountAlreadyExists": "This phone number is already registered. Please login instead of creating a new account."
+    "accountAlreadyExists": "This phone number is already registered. Please login instead of creating a new account.",
+    "networkError": "Network Error",
+    "noInternetConnection": "No Internet Connection",
+    "noInternetMessage": "This app requires internet connection to work properly. Please check your connection and try again.",
+    "retry": "Retry",
+    "networkRestored": "Internet Connection Restored",
+    "please_login_to_post_ad": "You need to login or register before you can post an ad",
+    "loginRequiredForContact": "You need to login or register to contact the advertiser",
+    "errorCheckingAuth": "Error checking authentication status, please try again",
+    "authRequiredForAdDetails": "You need to login or register to view advertisement details",
+    "adType": "Ad Type"
   },
   "tabs": {
     "home": "Home",
@@ -308,7 +318,9 @@
     "passwordResetFailed": "Failed to reset password",
     "resetPasswordAndLogin": "Reset Password and Login",
     "setupNewPassword": "Set up New Password",
-    "setupNewPasswordSubtitle": "Enter a new password to continue"
+    "setupNewPasswordSubtitle": "Enter a new password to continue",
+    "devModeOTP": "Development Mode: You can use code 000000 for verification",
+    "devModeReset": "Development Mode: You can use code 000000 for password reset"
   },
   "profile": {
     "edit_profile": "Edit Profile",

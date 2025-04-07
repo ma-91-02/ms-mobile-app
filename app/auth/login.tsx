@@ -24,6 +24,7 @@ import { authAPI } from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { RTL_LANGUAGES } from '../i18n';
 import i18n from '../i18n';
+import { reloadTranslations } from '../i18n';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -44,6 +45,33 @@ export default function LoginScreen() {
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // إضافة تشخيص للترجمات
+  useEffect(() => {
+    // إعادة تحميل الترجمات يدوياً
+    reloadTranslations();
+    
+    // طباعة الترجمات المفقودة للتشخيص
+    if (__DEV__) {
+      console.log('Current language:', i18n.language);
+      console.log('phoneExample translation:', t('auth:phoneExample'));
+      console.log('forgotPassword translation:', t('auth:forgotPassword'));
+      console.log('noAccount translation:', t('auth:noAccount'));
+      
+      // التحقق من وجود الترجمات
+      const hasForgotPassword = i18n.exists('auth:forgotPassword');
+      const hasNoAccount = i18n.exists('auth:noAccount');
+      const hasPhoneExample = i18n.exists('auth:phoneExample');
+      
+      console.log('Has forgotPassword:', hasForgotPassword);
+      console.log('Has noAccount:', hasNoAccount);
+      console.log('Has phoneExample:', hasPhoneExample);
+      
+      // التحقق من موارد الترجمة
+      const authResources = i18n.getResourceBundle(i18n.language, 'auth');
+      console.log('Auth resources:', authResources);
+    }
+  }, [i18n.language]);
 
   // إخفاء لوحة المفاتيح عند النقر خارج حقل الإدخال
   useEffect(() => {
@@ -78,14 +106,14 @@ export default function LoginScreen() {
       
       // التحقق من صحة رقم الهاتف
       if (!isPhoneValid || phoneNumber.length < 9) {
-        setPhoneError(t('auth.invalidPhoneNumber'));
+        setPhoneError(t('auth:invalidPhoneNumber'));
         setLoading(false);
         return;
       }
       
       // التحقق من صحة كلمة المرور
       if (!password || password.length < 6) {
-        setPasswordError(t('auth.invalidPassword'));
+        setPasswordError(t('auth:invalidPassword'));
         setLoading(false);
         return;
       }
@@ -99,10 +127,21 @@ export default function LoginScreen() {
         password 
       });
       
-      // التحقق من نجاح العملية
+      // التحقق من وجود خطأ شبكة
       if (!response.success) {
-        // عرض رسالة الخطأ
-        Alert.alert(t('error'), response.message || t('auth.loginFailed'));
+        if (response.isNetworkError) {
+          // عرض رسالة خطأ الشبكة بطريقة ودية للمستخدم
+          Alert.alert(
+            t('common:noInternetConnection'), 
+            t('common:noInternetMessage'),
+            [{ text: t('common:ok') }]
+          );
+          setLoading(false);
+          return;
+        }
+        
+        // عرض رسالة الخطأ للأخطاء الأخرى
+        Alert.alert(t('common:error'), response.message || t('auth:loginFailed'));
         setLoading(false);
         return;
       }
@@ -134,12 +173,16 @@ export default function LoginScreen() {
       } else {
         // إذا لم يكن هناك توكن
         console.error('No token received from server');
-        Alert.alert(t('error'), t('auth.loginFailedNoToken'));
+        Alert.alert(t('common:error'), t('auth:loginFailedNoToken'));
         setLoading(false);
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      Alert.alert(t('error'), t('auth.loginFailed'));
+      if (__DEV__) {
+        console.error('Dev Only - Login error:', error);
+      }
+      
+      // عرض رسالة عامة للخطأ
+      Alert.alert(t('common:error'), t('auth:loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -182,7 +225,7 @@ export default function LoginScreen() {
               { color: appColors.text },
               { textAlign: isRTL ? 'right' : 'left' }
             ]}>
-              {t('login')}
+              {t('common:login')}
             </Text>
             
             {/* تعديل مثال رقم الهاتف */}
@@ -192,7 +235,8 @@ export default function LoginScreen() {
             >
               <View style={styles.exampleContainer}>
                 <Text style={[styles.exampleLabel, { color: appColors.text }]}>
-                  {t('phoneExample')}
+                  {/* مثال لرقم الهاتف */}
+                  {i18n.getResourceBundle(i18n.language, 'auth')?.phoneExample || 'مثال: +9647XXXXXXXX'}
                 </Text>
                 <Text style={[styles.exampleText, { color: appColors.text }]}>
                   <Text style={styles.phoneNumberExample}>780 30 18 150</Text>
@@ -206,7 +250,7 @@ export default function LoginScreen() {
               onChangeText={(text) => setPhoneNumber(text)}
               onChangeFormattedText={(text) => setFormattedPhoneNumber(text)}
               onChangeCountry={(country) => setSelectedCountry(country)}
-              placeholder={t('auth.phoneNumber')}
+              placeholder={t('auth:phoneNumber')}
               error={phoneError}
               defaultCode="IQ"
               onValidityChange={setIsPhoneValid}
@@ -222,7 +266,7 @@ export default function LoginScreen() {
                     textAlign: isRTL ? 'right' : 'left',
                   }
                 ]}
-                placeholder={t('password')}
+                placeholder={t('auth:password')}
                 placeholderTextColor={appColors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
@@ -252,7 +296,8 @@ export default function LoginScreen() {
               onPress={() => router.push('/auth/forgot-password')}
             >
               <Text style={[styles.forgotPasswordText, { color: appColors.primary }]}>
-                {t('forgotPassword', { ns: 'auth' })}
+                {/* نسيت كلمة المرور */}
+                {i18n.getResourceBundle(i18n.language, 'auth')?.forgotPassword || 'نسيت كلمة المرور؟'}
               </Text>
             </TouchableOpacity>
 
@@ -264,7 +309,7 @@ export default function LoginScreen() {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.loginButtonText}>{t('login')}</Text>
+                <Text style={styles.loginButtonText}>{t('common:login')}</Text>
               )}
             </TouchableOpacity>
 
@@ -273,7 +318,8 @@ export default function LoginScreen() {
               onPress={() => router.push('/auth/register')}
             >
               <Text style={[styles.registerText, { color: appColors.textSecondary }]}>
-                {t('noAccount')}
+                {/* ليس لديك حساب */}
+                {i18n.getResourceBundle(i18n.language, 'auth')?.noAccount || 'ليس لديك حساب؟'}
               </Text>
             </TouchableOpacity>
           </View>

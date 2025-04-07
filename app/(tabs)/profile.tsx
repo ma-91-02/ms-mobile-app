@@ -109,9 +109,29 @@ export default function ProfileScreen() {
   // تحميل إحصائيات المستخدم
   const loadUserStats = async () => {
     try {
+      // تحقق من وجود رمز المصادقة أولاً
+      const userToken = await AsyncStorage.getItem('userToken');
+      if (!userToken) {
+        if (__DEV__) {
+          console.warn('Dev Only - Skipping loadUserStats: No token found');
+        }
+        setUserStats(prev => ({
+          ...prev,
+          adsCount: 0
+        }));
+        return;
+      }
+      
       // جلب إعلانات المستخدم
+      if (__DEV__) {
+        console.log('Dev Only - Loading user stats with token:', userToken ? `${userToken.substring(0, 10)}...` : 'No token');
+      }
+      
       const myAdsResponse = await adsAPI.getMyAds();
-      console.log('My ads response:', JSON.stringify(myAdsResponse));
+      
+      if (__DEV__) {
+        console.log('Dev Only - My ads response:', JSON.stringify(myAdsResponse));
+      }
       
       if (myAdsResponse.success && myAdsResponse.data) {
         setUserStats(prev => ({
@@ -119,14 +139,56 @@ export default function ProfileScreen() {
           adsCount: myAdsResponse.data?.length || 0
         }));
       } else {
-        console.warn('Failed to load my ads:', myAdsResponse.message);
-        setUserStats(prev => ({
-          ...prev,
-          adsCount: 0
-        }));
+        // تعامل مع حالة عدم النجاح
+        if (myAdsResponse.message?.includes('token') || 
+            myAdsResponse.message?.includes('authorized') || 
+            myAdsResponse.message?.includes('authentication')) {
+          // مشكلة في المصادقة - حاول تحديث بيانات المستخدم
+          if (__DEV__) {
+            console.log('Dev Only - Authentication error while loading ads - refreshing user data');
+          }
+          
+          // حفظ القيم الافتراضية
+          setUserStats(prev => ({
+            ...prev,
+            adsCount: 0
+          }));
+          
+          // يمكننا هنا إعادة التحقق من التوكن أو إعادة تسجيل الدخول
+          checkLoginStatus();
+        } else {
+          if (__DEV__) {
+            console.log('Dev Only - No ads found or other issue:', myAdsResponse.message);
+          }
+          setUserStats(prev => ({
+            ...prev,
+            adsCount: 0
+          }));
+        }
       }
-    } catch (error) {
-      console.error('Error loading user stats:', error);
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Dev Only - Error loading user stats:', error);
+        // عرض تفاصيل أكثر للخطأ
+        if (error.response) {
+          console.error(`Dev Only - Error status: ${error.response.status}, Error data:`, error.response.data);
+        }
+      }
+      
+      // التحقق من إذا كان الخطأ متعلق بالمصادقة
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        if (__DEV__) {
+          console.log('Dev Only - Authentication error (401/403) while loading user stats');
+        }
+        
+        // تنظيف التوكن المنتهي صلاحيته
+        await AsyncStorage.removeItem('userToken');
+        
+        // محاولة تجديد جلسة المستخدم
+        checkLoginStatus();
+      }
+      
+      // في كل الأحوال، نعيد تعيين العداد إلى صفر
       setUserStats(prev => ({
         ...prev,
         adsCount: 0
@@ -166,16 +228,7 @@ export default function ProfileScreen() {
         router.push('/auth/edit-profile-image' as any);
         break;
       case 'my-ads':
-        router.push({
-          pathname: '/ad-details' as any,
-          params: { type: 'my-ads' }
-        });
-        break;
-      case 'favorites':
-        router.push({
-          pathname: '/ad-details' as any,
-          params: { type: 'favorites' }
-        });
+        router.push('/my-ads' as any);
         break;
       default:
         // For other screens, just show an alert
@@ -302,7 +355,7 @@ export default function ProfileScreen() {
         </View>
         
         {/* قسم الإحصائيات */}
-        {renderStats()}
+        {/* renderStats() */}
 
         {/* قائمة خيارات الملف الشخصي */}
         <View style={styles.menuSection}>
@@ -312,16 +365,8 @@ export default function ProfileScreen() {
           <View style={[styles.menuContainer, { backgroundColor: appColors.card }]}>
             <ProfileMenuItem
               icon="document-text-outline"
-              title={t('myAds', { ns: 'common' })}
+              title={`${t('myAds', { ns: 'common' })} ${userStats.adsCount > 0 ? `(${userStats.adsCount})` : ''}`}
               onPress={() => navigateTo('my-ads')}
-              appColors={appColors}
-              isRTL={isRTL}
-            />
-            <View style={[styles.menuDivider, { backgroundColor: appColors.border }]} />
-            <ProfileMenuItem
-              icon="heart-outline"
-              title={t('favorites', { ns: 'common' })}
-              onPress={() => navigateTo('favorites')}
               appColors={appColors}
               isRTL={isRTL}
             />

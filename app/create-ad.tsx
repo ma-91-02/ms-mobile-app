@@ -10,7 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Switch
+  Switch,
+  Image,
+  Modal,
+  TouchableWithoutFeedback
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +24,8 @@ import AppColors from '../constants/AppColors';
 import i18n, { RTL_LANGUAGES } from './i18n';
 import { adsAPI } from './services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 interface Category {
   id: string;
@@ -65,8 +70,44 @@ const PROVINCES: Province[] = [
   { id: 'sulaymaniyah', name: 'sulaymaniyah' },
   { id: 'najaf', name: 'najaf' },
   { id: 'karbala', name: 'karbala' },
-  { id: 'duhok', name: 'duhok' }
+  { id: 'duhok', name: 'duhok' },
+  { id: 'anbar', name: 'anbar' },
+  { id: 'babil', name: 'babil' },
+  { id: 'diyala', name: 'diyala' },
+  { id: 'kirkuk', name: 'kirkuk' },
+  { id: 'misan', name: 'misan' },
+  { id: 'muthanna', name: 'muthanna' },
+  { id: 'nineveh', name: 'nineveh' },
+  { id: 'qadisiyyah', name: 'qadisiyyah' },
+  { id: 'saladin', name: 'saladin' },
+  { id: 'thi_qar', name: 'thi_qar' },
+  { id: 'wasit', name: 'wasit' }
 ];
+
+// الحصول على إحداثيات المحافظة
+const getCoordinatesForProvince = (provinceId: string): [number, number] => {
+  switch (provinceId) {
+    case 'baghdad': return [44.3661, 33.3152];
+    case 'basra': return [47.7804, 30.5085];
+    case 'erbil': return [44.0091, 36.1911];
+    case 'sulaymaniyah': return [45.4485, 35.5657];
+    case 'najaf': return [44.3414, 32.0284];
+    case 'karbala': return [44.0299, 32.6063];
+    case 'duhok': return [42.9926, 36.8695];
+    case 'anbar': return [42.5000, 33.0000];
+    case 'babil': return [44.4000, 32.5000];
+    case 'diyala': return [45.0000, 33.7500];
+    case 'kirkuk': return [44.3922, 35.4681];
+    case 'misan': return [47.1500, 31.8300];
+    case 'muthanna': return [45.2800, 29.9900];
+    case 'nineveh': return [43.1376, 36.3350];
+    case 'qadisiyyah': return [44.9249, 31.9894];
+    case 'saladin': return [43.8761, 34.6015];
+    case 'thi_qar': return [46.0300, 30.8400];
+    case 'wasit': return [45.7184, 32.5142];
+    default: return [44.3661, 33.3152]; // بغداد كقيمة افتراضية
+  }
+};
 
 export default function CreateAdScreen() {
   const { t } = useTranslation();
@@ -83,9 +124,177 @@ export default function CreateAdScreen() {
   const [ownerName, setOwnerName] = useState('');
   const [itemNumber, setItemNumber] = useState('');
   const [description, setDescription] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
   const [hideContactInfo, setHideContactInfo] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // إضافة حالة للقوائم المنسدلة
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showProvinceModal, setShowProvinceModal] = useState(false);
+  
+  // إضافة حالة للصور
+  const [images, setImages] = useState<string[]>([]);
+
+  // تحديث نمط الواجهة
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    typeContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+    },
+    typeCard: {
+      padding: 20,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    typeTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    typeDesc: {
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    form: {
+      padding: 16,
+    },
+    label: {
+      fontSize: 16,
+      marginBottom: 8,
+      fontWeight: 'bold',
+    },
+    input: {
+      height: 50,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      marginBottom: 16,
+    },
+    textArea: {
+      height: 100,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      marginBottom: 16,
+    },
+    imagesContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginBottom: 16,
+    },
+    imageWrapper: {
+      position: 'relative',
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    imagePreview: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 8,
+    },
+    removeImageBtn: {
+      position: 'absolute',
+      top: -10,
+      right: -10,
+      backgroundColor: 'white',
+      borderRadius: 12,
+    },
+    addImageBtn: {
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    addImageText: {
+      fontSize: 12,
+      marginTop: 4,
+    },
+    switchContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    switchLabel: {
+      fontSize: 16,
+    },
+    createButton: {
+      height: 50,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    createButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    dropdownButton: {
+      height: 50,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      justifyContent: 'center',
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+      maxHeight: '80%',
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      paddingBottom: 16,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: '#e0e0e0',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    modalItem: {
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: '#e0e0e0',
+    },
+    modalItemText: {
+      fontSize: 16,
+    },
+  });
 
   // اختيار نوع الإعلان (فقدت/وجدت)
   const handleSelectType = (type: 'lost' | 'found') => {
@@ -102,22 +311,170 @@ export default function CreateAdScreen() {
     }
   };
 
+  // إضافة وظيفة اختيار الصور
+  const pickImage = async () => {
+    try {
+      // منع إضافة أكثر من 5 صور
+      if (images.length >= 5) {
+        Alert.alert(
+          t('error', { ns: 'common' }),
+          t('maxImagesReached', { ns: 'common' })
+        );
+        return;
+      }
+      
+      // طلب إذن الوصول للصور
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          t('error', { ns: 'common' }),
+          t('cameraPermissionRequired', { ns: 'common' })
+        );
+        return;
+      }
+      
+      // فتح معرض الصور
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.1, // تقليل جودة الصورة لتقليل الحجم (0.1 = 10% من الجودة الأصلية)
+        exif: false, // تجاهل بيانات EXIF للتقليل من حجم الصورة
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        try {
+          // تحديث واجهة المستخدم لإظهار التحميل
+          setLoading(true);
+          
+          const selectedImageUri = result.assets[0].uri;
+          console.log(`تم اختيار صورة بحجم: ${await getImageFileSize(selectedImageUri)} KB`);
+          
+          // ضغط الصورة لتقليل حجمها
+          const compressedImage = await compressImage(selectedImageUri);
+          console.log(`تم ضغط الصورة إلى حجم: ${await getImageFileSize(compressedImage.uri)} KB`);
+          
+          // إضافة الصورة المضغوطة إلى المصفوفة
+          setImages([...images, compressedImage.uri]);
+          
+          setLoading(false);
+        } catch (err) {
+          console.error('خطأ في معالجة الصورة:', err);
+          setLoading(false);
+          Alert.alert(
+            t('error', { ns: 'common' }),
+            t('errorProcessingImage', { ns: 'common' })
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert(
+        t('error', { ns: 'common' }),
+        t('errorSelectingImage', { ns: 'common' })
+      );
+    }
+  };
+
+  // وظيفة لضغط الصورة باستخدام ImageManipulator
+  const compressImage = async (uri: string) => {
+    try {
+      console.log('بدء معالجة الصورة:', uri);
+      console.log('حجم الصورة الأصلي:', await getImageFileSize(uri), 'KB');
+      
+      // أولاً، تصغير حجم الصورة
+      const manipResult = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 800 } }], // تقليل العرض إلى 800 بكسل والارتفاع يتغير تناسبيًا
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG } // ضغط بنسبة 50%
+      );
+      
+      // إذا كان حجم الصورة لا يزال كبيرًا، نضغطها أكثر
+      let currentSize = await getImageFileSize(manipResult.uri);
+      console.log(`حجم الصورة بعد التعديل الأول: ${currentSize} KB`);
+      
+      if (currentSize > 200) { // إذا كان الحجم أكبر من 200KB
+        const moreCompressed = await ImageManipulator.manipulateAsync(
+          manipResult.uri,
+          [{ resize: { width: 600 } }], // تقليل أكثر
+          { compress: 0.3, format: ImageManipulator.SaveFormat.JPEG } // ضغط أكبر
+        );
+        
+        currentSize = await getImageFileSize(moreCompressed.uri);
+        console.log(`حجم الصورة بعد التعديل الثاني: ${currentSize} KB`);
+        
+        // إذا كان الحجم لا يزال كبيرًا جدًا، نضغط بشكل أكبر
+        if (currentSize > 100) {
+          const highlyCompressed = await ImageManipulator.manipulateAsync(
+            moreCompressed.uri,
+            [{ resize: { width: 400 } }], // تقليل أكثر إلى 400 بكسل
+            { compress: 0.2, format: ImageManipulator.SaveFormat.JPEG } // ضغط عالي جدًا
+          );
+          
+          const finalSize = await getImageFileSize(highlyCompressed.uri);
+          console.log(`حجم الصورة النهائي بعد الضغط الشديد: ${finalSize} KB`);
+          
+          // إذا كان الحجم لا يزال كبيرًا جدًا، نضغط بشكل أقصى
+          if (finalSize > 50) {
+            const extremelyCompressed = await ImageManipulator.manipulateAsync(
+              highlyCompressed.uri,
+              [{ resize: { width: 300 } }], // تقليل أكثر إلى 300 بكسل
+              { compress: 0.1, format: ImageManipulator.SaveFormat.JPEG } // ضغط قصوي 10%
+            );
+            
+            console.log(`حجم الصورة النهائي بعد الضغط القصوى: ${await getImageFileSize(extremelyCompressed.uri)} KB`);
+            return extremelyCompressed;
+          }
+          
+          return highlyCompressed;
+        }
+        
+        return moreCompressed;
+      }
+      
+      return manipResult;
+    } catch (error) {
+      console.error('خطأ في ضغط الصورة:', error);
+      throw error;
+    }
+  };
+
+  // وظيفة للحصول على حجم ملف الصورة بالكيلوبايت
+  const getImageFileSize = async (uri: string): Promise<number> => {
+    try {
+      // في أجهزة iOS، الـ URI يكون غالبًا بـ "file://" ونحتاج لإزالة "file://" 
+      const fileInfo = await fetch(uri);
+      const blob = await fileInfo.blob();
+      return blob.size / 1024; // تحويل من بايت إلى كيلوبايت
+    } catch (error) {
+      console.error('خطأ في الحصول على حجم الصورة:', error);
+      return 0;
+    }
+  };
+
+  // وظيفة حذف صورة
+  const removeImage = (index: number) => {
+    const newImages = [...images];
+    newImages.splice(index, 1);
+    setImages(newImages);
+  };
+
   // إنشاء الإعلان
   const handleCreateAd = async () => {
     // التحقق من البيانات المطلوبة
-    if (!adType || !category || !province || !ownerName || !itemNumber || !description || !contactPhone) {
-      Alert.alert(t('error'), t('fillAllFields'));
+    if (!adType || !category || !province || !ownerName || !itemNumber || !description) {
+      Alert.alert(t('error', { ns: 'common' }), t('fillAllFields', { ns: 'common' }));
       return;
     }
 
     // تأكيد إنشاء الإعلان
     Alert.alert(
-      t('createAdConfirmation'),
-      t('createAdConfirmationMessage'),
+      t('createAdConfirmation', { ns: 'common' }),
+      t('createAdConfirmationMessage', { ns: 'common' }),
       [
-        { text: t('cancel'), style: 'cancel' },
+        { text: t('cancel', { ns: 'common' }), style: 'cancel' },
         {
-          text: t('confirm'),
+          text: t('confirm', { ns: 'common' }),
           onPress: async () => {
             setLoading(true);
             
@@ -130,7 +487,16 @@ export default function CreateAdScreen() {
                 '4': 'other'
               };
               
-              // تجهيز بيانات الإعلان
+              // طباعة معلومات الصور قبل إرسالها
+              console.log('-------- تفاصيل الصور المراد تحميلها --------');
+              console.log(`عدد الصور: ${images.length}`);
+              for (let i = 0; i < images.length; i++) {
+                console.log(`صورة #${i+1}: ${images[i]}`);
+                console.log(`نوع المسار: ${typeof images[i]}`);
+                console.log(`اسم الملف: ${images[i].split('/').pop()}`);
+              }
+              
+              // تجهيز بيانات الإعلان - إزالة contactPhone لأنه سيتم استخدام رقم المستخدم تلقائيًا
               const adData = {
                 type: adType,
                 category: categoryMap[category] || category,
@@ -138,8 +504,8 @@ export default function CreateAdScreen() {
                 ownerName,
                 itemNumber,
                 description,
-                contactPhone,
                 hideContactInfo,
+                images: images, // إضافة الصور
                 location: {
                   type: "Point",
                   coordinates: getCoordinatesForProvince(province)
@@ -156,33 +522,34 @@ export default function CreateAdScreen() {
               const response = await adsAPI.createAd(adData);
               console.log('Server response:', JSON.stringify(response));
               
+              // التحقق من الصور في الاستجابة
+              if (response.success && response.data) {
+                console.log('Returned images from server:', JSON.stringify(response.data.images || []));
+              }
+              
               if (response.success) {
                 Alert.alert(
-                  t('adCreatedSuccess'),
-                  t('adCreatedSuccessMessage'),
+                  t('success', { ns: 'common' }),
+                  t('adCreatedSuccess', { ns: 'common' }),
                   [
                     {
-                      text: t('ok'),
-                      onPress: () => router.push('/(tabs)/ads' as any)
+                      text: t('ok', { ns: 'common' }),
+                      onPress: () => router.push('/my-ads' as any)
                     }
                   ]
                 );
               } else {
-                // في حالة حدوث خطأ من الخادم
-                console.error('Failed to create ad:', response.message);
                 Alert.alert(
-                  t('error'),
-                  response.message || t('adCreationError')
+                  t('error', { ns: 'common' }),
+                  response.message || t('adCreationError', { ns: 'common' })
                 );
               }
             } catch (error) {
               console.error('Error creating ad:', error);
-              // عرض تفاصيل الخطأ
-              let errorMessage = t('adCreationError');
-              if (error instanceof Error) {
-                errorMessage += ': ' + error.message;
-              }
-              Alert.alert(t('error'), errorMessage);
+              Alert.alert(
+                t('error', { ns: 'common' }),
+                t('adCreationDetailedError', { ns: 'common' })
+              );
             } finally {
               setLoading(false);
             }
@@ -192,129 +559,203 @@ export default function CreateAdScreen() {
     );
   };
 
-  // دالة للحصول على إحداثيات تقريبية للمحافظة
-  const getCoordinatesForProvince = (provinceId: string): number[] => {
-    // إحداثيات تقريبية للمحافظات (خط الطول، خط العرض)
-    const provinceCoordinates: {[key: string]: number[]} = {
-      'baghdad': [44.3661, 33.3152],
-      'basra': [47.7833, 30.5000],
-      'erbil': [44.0088, 36.1911],
-      'sulaymaniyah': [45.4329, 35.5569],
-      'najaf': [44.3214, 32.0288],
-      'karbala': [44.0246, 32.6168],
-      'duhok': [42.9926, 36.8694],
-      'kirkuk': [44.3922, 35.4681]
-    };
-    
-    return provinceCoordinates[provinceId] || [44.3661, 33.3152]; // Baghdad as default
-  };
-
-  // عنصر عرض الفئات
-  const renderCategories = () => (
-    <View style={styles.categoriesContainer}>
-      <Text style={[styles.sectionTitle, { color: appColors.text }]}>{t('selectCategory')}</Text>
-      <View style={styles.categoriesGrid}>
-        {CATEGORIES.map((cat) => (
-          <TouchableOpacity
-            key={cat.id}
-            style={[
-              styles.categoryItem,
-              { backgroundColor: category === cat.id ? appColors.primary : appColors.secondary },
-            ]}
-            onPress={() => setCategory(cat.id)}
-          >
-            <Ionicons
-              name={cat.icon as any}
-              size={24}
-              color={category === cat.id ? '#fff' : appColors.textSecondary}
-            />
-            <Text
-              style={[
-                styles.categoryText,
-                { color: category === cat.id ? '#fff' : appColors.text }
-              ]}
-            >
-              {t(cat.name)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
+  // مكون قائمة الفئات المنسدلة
+  const CategoryModal = () => (
+    <Modal
+      visible={showCategoryModal}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setShowCategoryModal(false)}
+      statusBarTranslucent={true}
+    >
+      <TouchableWithoutFeedback onPress={() => setShowCategoryModal(false)}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
+              <View style={[
+                styles.modalHeader,
+                { flexDirection: isRTL ? 'row-reverse' : 'row' }
+              ]}>
+                <Text style={[styles.modalTitle, { color: appColors.text }]}>
+                  {t('documentType', { ns: 'common' })}
+                </Text>
+                <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
+                  <Ionicons name="close" size={24} color={appColors.text} />
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {CATEGORIES.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.modalItem,
+                      { 
+                        backgroundColor: category === cat.id ? appColors.secondary : appColors.background,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingVertical: 15
+                      }
+                    ]}
+                    onPress={() => {
+                      setCategory(cat.id);
+                      setShowCategoryModal(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', flex: 1 }}>
+                      <Ionicons 
+                        name={cat.icon as any} 
+                        size={20} 
+                        color={category === cat.id ? appColors.primary : appColors.text} 
+                        style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} 
+                      />
+                      <Text 
+                        style={[
+                          styles.modalItemText, 
+                          { 
+                            color: category === cat.id ? appColors.primary : appColors.text,
+                            fontSize: 16
+                          }
+                        ]}
+                      >
+                        {t(cat.name, { ns: 'common' })}
+                      </Text>
+                    </View>
+                    {category === cat.id && (
+                      <Ionicons name="checkmark" size={24} color={appColors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
   );
 
-  // عنصر عرض المحافظات
-  const renderProvinces = () => (
-    <View style={styles.provincesContainer}>
-      <Text style={[styles.sectionTitle, { color: appColors.text }]}>{t('selectProvince')}</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.provincesScroll}
-      >
-        {PROVINCES.map((prov) => (
-          <TouchableOpacity
-            key={prov.id}
-            style={[
-              styles.provinceItem,
-              { backgroundColor: province === prov.id ? appColors.primary : appColors.secondary },
-            ]}
-            onPress={() => setProvince(prov.id)}
-          >
-            <Text
-              style={[
-                styles.provinceText,
-                { color: province === prov.id ? '#fff' : appColors.text }
-              ]}
-            >
-              {t(prov.name)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+  // مكون قائمة المحافظات المنسدلة
+  const ProvinceModal = () => (
+    <Modal
+      visible={showProvinceModal}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setShowProvinceModal(false)}
+      statusBarTranslucent={true}
+    >
+      <TouchableWithoutFeedback onPress={() => setShowProvinceModal(false)}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
+              <View style={[
+                styles.modalHeader,
+                { flexDirection: isRTL ? 'row-reverse' : 'row' }
+              ]}>
+                <Text style={[styles.modalTitle, { color: appColors.text }]}>
+                  {t('governorate', { ns: 'common' })}
+                </Text>
+                <TouchableOpacity onPress={() => setShowProvinceModal(false)}>
+                  <Ionicons name="close" size={24} color={appColors.text} />
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
+                {PROVINCES.map((prov) => {
+                  const translationKey = `provinces.${prov.id}`;
+                  const displayName = t(translationKey);
+                  
+                  return (
+                    <TouchableOpacity
+                      key={prov.id}
+                      style={[
+                        styles.modalItem,
+                        { 
+                          backgroundColor: province === prov.id ? appColors.secondary : appColors.background,
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          paddingVertical: 15
+                        }
+                      ]}
+                      onPress={() => {
+                        setProvince(prov.id);
+                        setShowProvinceModal(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text 
+                        style={[
+                          styles.modalItemText, 
+                          { 
+                            color: province === prov.id ? appColors.primary : appColors.text,
+                            flex: 1,
+                            fontSize: 16
+                          }
+                        ]}
+                      >
+                        {displayName}
+                      </Text>
+                      {province === prov.id && (
+                        <Ionicons name="checkmark" size={24} color={appColors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
   );
 
-  // عرض خطوة اختيار نوع الإعلان
+  // عرض شاشة اختيار النوع
   if (step === 1) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-        <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        <View style={styles.header}>
           <TouchableOpacity 
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: appColors.secondary }]} 
             onPress={handleGoBack}
           >
             <Ionicons 
-              name={isRTL ? "chevron-forward" : "chevron-back"} 
+              name={isRTL ? "arrow-forward" : "arrow-back"} 
               size={24} 
               color={appColors.text} 
             />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: appColors.text }]}>
-            {t('createNewAd')}
+            {t('selectAdType', { ns: 'common' })}
           </Text>
         </View>
 
-        <View style={styles.typeSelectionContainer}>
-          <Text style={[styles.typeSelectionTitle, { color: appColors.text }]}>
-            {t('selectAdType')}
-          </Text>
-          
+        <View style={styles.typeContainer}>
           <TouchableOpacity
-            style={[styles.typeButton, { backgroundColor: appColors.error }]}
+            style={[styles.typeCard, { backgroundColor: appColors.secondary }]}
             onPress={() => handleSelectType('lost')}
           >
-            <Ionicons name="alert-circle-outline" size={60} color="#fff" />
-            <Text style={styles.typeButtonTitle}>{t('lostDocument')}</Text>
-            <Text style={styles.typeButtonSubtitle}>{t('lostDocumentDesc')}</Text>
+            <Ionicons name="search" size={40} color={appColors.primary} />
+            <Text style={[styles.typeTitle, { color: appColors.text }]}>
+              {t('lostDocument', { ns: 'common' })}
+            </Text>
+            <Text style={[styles.typeDesc, { color: appColors.textSecondary }]}>
+              {t('lostDocumentDesc', { ns: 'common' })}
+            </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
-            style={[styles.typeButton, { backgroundColor: '#27ae60' }]}
+            style={[styles.typeCard, { backgroundColor: appColors.secondary }]}
             onPress={() => handleSelectType('found')}
           >
-            <Ionicons name="checkmark-circle-outline" size={60} color="#fff" />
-            <Text style={styles.typeButtonTitle}>{t('foundDocument')}</Text>
-            <Text style={styles.typeButtonSubtitle}>{t('foundDocumentDesc')}</Text>
+            <Ionicons name="hand-right" size={40} color={appColors.success} />
+            <Text style={[styles.typeTitle, { color: appColors.text }]}>
+              {t('foundDocument', { ns: 'common' })}
+            </Text>
+            <Text style={[styles.typeDesc, { color: appColors.textSecondary }]}>
+              {t('foundDocumentDesc', { ns: 'common' })}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -322,323 +763,215 @@ export default function CreateAdScreen() {
   }
 
   // عرض نموذج إنشاء الإعلان
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidView}
-      >
-        <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={handleGoBack}
-          >
-            <Ionicons 
-              name={isRTL ? "chevron-forward" : "chevron-back"} 
-              size={24} 
-              color={appColors.text} 
-            />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: appColors.text }]}>
-            {adType === 'lost' ? t('createLostAd') : t('createFoundAd')}
-          </Text>
-        </View>
-
-        <ScrollView 
-          style={styles.formContainer}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.formContent}
+  if (step === 2) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
         >
-          {/* فئة المستمسك */}
-          {renderCategories()}
-          
-          {/* المحافظة */}
-          {renderProvinces()}
-          
-          {/* بيانات المستمسك */}
-          <View style={styles.inputSection}>
-            <Text style={[styles.sectionTitle, { color: appColors.text }]}>{t('documentInfo')}</Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={[styles.inputLabel, { color: appColors.textSecondary }]}>{t('ownerName')}</Text>
+          <ScrollView>
+            <View style={styles.header}>
+              <TouchableOpacity 
+                style={[styles.backButton, { backgroundColor: appColors.secondary }]} 
+                onPress={handleGoBack}
+              >
+                <Ionicons 
+                  name={isRTL ? "arrow-forward" : "arrow-back"} 
+                  size={24} 
+                  color={appColors.text} 
+                />
+              </TouchableOpacity>
+              <Text style={[styles.headerTitle, { color: appColors.text }]}>
+                {adType === 'lost' 
+                  ? t('createLostAd', { ns: 'common' })
+                  : t('createFoundAd', { ns: 'common' })
+                }
+              </Text>
+            </View>
+
+            <View style={styles.form}>
+              {/* نوع المستمسك - زر القائمة المنسدلة */}
+              <Text style={[styles.label, { color: appColors.text }]}>
+                {t('documentType', { ns: 'common' })} *
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.dropdownButton,
+                  { backgroundColor: appColors.secondary }
+                ]}
+                onPress={() => setShowCategoryModal(true)}
+              >
+                <View style={{ 
+                  flexDirection: isRTL ? 'row-reverse' : 'row', 
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flex: 1
+                }}>
+                  <View style={{ 
+                    flexDirection: isRTL ? 'row-reverse' : 'row', 
+                    alignItems: 'center' 
+                  }}>
+                    {category ? (
+                      <>
+                        <Ionicons 
+                          name={(CATEGORIES.find(c => c.id === category)?.icon || 'document-text-outline') as any} 
+                          size={20} 
+                          color={appColors.primary} 
+                          style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} 
+                        />
+                        <Text style={{ color: appColors.text }}>
+                          {t(CATEGORIES.find(c => c.id === category)?.name || '', { ns: 'common' })}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text style={{ color: appColors.textSecondary }}>
+                        {t('selectDocumentType', { ns: 'common' })}
+                      </Text>
+                    )}
+                  </View>
+                  <Ionicons name="chevron-down" size={20} color={appColors.text} />
+                </View>
+              </TouchableOpacity>
+              
+              {/* المحافظة - زر القائمة المنسدلة */}
+              <Text style={[styles.label, { color: appColors.text, marginTop: 16 }]}>
+                {t('governorate', { ns: 'common' })} *
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.dropdownButton,
+                  { backgroundColor: appColors.secondary }
+                ]}
+                onPress={() => setShowProvinceModal(true)}
+              >
+                <View style={{ 
+                  flexDirection: isRTL ? 'row-reverse' : 'row', 
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flex: 1
+                }}>
+                  <Text style={{ 
+                    color: province ? appColors.text : appColors.textSecondary
+                  }}>
+                    {province ? t(`provinces.${province}`) : t('selectProvince', { ns: 'common' })}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color={appColors.text} />
+                </View>
+              </TouchableOpacity>
+
+              {/* اسم صاحب المستمسك */}
+              <Text style={[styles.label, { color: appColors.text, marginTop: 16 }]}>
+                {t('ownerName', { ns: 'common' })} *
+              </Text>
               <TextInput
                 style={[
                   styles.input,
-                  { 
-                    backgroundColor: appColors.secondary,
-                    color: appColors.text,
-                    textAlign: isRTL ? 'right' : 'left'
-                  }
+                  { backgroundColor: appColors.secondary, color: appColors.text }
                 ]}
                 value={ownerName}
                 onChangeText={setOwnerName}
-                placeholder={t('ownerNamePlaceholder')}
+                placeholder={t('ownerNamePlaceholder', { ns: 'common' })}
                 placeholderTextColor={appColors.textSecondary}
               />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={[styles.inputLabel, { color: appColors.textSecondary }]}>{t('documentNumber')}</Text>
+
+              {/* رقم/معلومات المستمسك */}
+              <Text style={[styles.label, { color: appColors.text }]}>
+                {t('documentNumber', { ns: 'common' })} *
+              </Text>
               <TextInput
                 style={[
                   styles.input,
-                  { 
-                    backgroundColor: appColors.secondary,
-                    color: appColors.text,
-                    textAlign: isRTL ? 'right' : 'left'
-                  }
+                  { backgroundColor: appColors.secondary, color: appColors.text }
                 ]}
                 value={itemNumber}
                 onChangeText={setItemNumber}
-                placeholder={t('documentNumberPlaceholder')}
+                placeholder={t('documentNumberPlaceholder', { ns: 'common' })}
                 placeholderTextColor={appColors.textSecondary}
               />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={[styles.inputLabel, { color: appColors.textSecondary }]}>{t('description')}</Text>
+
+              {/* وصف المستمسك */}
+              <Text style={[styles.label, { color: appColors.text }]}>
+                {t('description', { ns: 'common' })} *
+              </Text>
               <TextInput
                 style={[
                   styles.textArea,
-                  { 
-                    backgroundColor: appColors.secondary,
-                    color: appColors.text,
-                    textAlign: isRTL ? 'right' : 'left'
-                  }
+                  { backgroundColor: appColors.secondary, color: appColors.text }
                 ]}
                 value={description}
                 onChangeText={setDescription}
-                placeholder={t('descriptionPlaceholder')}
+                placeholder={t('descriptionPlaceholder', { ns: 'common' })}
                 placeholderTextColor={appColors.textSecondary}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
               />
-            </View>
-          </View>
-          
-          {/* معلومات الاتصال */}
-          <View style={styles.inputSection}>
-            <Text style={[styles.sectionTitle, { color: appColors.text }]}>{t('contactInfo')}</Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={[styles.inputLabel, { color: appColors.textSecondary }]}>{t('phoneNumber')}</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  { 
-                    backgroundColor: appColors.secondary,
-                    color: appColors.text,
-                    textAlign: isRTL ? 'right' : 'left'
-                  }
-                ]}
-                value={contactPhone}
-                onChangeText={setContactPhone}
-                placeholder={t('phoneNumberPlaceholder')}
-                placeholderTextColor={appColors.textSecondary}
-                keyboardType="phone-pad"
-              />
-            </View>
-            
-            <View style={[styles.switchContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-              <Switch
-                value={hideContactInfo}
-                onValueChange={setHideContactInfo}
-                trackColor={{ false: '#d0d0d0', true: appColors.primary }}
-                thumbColor="#ffffff"
-              />
-              <Text 
-                style={[
-                  styles.switchLabel,
-                  { 
-                    color: appColors.text,
-                    marginLeft: isRTL ? 0 : 10,
-                    marginRight: isRTL ? 10 : 0,
-                  }
-                ]}
-              >
-                {t('hideContactInfo')}
-              </Text>
-            </View>
-          </View>
-          
-          {/* زر إنشاء الإعلان */}
-          <TouchableOpacity
-            style={[
-              styles.createButton,
-              { backgroundColor: appColors.primary },
-              loading && { opacity: 0.7 }
-            ]}
-            onPress={handleCreateAd}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="add-circle-outline" size={24} color="#fff" />
-                <Text style={styles.createButtonText}>{t('createAd')}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-}
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardAvoidView: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontFamily: 'Cairo-Bold',
-    marginLeft: 8,
-  },
-  typeSelectionContainer: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
-  typeSelectionTitle: {
-    fontSize: 24,
-    marginBottom: 30,
-    textAlign: 'center',
-    fontFamily: 'Cairo-Bold',
-  },
-  typeButton: {
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-  },
-  typeButtonTitle: {
-    fontSize: 22,
-    color: '#fff',
-    marginTop: 10,
-    fontFamily: 'Cairo-Bold',
-  },
-  typeButtonSubtitle: {
-    fontSize: 16,
-    color: '#fff',
-    marginTop: 5,
-    textAlign: 'center',
-    opacity: 0.9,
-    fontFamily: 'Cairo-Regular',
-  },
-  formContainer: {
-    flex: 1,
-  },
-  formContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  categoriesContainer: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 12,
-    fontFamily: 'Cairo-Bold',
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  categoryItem: {
-    width: '48%',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  categoryText: {
-    marginTop: 8,
-    fontSize: 16,
-    fontFamily: 'Cairo-Medium',
-  },
-  provincesContainer: {
-    marginBottom: 20,
-  },
-  provincesScroll: {
-    paddingRight: 20,
-  },
-  provinceItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  provinceText: {
-    fontSize: 16,
-    fontFamily: 'Cairo-Medium',
-  },
-  inputSection: {
-    marginBottom: 20,
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 16,
-    marginBottom: 8,
-    fontFamily: 'Cairo-Medium',
-  },
-  input: {
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    fontFamily: 'Cairo-Regular',
-  },
-  textArea: {
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    minHeight: 100,
-    fontFamily: 'Cairo-Regular',
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  switchLabel: {
-    fontSize: 16,
-    fontFamily: 'Cairo-Regular',
-  },
-  createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 20,
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    marginLeft: 10,
-    fontFamily: 'Cairo-Bold',
-  },
-}); 
+              {/* إضافة صور */}
+              <Text style={[styles.label, { color: appColors.text }]}>
+                {t('images', { ns: 'common' })}
+              </Text>
+              
+              <View style={styles.imagesContainer}>
+                {images.map((uri, index) => (
+                  <View key={index} style={styles.imageWrapper}>
+                    <Image source={{ uri }} style={styles.imagePreview} />
+                    <TouchableOpacity 
+                      style={styles.removeImageBtn}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Ionicons name="close-circle" size={24} color={appColors.error} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                
+                <TouchableOpacity 
+                  style={[styles.addImageBtn, { backgroundColor: appColors.secondary }]}
+                  onPress={pickImage}
+                >
+                  <Ionicons name="add" size={24} color={appColors.primary} />
+                  <Text style={[styles.addImageText, { color: appColors.primary }]}>
+                    {t('addImage', { ns: 'common' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* إخفاء معلومات الاتصال */}
+              <View style={styles.switchContainer}>
+                <Text style={[styles.switchLabel, { color: appColors.text }]}>
+                  {t('hideContactInfo', { ns: 'common' })}
+                </Text>
+                <Switch
+                  value={hideContactInfo}
+                  onValueChange={setHideContactInfo}
+                  trackColor={{ false: appColors.border, true: appColors.primary }}
+                  thumbColor={hideContactInfo ? appColors.secondary : appColors.background}
+                />
+              </View>
+
+              {/* زر إنشاء الإعلان */}
+              <TouchableOpacity
+                style={[styles.createButton, { backgroundColor: appColors.primary }]}
+                onPress={handleCreateAd}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.createButtonText}>
+                    {t('createAd', { ns: 'common' })}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+        
+        {/* Render the modals */}
+        <CategoryModal />
+        <ProvinceModal />
+      </SafeAreaView>
+    );
+  }
+} 

@@ -1,3 +1,12 @@
+/**
+ * ملف تهيئة نظام الترجمة i18next
+ * 
+ * هذا هو الملف الرئيسي والوحيد لتهيئة نظام الترجمة في التطبيق
+ * يتم استيراد ملفات الترجمة JSON من مجلد translations
+ * يرجى عدم إنشاء ملفات i18n.ts أخرى أو إعادة تهيئة نظام الترجمة في مكان آخر
+ * لتجنب التعارض وتهيئة المكتبة مرتين
+ */
+
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -80,7 +89,8 @@ const loadAllSections = (translations: any): TranslationData => {
         'otherDocuments': 'مستمسكات أخرى',
         'loading_more': 'جاري تحميل المزيد...',
         'profile': 'الملف الشخصي',
-        'settings': 'الإعدادات'
+        'settings': 'الإعدادات',
+        'allCategories': 'جميع الفئات'
       },
       en: {
         'passport': 'Passport',
@@ -107,7 +117,8 @@ const loadAllSections = (translations: any): TranslationData => {
         'otherDocuments': 'Other Documents',
         'loading_more': 'Loading more...',
         'profile': 'Profile',
-        'settings': 'Settings'
+        'settings': 'Settings',
+        'allCategories': 'All Categories'
       },
       ku: {
         'passport': 'پاسپۆرت',
@@ -134,7 +145,8 @@ const loadAllSections = (translations: any): TranslationData => {
         'otherDocuments': 'بەڵگەنامەکانی تر',
         'loading_more': 'زیادکردنی زیاتر...',
         'profile': 'پڕۆفایل',
-        'settings': 'ڕێکخستنەکان'
+        'settings': 'ڕێکخستنەکان',
+        'allCategories': 'هەموو بەشەکان'
       }
     }
   };
@@ -222,9 +234,47 @@ const initI18n = () => {
     returnEmptyString: false,
     returnObjects: true,
     fallbackNS: 'common',
-    keySeparator: false,
+    keySeparator: '.', // تمكين فاصل المفاتيح ليعمل بشكل صحيح مع التسلسل مثل provinces.baghdad
     nsSeparator: ':'
   });
+  
+  // إضافة مفاتيح تصحيح المحافظات في وضع التطوير
+  if (__DEV__) {
+    const debugProvinces = {
+      ar: {
+        'provinces': {
+          'all': 'جميع محافظات العراق',
+          'baghdad': 'بغداد',
+          'basra': 'البصرة',
+          'erbil': 'أربيل',
+          'sulaymaniyah': 'السليمانية',
+          'najaf': 'النجف',
+          'karbala': 'كربلاء',
+          'duhok': 'دهوك',
+          'anbar': 'الأنبار',
+          'babil': 'بابل',
+          'diyala': 'ديالى',
+          'kirkuk': 'كركوك',
+          'misan': 'ميسان',
+          'muthanna': 'المثنى',
+          'nineveh': 'نينوى',
+          'qadisiyyah': 'القادسية',
+          'saladin': 'صلاح الدين',
+          'thi_qar': 'ذي قار',
+          'wasit': 'واسط'
+        }
+      }
+    };
+    
+    // إضافة المحافظات للتصحيح
+    i18next.addResourceBundle('ar', 'common', debugProvinces.ar, true, true);
+    console.log('Added debug provinces translations');
+    
+    // اختبار مباشر للترجمات
+    console.log('Direct test - all provinces:');
+    console.log('provinces.all:', i18next.t('provinces.all'));
+    console.log('provinces.nineveh:', i18next.t('provinces.nineveh'));
+  }
   
   isInitialized = true;
 };
@@ -330,32 +380,119 @@ export const changeLanguage = async (languageCode: string): Promise<boolean> => 
   }
 };
 
-// وظيفة إعادة تحميل الترجمات
-export const reloadTranslations = async () => {
-  try {
-    const savedLanguage = await AsyncStorage.getItem('user-language');
-    if (savedLanguage) {
-      console.log(`Reloading translations for: ${savedLanguage}`);
-      
-      // إعادة تطبيق اللغة
-      await i18next.changeLanguage(savedLanguage);
-      console.log(`Translations reloaded successfully: ${savedLanguage}`);
-      
-      // إعادة تطبيق اتجاه RTL إذا لزم الأمر
-      const isRTL = RTL_LANGUAGES.includes(savedLanguage);
-      if (I18nManager.isRTL !== isRTL) {
-        I18nManager.forceRTL(isRTL);
-        console.log(`RTL direction updated: ${isRTL}`);
-      }
-      
-      return true;
-    }
-    return false;
-  } catch (error) {
-    console.error('Error reloading translations:', error);
-    return false;
+// إضافة تشخيص وإعادة تحميل موارد الترجمة
+export const reloadTranslations = () => {
+  if (__DEV__) {
+    console.log('Manually reloading translation resources...');
   }
+  
+  // إعادة تحميل الموارد
+  const refreshedResources = {
+    ar: loadAllSections({...ar, lang: 'ar'}),
+    en: loadAllSections({...en, lang: 'en'}),
+    ku: loadAllSections({...ku, lang: 'ku'})
+  };
+  
+  const currentLang = i18next.language || 'ar';
+  
+  if (__DEV__) {
+    console.log(`Current language: ${currentLang}`);
+    
+    // تشخيص مفاتيح المحافظات
+    const arCommon = refreshedResources.ar?.common || {};
+    const arProvinces = arCommon.provinces || {};
+    console.log('AR provinces keys:', Object.keys(arProvinces));
+  }
+  
+  // إضافة موارد الترجمة يدوياً
+  Object.keys(refreshedResources).forEach(lang => {
+    Object.keys(refreshedResources[lang as keyof typeof refreshedResources]).forEach(ns => {
+      const bundle = refreshedResources[lang as keyof typeof refreshedResources][ns];
+      i18next.addResourceBundle(lang, ns, bundle, true, true);
+    });
+  });
+  
+  // إضافة ترجمات المحافظات بشكل مباشر
+  const provincesTranslations = {
+    ar: {
+      'provinces': {
+        'all': 'جميع محافظات العراق',
+        'baghdad': 'بغداد',
+        'basra': 'البصرة',
+        'erbil': 'أربيل',
+        'sulaymaniyah': 'السليمانية',
+        'najaf': 'النجف',
+        'karbala': 'كربلاء',
+        'duhok': 'دهوك',
+        'anbar': 'الأنبار',
+        'babil': 'بابل',
+        'diyala': 'ديالى',
+        'kirkuk': 'كركوك',
+        'misan': 'ميسان',
+        'muthanna': 'المثنى',
+        'nineveh': 'نينوى',
+        'qadisiyyah': 'القادسية',
+        'saladin': 'صلاح الدين',
+        'thi_qar': 'ذي قار',
+        'wasit': 'واسط'
+      }
+    },
+    en: {
+      'provinces': {
+        'all': 'All Iraq Governorates',
+        'baghdad': 'Baghdad',
+        'basra': 'Basra',
+        'erbil': 'Erbil',
+        'sulaymaniyah': 'Sulaymaniyah',
+        'najaf': 'Najaf',
+        'karbala': 'Karbala',
+        'duhok': 'Duhok',
+        'anbar': 'Anbar',
+        'babil': 'Babylon',
+        'diyala': 'Diyala',
+        'kirkuk': 'Kirkuk',
+        'misan': 'Maysan',
+        'muthanna': 'Muthanna',
+        'nineveh': 'Nineveh',
+        'qadisiyyah': 'Qadisiyyah',
+        'saladin': 'Saladin',
+        'thi_qar': 'Thi Qar',
+        'wasit': 'Wasit'
+      }
+    }
+  };
+  
+  // إضافة ترجمات المحافظات
+  Object.keys(provincesTranslations).forEach(lang => {
+    if (lang === currentLang || lang === 'ar') { // دائماً نضيف العربية كاحتياط
+      i18next.addResourceBundle(lang, 'common', provincesTranslations[lang as keyof typeof provincesTranslations], true, true);
+      if (__DEV__) {
+        console.log(`Added province translations for ${lang}`);
+      }
+    }
+  });
+  
+  // إعادة تحميل الترجمات الرئيسية
+  const namespaces = ['common', 'auth', 'tabs', 'langSelect'];
+  i18next.reloadResources(currentLang, namespaces);
+  
+  // للتأكد من أن التغييرات تم تطبيقها
+  if (__DEV__) {
+    // التحقق من ترجمات المحافظات
+    console.log('After reload - provinces test:');
+    console.log('provinces.all:', i18next.t('provinces.all', { ns: 'common' }));
+    console.log('provinces.nineveh:', i18next.t('provinces.nineveh', { ns: 'common' }));
+  }
+  
+  // إعادة المؤشر إلى نجاح العملية
+  return true;
 };
+
+// تنفيذ إعادة تحميل الترجمات عند بدء التشغيل
+if (__DEV__) {
+  // في وضع التطوير فقط، نقوم بإعادة التحميل للتشخيص
+  reloadTranslations();
+}
 
 // وظيفة لإعادة تعيين اللغة وإزالتها من التخزين المحلي
 export const resetLanguage = async (): Promise<boolean> => {

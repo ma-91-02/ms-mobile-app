@@ -61,9 +61,10 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   success: boolean;
-  message: string;
-  token: string;
-  user: User;
+  message?: string;
+  token?: string;
+  user?: User;
+  isNetworkError?: boolean;
 }
 
 // إضافة تصدير افتراضي

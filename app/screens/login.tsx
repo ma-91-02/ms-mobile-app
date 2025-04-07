@@ -27,16 +27,16 @@ export default function LoginScreen() {
   const { t } = useTranslation();
 
   // إضافة سجلات لتصحيح الأخطاء
-  console.log('Translation test - warning:', t('common.warning'));
-  console.log('Translation test - error:', t('common.error'));
-  console.log('Translation test - login:', t('common.login'));
-  console.log('Translation test - phone:', t('common.phoneNumber'));
-  console.log('Translation test - password:', t('auth.password'));
-  console.log('Translation test - no account:', t('auth.noAccount'));
-  console.log('Translation test - register now:', t('auth.registerNow'));
+  console.log('Translation test - warning:', t('warning', { ns: 'common' }));
+  console.log('Translation test - error:', t('error', { ns: 'common' }));
+  console.log('Translation test - login:', t('login', { ns: 'common' }));
+  console.log('Translation test - phone:', t('phoneNumber', { ns: 'common' }));
+  console.log('Translation test - password:', t('password', { ns: 'auth' }));
+  console.log('Translation test - no account:', t('noAccount', { ns: 'auth' }));
+  console.log('Translation test - register now:', t('registerNow', { ns: 'auth' }));
   console.log('Current i18n namespaces:', i18n.options?.ns);
   console.log('Current i18n language:', i18n.language);
-  console.log('Translation test - enterPhoneAndPassword:', t('auth.enterPhoneAndPassword'));
+  console.log('Translation test - enterPhoneAndPassword:', t('enterPhoneAndPassword', { ns: 'auth' }));
   
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +46,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
       // استخدام نصوص ثابتة للتنبيهات مؤقتًا
-      console.log('Translation test - would use:', t('common.warning'), t('auth.enterPhoneAndPassword'));
+      console.log('Translation test - would use:', t('warning', { ns: 'common' }), t('enterPhoneAndPassword', { ns: 'auth' }));
       Alert.alert('تحذير', 'الرجاء إدخال رقم الهاتف وكلمة المرور');
       return;
     }
@@ -56,14 +56,18 @@ export default function LoginScreen() {
       const response = await authAPI.login({ phoneNumber, password });
       
       // حفظ بيانات المستخدم
-      await AsyncStorage.setItem('userToken', response.token);
-      await AsyncStorage.setItem('userData', JSON.stringify(response.user));
-      
-      // إعادة توجيه المستخدم إلى الصفحة الرئيسية
-      router.replace('/(tabs)/ads');
+      if (response && response.token) {
+        await AsyncStorage.setItem('userToken', response.token);
+        await AsyncStorage.setItem('userData', JSON.stringify(response.user));
+        
+        // إعادة توجيه المستخدم إلى الصفحة الرئيسية
+        router.replace('/(tabs)/ads');
+      } else {
+        Alert.alert('خطأ', 'فشل تسجيل الدخول: لم يتم استلام رمز المصادقة من الخادم.');
+      }
     } catch (error: any) {
       // استخدام نصوص ثابتة للتنبيهات مؤقتًا
-      console.log('Translation test - would use:', t('common.error'));
+      console.log('Translation test - would use:', t('error', { ns: 'common' }));
       Alert.alert('خطأ', error.message);
     } finally {
       setLoading(false);
@@ -77,7 +81,7 @@ export default function LoginScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          <Text style={[styles.title, { color: appColors.text }]}>{t('common.login')}</Text>
+          <Text style={[styles.title, { color: appColors.text }]}>{t('login', { ns: 'common' })}</Text>
           
           <View style={styles.inputContainer}>
             <TextInput
@@ -85,7 +89,7 @@ export default function LoginScreen() {
                 backgroundColor: appColors.secondary,
                 color: appColors.text,
               }]}
-              placeholder={t('common.phoneNumber')}
+              placeholder={t('phoneNumber', { ns: 'common' })}
               placeholderTextColor={appColors.textSecondary}
               value={phoneNumber}
               onChangeText={setPhoneNumber}
@@ -100,7 +104,7 @@ export default function LoginScreen() {
                 backgroundColor: appColors.secondary,
                 color: appColors.text,
               }]}
-              placeholder={t('auth.password')}
+              placeholder={t('password', { ns: 'auth' })}
               placeholderTextColor={appColors.textSecondary}
               value={password}
               onChangeText={setPassword}
@@ -126,7 +130,7 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.loginButtonText}>{t('common:login')}</Text>
+              <Text style={styles.loginButtonText}>{t('login', { ns: 'common' })}</Text>
             )}
           </TouchableOpacity>
 
@@ -135,7 +139,7 @@ export default function LoginScreen() {
             onPress={() => router.push('/register' as any)}
           >
             <Text style={[styles.registerText, { color: appColors.textSecondary }]}>
-              {t('auth:noAccount')} {t('auth:registerNow')}
+              {t('noAccount', { ns: 'auth' })} {t('registerNow', { ns: 'auth' })}
             </Text>
           </TouchableOpacity>
         </View>

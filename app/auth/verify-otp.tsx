@@ -64,71 +64,100 @@ export default function VerifyOTPScreen() {
   
   const handleVerifyOTP = async () => {
     try {
-      setLoading(true);
-      
-      // التحقق من إدخال جميع الأرقام
-      if (otp.length !== 6) {
+      // التحقق من اكتمال رمز التحقق
+      if (otp.length < 4) {
         Alert.alert(t('error', { ns: 'common' }), t('pleaseEnterFullOTP', { ns: 'auth' }));
-        setLoading(false);
         return;
       }
       
-      console.log('Verifying OTP:', otp, 'for phone:', phoneNumber);
-      console.log('Is this a password reset?', isResetPassword ? 'Yes' : 'No');
+      // طباعة معلومات تشخيصية عن رقم الهاتف
+      console.log('=============== تشخيص رقم الهاتف في صفحة التحقق ===============');
+      console.log('رقم الهاتف المستلم من الصفحة السابقة:', phoneNumber);
+      console.log('نوع بيانات رقم الهاتف:', typeof phoneNumber);
+      console.log('طول رقم الهاتف:', phoneNumber.length);
+      console.log('================================================================');
       
-      // إذا كانت العملية هي إعادة تعيين كلمة المرور
+      setLoading(true);
+      
+      // استدعاء خدمة التحقق
+      let response;
+      
+      // استخدام API مختلف للتحقق اعتمادًا على نوع العملية
       if (isResetPassword) {
-        console.log('Processing password reset verification');
-        // استدعاء API للتحقق من رمز إعادة تعيين كلمة المرور
-        const response = await authAPI.verifyResetCode(phoneNumber, otp);
-        
-        console.log('Reset verification response:', response);
-        
-        if (!response.success) {
-          Alert.alert(t('error', { ns: 'common' }), response.message || t('invalidOTP', { ns: 'auth' }));
+        console.log('Using verifyResetCode for password reset flow');
+        response = await authAPI.verifyResetCode(phoneNumber, otp);
+      } else {
+        console.log('Using verifyOTP for regular flow');
+        response = await authAPI.verifyOTP(phoneNumber, otp);
+      }
+      
+      // التحقق من نجاح العملية
+      if (!response.success) {
+        // التحقق من نوع الخطأ
+        if (response.isNetworkError) {
+          Alert.alert(
+            t('common.noInternetConnection'), 
+            t('common.noInternetMessage'),
+            [{ text: t('common.ok') }]
+          );
           setLoading(false);
           return;
         }
         
-        console.log('Reset code verification successful');
-        console.log('Reset token received:', response.data?.resetToken);
-        
-        // الانتقال إلى شاشة إعادة تعيين كلمة المرور
-        console.log('Navigating to reset password screen');
-        router.push({
-          pathname: '/auth/reset-password',
-          params: { 
-            phoneNumber, 
-            resetToken: response.data?.resetToken
-          }
-        });
-        
-        return;
-      }
-      
-      // إرسال طلب التحقق من الرمز لتسجيل الدخول العادي
-      console.log('Processing regular OTP verification');
-      const response = await authAPI.verifyOTP(phoneNumber, otp);
-      
-      console.log('OTP verification response:', response);
-      
-      if (!response.success) {
-        Alert.alert(t('error', { ns: 'common' }), response.message || t('invalidOTP', { ns: 'auth' }));
+        // عرض رسالة الخطأ للأخطاء الأخرى
+        Alert.alert(t('error', { ns: 'common' }), response.message || t('verificationFailed', { ns: 'auth' }));
         setLoading(false);
         return;
       }
       
-      console.log('OTP verification successful');
-      
-      // الانتقال إلى صفحة إكمال الملف الشخصي
-      console.log('Navigating to complete profile screen');
-      router.push({
-        pathname: '/auth/complete-profile',
-        params: { phoneNumber }
-      });
+      // التحقق من نوع العملية (تسجيل أو إعادة تعيين)
+      if (isResetPassword) {
+        // إذا كانت العملية هي إعادة تعيين كلمة المرور
+        console.log('Processing password reset verification');
+        
+        // التحقق من وجود رمز إعادة التعيين
+        const resetToken = response.data?.resetToken;
+        console.log('Reset token received:', resetToken);
+        
+        if (!resetToken) {
+          console.error('No reset token received from the server');
+          Alert.alert(
+            t('error', { ns: 'common' }),
+            'لم يتم استلام رمز إعادة تعيين كلمة المرور من الخادم. يرجى المحاولة مرة أخرى.'
+          );
+          setLoading(false);
+          return;
+        }
+        
+        // حفظ الرمز المؤقت في التخزين المحلي للاستخدام في شاشة إعادة تعيين كلمة المرور
+        await AsyncStorage.setItem('temp_reset_token', resetToken);
+        
+        // الانتقال إلى شاشة إعادة تعيين كلمة المرور
+        console.log('Navigating to reset password screen with token:', resetToken);
+        router.push({
+          pathname: '/auth/reset-password',
+          params: { 
+            phoneNumber, 
+            resetToken: resetToken
+          }
+        });
+      } else {
+        // إذا كانت العملية هي تسجيل دخول
+        console.log('Processing regular OTP verification');
+        console.log('OTP verification successful');
+        
+        // الانتقال إلى صفحة إكمال الملف الشخصي
+        console.log('Navigating to complete profile screen');
+        router.push({
+          pathname: '/auth/complete-profile',
+          params: { phoneNumber }
+        });
+      }
     } catch (error: any) {
-      console.error('Verify OTP error:', error);
-      Alert.alert(t('error', { ns: 'common' }), t('verificationFailed', { ns: 'auth' }));
+      if (__DEV__) {
+        console.error('Dev Only - OTP verification error:', error);
+      }
+      Alert.alert(t('error', { ns: 'common' }), t('networkError', { ns: 'auth' }));
     } finally {
       setLoading(false);
     }
@@ -230,8 +259,18 @@ export default function VerifyOTPScreen() {
             { color: appColors.textSecondary },
             { textAlign: isRTL ? 'right' : 'left' }
           ]}>
-            {t('otpSentTo', { phoneNumber, ns: 'auth' })}
+            {t('auth:otpSentTo', { phoneNumber })}
           </Text>
+
+          {__DEV__ && (
+            <Text style={[
+              styles.devModeText,
+              { color: appColors.primary },
+              { textAlign: isRTL ? 'right' : 'left' }
+            ]}>
+              {t('auth:devModeOTP')}
+            </Text>
+          )}
 
           <View style={styles.otpContainer}>
             {Array(6).fill(0).map((_, index) => (
@@ -317,6 +356,10 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     marginBottom: 30,
+  },
+  devModeText: {
+    fontSize: 12,
+    marginTop: 10,
   },
   otpContainer: {
     flexDirection: 'row',

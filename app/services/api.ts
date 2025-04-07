@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Platform } from 'react-native';
-import axios from 'axios';
 import { LoginRequest, LoginResponse } from '../types/auth';
+import NetInfo from '@react-native-community/netinfo';
 
 // تعريف عنوان API الأساسي
 // استخدام عنوان مناسب حسب البيئة
@@ -15,52 +16,69 @@ export const API_BASE_URL = Platform.OS === 'web'
 // تحقق من العنوان
 console.log('Using API URL:', API_BASE_URL);
 
-// إنشاء مثيل من axios مع الإعدادات الافتراضية
-const api = axios.create({
+// تهيئة مكتبة axios
+const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 seconds timeout
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
-// قائمة بالطرق (endpoints) التي لا تتطلب توكن مصادقة
-const publicEndpoints = [
-  '/api/mobile/auth/login',
-  '/api/mobile/auth/send-otp',
-  '/api/mobile/auth/verify-otp',
-  '/api/mobile/auth/complete-registration',
-  '/api/mobile/auth/reset-password-request',
-  '/api/mobile/auth/verify-reset-code',
-  '/api/mobile/auth/reset-password'
-];
-
-// إضافة معترض للطلبات لإضافة رمز المصادقة
+// إضافة معترض للطلبات لإضافة رمز المصادقة تلقائياً إذا كان موجوداً
 api.interceptors.request.use(
   async (config) => {
-    // التحقق مما إذا كان المسار من الطرق العامة التي لا تتطلب توكن
-    const isPublicEndpoint = publicEndpoints.some(endpoint => 
-      config.url?.includes(endpoint)
-    );
-    
-    // إذا كان المسار يتطلب توكن، نقوم بإضافته
-    if (!isPublicEndpoint) {
+    try {
       const token = await AsyncStorage.getItem('userToken');
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers['Authorization'] = `Bearer ${token}`;
+        if (__DEV__) {
+          console.log('Dev Only - Added auth token to request');
+        }
       }
+      return config;
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Dev Only - Error setting auth token:', error);
+      }
+      return config;
     }
-    
-    return config;
   },
   (error) => {
     return Promise.reject(error);
   }
 );
 
+// إضافة معترض للاستجابات للتعامل مع أخطاء الاستجابة
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // تسجيل أخطاء الشبكة في وضع التطوير فقط
+    if (__DEV__) {
+      if (error.message === 'Network Error') {
+        console.log('Dev Only - Network error detected in API call');
+      } else if (error.response) {
+        console.log(`Dev Only - API error: ${error.response.status}`, error.response.data);
+        
+        // Log user not found errors specifically for debugging
+        if (error.response.status === 404 && 
+            error.response.data?.message?.includes('not found') || 
+            error.response.data?.message?.includes('غير موجود')) {
+          console.log('Dev Only - User not found error:', error.response.data.message);
+        }
+      } else {
+        console.log('Dev Only - API error:', error.message);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // واجهة للاستجابة العامة من API
-interface ApiResponse<T = any> {
+export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   data?: T;
@@ -68,6 +86,9 @@ interface ApiResponse<T = any> {
   user?: any;
   isProfileComplete?: boolean;
   userExists?: boolean;
+  isNetworkError?: boolean;
+  demoOtp?: string;
+  requiresAuth?: boolean;
 }
 
 // واجهة الإعلان
@@ -103,21 +124,40 @@ export const authAPI = {
   // إرسال رمز التحقق OTP
   async sendOTP(phoneNumber: string, isRegistration: boolean = false): Promise<ApiResponse> {
     try {
-      console.log(`Sending OTP to ${phoneNumber}, isRegistration: ${isRegistration}`);
-      console.log(`API URL: ${API_BASE_URL}/api/mobile/auth/send-otp`);
+      if (__DEV__) {
+        console.log(`Dev Only - Sending OTP to ${phoneNumber}, isRegistration: ${isRegistration}`);
+        console.log(`Dev Only - API URL: ${API_BASE_URL}/api/mobile/auth/send-otp`);
+      }
+      
+      // قبل الاتصال بالخادم، تحقق من اتصال الإنترنت
+      const netInfo = await NetInfo.fetch();
+      if (!netInfo.isConnected) {
+        // عدم وجود اتصال بالإنترنت
+        return {
+          success: false,
+          message: 'يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى',
+          isNetworkError: true
+        };
+      }
       
       const response = await api.post('/api/mobile/auth/send-otp', { phoneNumber, isRegistration });
-      console.log('Response data:', response.data);
+      
+      if (__DEV__) {
+        console.log('Dev Only - Response data:', response.data);
+      }
       
       return response.data;
     } catch (error: any) {
-      console.error('Error in sendOTP:', error);
+      if (__DEV__) {
+        console.error('Dev Only - Error in sendOTP:', error);
+      }
       
       // معالجة خطأ الشبكة
       if (error.message === 'Network Error') {
         return {
           success: false,
-          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          message: 'يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى',
+          isNetworkError: true
         };
       }
       
@@ -141,13 +181,29 @@ export const authAPI = {
   // التحقق من رمز OTP
   async verifyOTP(phoneNumber: string, otp: string): Promise<ApiResponse> {
     try {
-      console.log(`Verifying OTP for ${phoneNumber}`);
+      if (__DEV__) {
+        console.log(`Dev Only - Verifying OTP for ${phoneNumber}`);
+      }
+      
+      // قبل الاتصال بالخادم، تحقق من اتصال الإنترنت
+      const netInfo = await NetInfo.fetch();
+      if (!netInfo.isConnected) {
+        // عدم وجود اتصال بالإنترنت
+        return {
+          success: false,
+          message: 'يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى',
+          isNetworkError: true
+        };
+      }
       
       const response = await api.post('/api/mobile/auth/verify-otp', { phoneNumber, otp });
       const data = response.data;
       
-      if (data.success && data.token) {
-        // حفظ رمز المصادقة وبيانات المستخدم
+      // تعديل: لا نحفظ التوكن بعد التحقق من OTP في حالة التسجيل
+      // سيتم حفظ التوكن فقط بعد إكمال الملف الشخصي
+      // نقوم بحفظ التوكن فقط في حالة إعادة تعيين كلمة المرور
+      if (data.success && data.token && data.isPasswordReset) {
+        // حفظ رمز المصادقة وبيانات المستخدم في حالة إعادة تعيين كلمة المرور فقط
         await AsyncStorage.setItem('userToken', data.token);
         if (data.user) {
           await AsyncStorage.setItem('userData', JSON.stringify(data.user));
@@ -156,13 +212,16 @@ export const authAPI = {
       
       return data;
     } catch (error: any) {
-      console.error('Error in verifyOTP:', error);
+      if (__DEV__) {
+        console.error('Dev Only - Error in verifyOTP:', error);
+      }
       
       // معالجة الأخطاء المختلفة
       if (error.message === 'Network Error') {
         return {
           success: false,
-          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          message: 'يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى',
+          isNetworkError: true
         };
       }
       
@@ -229,60 +288,64 @@ export const authAPI = {
   },
   
   // تسجيل الدخول
-  async login(data: { phoneNumber: string; password: string }): Promise<ApiResponse> {
+  async login(loginData: LoginRequest): Promise<LoginResponse> {
     try {
-      console.log('Login with phone number:', data.phoneNumber);
+      if (__DEV__) {
+        console.log('Dev Only - Logging in user:', loginData.phoneNumber);
+      }
       
-      // استخدام وضع التطوير مؤقتاً لتجاوز الاتصال بالخادم
-      const devMode = false;
-      
-      if (devMode) {
-        console.log('Using development mode for login');
-        // تأخير وهمي للمحاكاة
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const mockToken = 'dev-token-' + Date.now();
-        const mockUser = {
-          id: '1',
-          phoneNumber: data.phoneNumber,
-          name: 'مستخدم تجريبي'
-        };
-        
-        // حفظ بيانات المستخدم في وضع التطوير
-        await AsyncStorage.setItem('userToken', mockToken);
-        await AsyncStorage.setItem('userData', JSON.stringify(mockUser));
-        
+      // قبل الاتصال بالخادم، تحقق من اتصال الإنترنت
+      const netInfo = await NetInfo.fetch();
+      if (!netInfo.isConnected) {
+        // عدم وجود اتصال بالإنترنت
         return {
-          success: true,
-          message: 'تم تسجيل الدخول بنجاح',
-          token: mockToken,
-          user: mockUser
+          success: false,
+          message: 'يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى',
+          isNetworkError: true
         };
       }
       
-      // الاتصال بالخادم في وضع الإنتاج
-      const response = await api.post('/api/mobile/auth/login', data);
-      const responseData = response.data;
+      const response = await api.post('/api/mobile/auth/login', loginData);
       
-      // حفظ بيانات المستخدم عند نجاح تسجيل الدخول
-      if (responseData.success && responseData.token) {
-        console.log('Saving user token and data to AsyncStorage');
-        await AsyncStorage.setItem('userToken', responseData.token);
-        
-        if (responseData.user) {
-          await AsyncStorage.setItem('userData', JSON.stringify(responseData.user));
+      if (response.data.success && response.data.token) {
+        if (__DEV__) {
+          console.log('Dev Only - Login successful, token received');
         }
+        
+        // حفظ رمز المصادقة وبيانات المستخدم
+        await AsyncStorage.setItem('userToken', response.data.token);
+        
+        if (response.data.user) {
+          await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
+          
+          if (__DEV__) {
+            console.log('Dev Only - User data saved to storage');
+          }
+        }
+      } else if (__DEV__) {
+        console.log('Dev Only - Login response lacks token:', response.data);
       }
       
-      return responseData;
+      return response.data;
     } catch (error: any) {
-      console.error('Login error:', error);
+      if (__DEV__) {
+        console.error('Dev Only - Error during login:', error);
+      }
       
-      // معالجة الأخطاء المختلفة
+      // معالجة خطأ الشبكة
       if (error.message === 'Network Error') {
         return {
           success: false,
           message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          isNetworkError: true
+        };
+      }
+      
+      // معالجة خطأ timeout
+      if (error.code === 'ECONNABORTED') {
+        return {
+          success: false,
+          message: 'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.',
         };
       }
       
@@ -295,134 +358,48 @@ export const authAPI = {
     }
   },
   
-  // استعادة كلمة المرور - إرسال طلب الاستعادة
+  // طلب إعادة تعيين كلمة المرور (الحصول على رمز OTP)
   async requestPasswordReset(phoneNumber: string): Promise<ApiResponse> {
     try {
-      console.log(`Requesting password reset for phone number: ${phoneNumber}`);
-      
-      // التحقق من وجود رقم الهاتف
-      if (!phoneNumber) {
-        console.error('Missing phone number for password reset');
-        return {
-          success: false,
-          message: 'رقم الهاتف غير محدد',
-        };
-      }
-      
-      // تفعيل وضع التطوير مؤقتًا للتحقق من المشكلة
-      const devMode = false; // استخدام الخادم الحقيقي
-      
-      if (devMode) {
-        console.log('Using development mode for password reset request');
-        // تأخير وهمي للمحاكاة
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        return {
-          success: true,
-          message: 'تم إرسال رمز التحقق إلى رقم هاتفك',
-        };
-      }
-      
-      // طلب إعادة تعيين كلمة المرور من الخادم
-      console.log(`Sending API request to ${API_BASE_URL}/api/mobile/auth/reset-password-request`);
-      console.log('Request payload:', { phoneNumber });
+      console.log(`Requesting password reset for phone: ${phoneNumber}`);
       
       const response = await api.post('/api/mobile/auth/reset-password-request', { phoneNumber });
-      console.log('Password reset request response status:', response.status);
-      console.log('Password reset request response data:', response.data);
       
-      // تحقق من استجابة API
-      if (!response.data) {
-        console.error('Empty response data from server');
-        return {
-          success: false,
-          message: 'استجابة فارغة من الخادم',
-        };
+      if (__DEV__) {
+        console.log('Password reset request response:', response.data);
       }
       
       return response.data;
     } catch (error: any) {
       console.error('Password reset request error:', error);
       
-      // تفاصيل أكثر عن الخطأ
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        response: error.response ? {
-          status: error.response.status,
-          data: error.response.data,
-          headers: error.response.headers
-        } : 'No response data'
-      });
-      
       if (error.message === 'Network Error') {
         return {
           success: false,
           message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          isNetworkError: true
         };
       }
       
-      if (error.code === 'ECONNABORTED') {
-        return {
-          success: false,
-          message: 'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.',
-        };
-      }
-      
-      // إذا كان هناك استجابة من الخادم تحتوي على رسالة
-      if (error.response && error.response.data) {
-        console.error('Server error response:', error.response.data);
-        const serverErrorMessage = error.response.data.message;
-        return {
-          success: false,
-          message: serverErrorMessage || `خطأ من الخادم (${error.response.status})`,
-        };
-      }
-      
+      const serverErrorMessage = error.response?.data?.message;
       return {
         success: false,
-        message: error.message || 'حدث خطأ أثناء طلب إعادة تعيين كلمة المرور',
+        message: serverErrorMessage || 'حدث خطأ أثناء طلب إعادة تعيين كلمة المرور',
       };
     }
   },
   
-  // التحقق من رمز إعادة تعيين كلمة المرور
+  // التحقق من رمز إعادة تعيين كلمة المرور (للحصول على resetToken)
   async verifyResetCode(phoneNumber: string, otp: string): Promise<ApiResponse> {
     try {
-      console.log(`Verifying reset code for ${phoneNumber}, OTP: ${otp}`);
+      console.log(`Verifying reset code for phone: ${phoneNumber}, code: ${otp}`);
       
-      // التحقق من المعلمات
-      if (!phoneNumber || !otp) {
-        console.error('Missing parameters for verifyResetCode', { phoneNumber, otp });
-        return {
-          success: false,
-          message: 'رقم الهاتف أو رمز التحقق غير مُحدد',
-        };
-      }
-      
-      // تفعيل وضع التطوير مؤقتًا للتحقق من المشكلة
-      const devMode = false; // استخدام الخادم الحقيقي
-      
-      if (devMode) {
-        console.log('Using development mode for reset code verification');
-        // تأخير وهمي للمحاكاة
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const mockResetToken = 'mock-reset-token-' + Date.now();
-        console.log('Generated mock reset token:', mockResetToken);
-        
-        return {
-          success: true,
-          message: 'تم التحقق من رمز إعادة التعيين بنجاح',
-          data: {
-            resetToken: mockResetToken
-          }
-        };
-      }
-      
-      // التحقق من رمز إعادة التعيين
       const response = await api.post('/api/mobile/auth/verify-reset-code', { phoneNumber, otp });
-      console.log('Reset code verification response:', response.data);
+      
+      if (__DEV__) {
+        console.log('Reset code verification response:', response.data);
+      }
+      
       return response.data;
     } catch (error: any) {
       console.error('Reset code verification error:', error);
@@ -431,6 +408,7 @@ export const authAPI = {
         return {
           success: false,
           message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          isNetworkError: true
         };
       }
       
@@ -445,12 +423,28 @@ export const authAPI = {
   // إنشاء كلمة مرور جديدة
   async resetPassword(data: { phoneNumber: string; resetToken: string; newPassword: string; confirmPassword: string }): Promise<ApiResponse> {
     try {
+      // معلومات تشخيصية مفصلة
+      console.log('Resetting password for:', data.phoneNumber);
+      console.log('Using reset token:', data.resetToken);
       console.log('Resetting password with data:', { 
         phoneNumber: data.phoneNumber, 
         resetToken: data.resetToken,
         passwordLength: data.newPassword?.length,
         confirmPasswordLength: data.confirmPassword?.length
       });
+      
+      // معلومات Postman للاختبار
+      if (__DEV__) {
+        console.log('Postman test info for reset password:');
+        console.log('POST /api/mobile/auth/reset-password');
+        console.log('Request body:');
+        console.log(JSON.stringify({
+          phoneNumber: data.phoneNumber,
+          resetToken: data.resetToken,
+          newPassword: data.newPassword,
+          confirmPassword: data.confirmPassword
+        }, null, 2));
+      }
       
       // التحقق من المعلمات
       if (!data.phoneNumber || !data.resetToken || !data.newPassword || !data.confirmPassword) {
@@ -708,7 +702,9 @@ export const adsAPI = {
   // جلب قائمة الإعلانات
   async getAds(params?: {
     categoryId?: string;
+    category?: string;
     location?: string;
+    governorate?: string;
     search?: string;
     limit?: number;
     page?: number;
@@ -716,233 +712,102 @@ export const adsAPI = {
     type?: 'lost' | 'found';
   }): Promise<ApiResponse<Ad[]>> {
     try {
-      console.log('Fetching ads with params:', params);
-      
-      // في وضع التطوير، يمكن عمل محاكاة لإستجابة API
-      const devMode = false; // تغيير إلى false لاستخدام API الحقيقي
-      
-      if (devMode) {
-        // تأخير وهمي للمحاكاة
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // بيانات وهمية للاختبار
-        return {
-          success: true,
-          data: [
-            {
-              _id: '1',
-              userId: {
-                _id: '1',
-                phoneNumber: '07700000000',
-                fullName: 'مستخدم تجريبي'
-              },
-              type: 'lost',
-              category: '1',
-              governorate: 'بغداد',
-              ownerName: 'مستخدم تجريبي',
-              itemNumber: 'فقدان جواز سفر باسم احمد محمد',
-              description: 'فقدت جواز سفري في منطقة الكرادة. الرجاء الاتصال إذا تم العثور عليه.',
-              images: ['https://via.placeholder.com/400x300'],
-              contactPhone: '07700000000',
-              status: 'active',
-              isApproved: true,
-              isResolved: false,
-              hideContactInfo: false,
-              createdAt: '2023-08-15T14:30:00',
-              updatedAt: '2023-08-15T14:30:00',
-              location: {
-                type: 'Point',
-                coordinates: [33.3152, 44.3661]
-              }
-            },
-            {
-              _id: '2',
-              userId: {
-                _id: '2',
-                phoneNumber: '07700000001',
-                fullName: 'مستخدم تجريبي'
-              },
-              type: 'lost',
-              category: '2',
-              governorate: 'البصرة',
-              ownerName: 'مستخدم تجريبي',
-              itemNumber: 'بطاقة وطنية باسم علي حسين',
-              description: 'بطاقة وطنية مفقودة في منطقة العشار.',
-              images: ['https://via.placeholder.com/400x300'],
-              contactPhone: '07700000001',
-              status: 'active',
-              isApproved: true,
-              isResolved: false,
-              hideContactInfo: false,
-              createdAt: '2023-08-14T10:15:00',
-              updatedAt: '2023-08-14T10:15:00',
-              location: {
-                type: 'Point',
-                coordinates: [36.3152, 44.3661]
-              }
-            },
-            {
-              _id: '3',
-              userId: {
-                _id: '3',
-                phoneNumber: '07700000002',
-                fullName: 'مستخدم تجريبي'
-              },
-              type: 'lost',
-              category: '3',
-              governorate: 'اربيل',
-              ownerName: 'مستخدم تجريبي',
-              itemNumber: 'اجازة سوق مفقودة في اربيل',
-              description: 'فقدت اجازة السوق الخاصة بي في منطقة عنكاوة.',
-              images: ['https://via.placeholder.com/400x300'],
-              contactPhone: '07700000002',
-              status: 'active',
-              isApproved: true,
-              isResolved: false,
-              hideContactInfo: false,
-              createdAt: '2023-08-13T15:45:00',
-              updatedAt: '2023-08-13T15:45:00',
-              location: {
-                type: 'Point',
-                coordinates: [44.3152, 36.3661]
-              }
-            },
-            {
-              _id: '4',
-              userId: {
-                _id: '4',
-                phoneNumber: '07700000003',
-                fullName: 'مستخدم تجريبي'
-              },
-              type: 'lost',
-              category: '4',
-              governorate: 'نينوى',
-              ownerName: 'مستخدم تجريبي',
-              itemNumber: 'شهادة ميلاد مفقودة',
-              description: 'شهادة ميلاد باسم سارة علي، فقدت في الموصل.',
-              images: ['https://via.placeholder.com/400x300'],
-              contactPhone: '07700000003',
-              status: 'active',
-              isApproved: true,
-              isResolved: false,
-              hideContactInfo: false,
-              createdAt: '2023-08-12T09:20:00',
-              updatedAt: '2023-08-12T09:20:00',
-              location: {
-                type: 'Point',
-                coordinates: [40.3152, 37.3661]
-              }
-            },
-            {
-              _id: '5',
-              userId: {
-                _id: '5',
-                phoneNumber: '07700000004',
-                fullName: 'مستخدم تجريبي'
-              },
-              type: 'lost',
-              category: '1',
-              governorate: 'بغداد',
-              ownerName: 'مستخدم تجريبي',
-              itemNumber: 'جواز سفر أمريكي مفقود',
-              description: 'جواز سفر أمريكي فقد في المنطقة الخضراء.',
-              images: ['https://via.placeholder.com/400x300'],
-              contactPhone: '07700000004',
-              status: 'active',
-              isApproved: true,
-              isResolved: false,
-              hideContactInfo: false,
-              createdAt: '2023-08-11T11:30:00',
-              updatedAt: '2023-08-11T11:30:00',
-              location: {
-                type: 'Point',
-                coordinates: [33.3152, 44.3661]
-              }
-            }
-          ]
-        };
+      if (__DEV__) {
+        console.log('Dev Only - Fetching ads with parameters:', params);
       }
       
-      // تحويل المعلمات إلى الصيغة المتوافقة مع API
-      const apiParams: any = {};
+      const response = await api.get('/api/mobile/advertisements', { params });
       
-      if (params?.page) {
-        apiParams.page = params.page;
-      }
-      
-      if (params?.limit) {
-        apiParams.limit = params.limit;
-      }
-      
-      if (params?.categoryId) {
-        apiParams.category = params.categoryId;
-      }
-      
-      if (params?.location) {
-        apiParams.governorate = params.location;
-      }
-      
-      if (params?.search) {
-        apiParams.search = params.search;
-      }
-      
-      if (params?.type) {
-        apiParams.type = params.type;
-      }
-      
-      // جلب البيانات من الخادم
-      const response = await api.get('/api/mobile/advertisements', { params: apiParams });
-      console.log('API response:', response.data);
-      
-      // تعديل الاستجابة لتتوافق مع واجهة البرمجة المتوقعة
-      if (response.data.success && response.data.data) {
-        return {
-          success: true,
-          data: response.data.data,
-          message: response.data.message
-        };
+      if (__DEV__) {
+        console.log('Dev Only - Received ads response data:', response.data);
       }
       
       return response.data;
     } catch (error: any) {
       console.error('Error fetching ads:', error);
       
+      // Network error
       if (error.message === 'Network Error') {
         return {
           success: false,
           message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          isNetworkError: true,
+          data: [] // return empty array
         };
       }
       
       const serverErrorMessage = error.response?.data?.message;
       return {
         success: false,
-        message: serverErrorMessage || 'حدث خطأ أثناء جلب الإعلانات',
+        message: serverErrorMessage || 'حدث خطأ أثناء جلب قائمة الإعلانات',
       };
     }
   },
   
-  // جلب تفاصيل إعلان محدد
+  // جلب تفاصيل إعلان
   async getAdDetails(adId: string): Promise<ApiResponse<Ad>> {
     try {
-      console.log(`Fetching details for ad: ${adId}`);
+      if (!adId || adId === 'undefined' || adId === '[id]') {
+        console.warn(`Invalid ad ID: ${adId}`);
+        return {
+          success: false,
+          message: 'معرف الإعلان غير صالح',
+          requiresAuth: true // تعديل: إعادة رسالة مصادقة حتى في حالة المعرف الخاطئ
+        };
+      }
+
+      // التحقق من وجود التوكن لمعرفة حالة تسجيل الدخول
+      const token = await AsyncStorage.getItem('userToken');
       
+      // إذا لم يكن المستخدم مسجلاً، نُرجع رسالة مخصصة
+      if (!token) {
+        if (__DEV__) {
+          console.log('Dev Only - User not authenticated, returning custom message for ad details');
+        }
+        return {
+          success: false,
+          message: 'يجب تسجيل الدخول أو التسجيل من أجل الاطلاع على تفاصيل الإعلان',
+          requiresAuth: true, // علامة لتوضيح أن الخطأ متعلق بالمصادقة
+        };
+      }
+      
+      if (__DEV__) {
+        console.log(`Dev Only - Fetching ad details for ID: ${adId}`);
+      }
+      
+      // استخدام المسار الصحيح للحصول على تفاصيل الإعلان
       const response = await api.get(`/api/mobile/advertisements/${adId}`);
+      
+      if (__DEV__) {
+        console.log('Dev Only - Received ad details response:', response.data);
+      }
+      
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching ad details:', error);
+      console.error(`Error fetching ad details for ID ${adId}:`, error);
       
+      // Network error
       if (error.message === 'Network Error') {
         return {
           success: false,
           message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          isNetworkError: true
         };
       }
       
-      const serverErrorMessage = error.response?.data?.message;
+      // إذا كان الخطأ 401 أو 403 فهذا يعني أن الوصول غير مصرح به
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        return {
+          success: false,
+          message: 'يجب تسجيل الدخول أو التسجيل من أجل الاطلاع على تفاصيل الإعلان',
+          requiresAuth: true
+        };
+      }
+      
       return {
         success: false,
-        message: serverErrorMessage || 'حدث خطأ أثناء جلب تفاصيل الإعلان',
+        message: 'يجب تسجيل الدخول أو التسجيل من أجل الاطلاع على تفاصيل الإعلان',
+        requiresAuth: true
       };
     }
   },
@@ -955,7 +820,6 @@ export const adsAPI = {
     ownerName: string;
     itemNumber: string;
     description: string;
-    contactPhone: string;
     hideContactInfo: boolean;
     images?: string[];
     location?: {
@@ -964,7 +828,7 @@ export const adsAPI = {
     };
   }): Promise<ApiResponse<Ad>> {
     try {
-      console.log('Creating new ad. URL:', `${API_BASE_URL}/api/mobile/advertisements`);
+      console.log('Creating new ad. URL:', `${API_BASE_URL}/api/mobile/ads`);
       
       // تحويل معرف الفئة إلى اسم الفئة حسب القيمة المتوقعة من الخادم
       const categoryMap: {[key: string]: string} = {
@@ -973,20 +837,6 @@ export const adsAPI = {
         '3': 'driving_license',
         '4': 'other'
       };
-      
-      // تجهيز البيانات للإرسال
-      const dataToSend = {
-        ...adData,
-        // إذا كان معرف الفئة موجود في القائمة، استخدم الاسم المقابل له
-        category: categoryMap[adData.category] || adData.category,
-        // تأكد من أن الموقع في التنسيق الصحيح
-        location: adData.location || {
-          type: 'Point',
-          coordinates: [0, 0] // إحداثيات افتراضية
-        }
-      };
-      
-      console.log('Data being sent to server:', JSON.stringify(dataToSend));
       
       // التحقق من وجود التوكن قبل الطلب
       const token = await AsyncStorage.getItem('userToken');
@@ -998,41 +848,173 @@ export const adsAPI = {
         };
       }
       
+      // الحصول على بيانات المستخدم للحصول على رقم الهاتف
+      const userDataString = await AsyncStorage.getItem('userData');
+      let userData = null;
+      let userPhone = "";
+      
+      if (userDataString) {
+        userData = JSON.parse(userDataString);
+        userPhone = userData.phoneNumber || "";
+        console.log('Using user phone number:', userPhone);
+      } else {
+        console.warn('User data not found, cannot retrieve phone number');
+        return {
+          success: false,
+          message: 'لم يتم العثور على بيانات المستخدم. يرجى تسجيل الدخول مرة أخرى.'
+        };
+      }
+      
+      // تجهيز البيانات للإرسال - استخدام نفس طريقة Postman
+      const dataToSend = new FormData();
+      
+      // إضافة البيانات الأساسية
+      dataToSend.append('type', adData.type);
+      dataToSend.append('category', categoryMap[adData.category] || adData.category);
+      dataToSend.append('governorate', adData.governorate);
+      dataToSend.append('ownerName', adData.ownerName);
+      dataToSend.append('itemNumber', adData.itemNumber);
+      dataToSend.append('description', adData.description);
+      dataToSend.append('contactPhone', userPhone); // استخدام رقم هاتف المستخدم تلقائيًا
+      dataToSend.append('hideContactInfo', adData.hideContactInfo.toString());
+      
+      // إضافة بيانات الموقع كما في طلب Postman
+      if (adData.location) {
+        dataToSend.append('location[type]', adData.location.type);
+        dataToSend.append('location[coordinates][0]', adData.location.coordinates[0].toString());
+        dataToSend.append('location[coordinates][1]', adData.location.coordinates[1].toString());
+      }
+      
+      // التحقق من وجود صور وعددها
+      console.log(`عدد الصور: ${adData.images?.length || 0}`);
+      
+      // إضافة الصور (مع تحديد العدد الأقصى 5 صور)
+      if (adData.images && adData.images.length > 0) {
+        // تقليل عدد الصور إلى 5 كحد أقصى
+        const imagesToUpload = adData.images.slice(0, 5);
+        
+        console.log('صور للرفع:', JSON.stringify(imagesToUpload));
+        
+        for (let i = 0; i < imagesToUpload.length; i++) {
+          const imageUri = imagesToUpload[i];
+          // استخراج اسم الملف من المسار
+          const fileName = imageUri.split('/').pop() || `image_${i}.jpg`;
+          
+          // ضبط كائن الصورة بالضبط كما يتوقعه الخادم
+          // الشكل الصحيح لكائن الصورة في React Native
+          const fileObj = {
+            uri: Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri,
+            type: 'image/jpeg',
+            name: fileName
+          };
+          
+          console.log(`إضافة صورة ${i+1}/${imagesToUpload.length}: ${fileName}`);
+          console.log('كائن الصورة:', JSON.stringify(fileObj));
+          
+          // استخدام اسم الحقل "images" فقط كما هو مطلوب في الواجهة API
+          dataToSend.append('images', fileObj as any);
+        }
+        
+        console.log('عدد الصور المرفقة:', imagesToUpload.length);
+        console.log('FormData جاهز للإرسال مع الصور');
+      } else {
+        console.log('لا توجد صور للتحميل في هذا الإعلان');
+      }
+      
+      console.log('إرسال بيانات الإعلان إلى الخادم...');
+      
       // إعداد الطلب مع رأس مصادقة صريح
       const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
       };
       
-      // إرسال البيانات للخادم مع رأس المصادقة الصريح
-      const response = await api.post('/api/mobile/advertisements', dataToSend, { headers });
-      console.log('Create ad response status:', response.status);
-      console.log('Create ad response data:', JSON.stringify(response.data));
+      console.log('استخدام الرؤوس:', JSON.stringify(headers));
       
-      return response.data;
+      // طباعة URL للتأكد
+      console.log('URL المستخدم:', `${API_BASE_URL}/api/mobile/ads`);
+      
+      try {
+        console.log('بدء إرسال البيانات للخادم...');
+        
+        // إرسال البيانات للخادم - استخدام المسار الصحيح /api/mobile/ads
+        const response = await api.post('/api/mobile/ads', dataToSend, { 
+          headers,
+          timeout: 60000, // زيادة مهلة الانتظار إلى 60 ثانية
+          transformRequest: (data) => {
+            // التأكد من عدم تحويل FormData إلى JSON
+            return data instanceof FormData ? data : JSON.stringify(data);
+          }
+        });
+        
+        console.log('حالة استجابة إنشاء الإعلان:', response.status);
+        console.log('بيانات استجابة الإعلان:', JSON.stringify(response.data));
+        
+        // فحص البيانات المرجعة للتأكد من الصور
+        if (response.data.success && response.data.data) {
+          console.log('الصور المرجعة من الخادم:', JSON.stringify(response.data.data.images || []));
+        }
+        
+        return response.data;
+      } catch (innerError: any) {
+        console.error('خطأ أثناء إرسال البيانات للخادم:', innerError.message);
+        if (innerError.response) {
+          console.error('حالة استجابة الخطأ:', innerError.response.status);
+          console.error('بيانات استجابة الخطأ:', typeof innerError.response.data === 'string' 
+            ? innerError.response.data 
+            : JSON.stringify(innerError.response.data));
+        }
+        throw innerError; // إعادة رمي الخطأ ليتم التقاطه في الـ catch الخارجي
+      }
     } catch (error: any) {
-      console.error('Error creating ad:', error);
+      console.error('خطأ في إنشاء الإعلان:', error);
       
-      // التحقق من نوع الخطأ وعرض المزيد من المعلومات
+      // طباعة المزيد من المعلومات عن الخطأ للتشخيص
+      if (error.response) {
+        console.error('حالة استجابة الخطأ من الخادم:', error.response.status);
+        console.error('رؤوس استجابة الخطأ:', JSON.stringify(error.response.headers));
+        
+        try {
+          console.error('بيانات استجابة الخطأ:', typeof error.response.data === 'string' 
+            ? error.response.data 
+            : JSON.stringify(error.response.data));
+          
+          if (typeof error.response.data === 'object') {
+            if (error.response.data.message) {
+              console.error('رسالة الخطأ:', error.response.data.message);
+            }
+          }
+        } catch (e) {
+          console.error('خطأ في تحليل استجابة الخادم:', e);
+        }
+      }
+      
+      console.error('اسم الخطأ:', error.name);
+      console.error('رسالة الخطأ:', error.message);
+      
       if (error.message === 'Network Error') {
-        console.error('Network error while creating ad');
         return {
           success: false,
           message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
         };
       }
       
-      // تفاصيل استجابة الخطأ إذا كانت متاحة
-      if (error.response) {
-        console.error('Server error response:', error.response.status, JSON.stringify(error.response.data));
-        const serverErrorMessage = error.response.data?.message;
+      if (error.response && error.response.status === 413) {
         return {
           success: false,
-          message: serverErrorMessage || `خطأ من الخادم (${error.response.status}): ${JSON.stringify(error.response.data)}`,
+          message: 'حجم الصور كبير جدًا. يرجى تقليل حجم الصور أو عددها وإعادة المحاولة.',
         };
       }
       
-      // خطأ عام
+      if (error.response) {
+        const serverErrorMessage = error.response.data?.message;
+        return {
+          success: false,
+          message: serverErrorMessage || `خطأ من الخادم (${error.response.status})`,
+        };
+      }
+      
       return {
         success: false,
         message: `حدث خطأ أثناء إنشاء الإعلان: ${error.message}`,
@@ -1047,32 +1029,95 @@ export const adsAPI = {
     page?: number;
   }): Promise<ApiResponse<Ad[]>> {
     try {
-      console.log('Fetching user ads with params:', params);
+      if (__DEV__) {
+        console.log('Dev Only - Fetching user ads with params:', params);
+      }
+      
+      // تحقق من وجود التوكن وعرض معلومات إضافية في وضع التطوير
+      const token = await AsyncStorage.getItem('userToken');
+      if (__DEV__) {
+        console.log('Dev Only - Token info for getMyAds:', token ? `${token.substring(0, 10)}...` : 'No token found');
+      }
+      
+      if (!token) {
+        if (__DEV__) {
+          console.warn('Dev Only - No token found when fetching user ads');
+        }
+        return {
+          success: true, // تغيير الى نجاح لتجنب ظهور رسائل خطأ غير ضرورية
+          message: 'المستخدم لم يسجل الدخول أو لا يملك رمز المصادقة',
+          data: [] // إرجاع مصفوفة فارغة
+        };
+      }
+      
+      // فحص اتصال الإنترنت
+      const netInfo = await NetInfo.fetch();
+      if (!netInfo.isConnected) {
+        return {
+          success: false,
+          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          isNetworkError: true,
+          data: [] // إرجاع مصفوفة فارغة
+        };
+      }
       
       const response = await api.get('/api/mobile/ads/user/ads', { params });
-      console.log('User ads response:', response.data);
+      
+      if (__DEV__) {
+        console.log('Dev Only - User ads response:', response.data);
+      }
       
       // التأكد من أن البيانات هي مصفوفة
       if (response.data.success && !Array.isArray(response.data.data)) {
-        console.warn('User ads data is not an array:', response.data.data);
+        if (__DEV__) {
+          console.warn('Dev Only - User ads data is not an array:', response.data.data);
+        }
         response.data.data = [];
       }
       
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching user ads:', error);
+      if (__DEV__) {
+        console.error('Dev Only - Error fetching user ads:', error);
+        // إضافة تفاصيل أكثر عن الخطأ لتسهيل التشخيص
+        if (error.response) {
+          console.error(`Dev Only - Error status: ${error.response.status}, Error data:`, error.response.data);
+        }
+      }
       
+      // معالجة أخطاء شبكة
       if (error.message === 'Network Error') {
         return {
           success: false,
           message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          isNetworkError: true,
+          data: []
+        };
+      }
+      
+      // معالجة أخطاء المصادقة - تغيير السلوك هنا
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        // تنظيف التوكن المنتهية صلاحيته
+        if (__DEV__) {
+          console.log('Dev Only - Clearing expired token due to 401/403 error');
+        }
+        
+        await AsyncStorage.removeItem('userToken');
+        
+        // إرجاع نجاح بدلاً من فشل، مع مصفوفة فارغة
+        // هذا لن يؤدي إلى ظهور رسائل خطأ للمستخدم
+        return {
+          success: true,
+          message: 'لا توجد إعلانات متاحة',
+          data: []
         };
       }
       
       const serverErrorMessage = error.response?.data?.message;
       return {
-        success: false,
-        message: serverErrorMessage || 'حدث خطأ أثناء جلب إعلانات المستخدم',
+        success: true, // تغيير إلى true لتجنب عرض رسائل خطأ غير ضرورية
+        message: 'لا توجد إعلانات متاحة',
+        data: [] // دائماً نعيد مصفوفة فارغة
       };
     }
   },
@@ -1097,7 +1142,7 @@ export const adsAPI = {
       const serverErrorMessage = error.response?.data?.message;
       return {
         success: false,
-        message: serverErrorMessage || 'حدث خطأ أثناء تحديث الإعلان',
+        message: serverErrorMessage || `خطأ أثناء تحديث الإعلان (${error.response?.status || 'unknown'})`,
       };
     }
   },
@@ -1105,8 +1150,6 @@ export const adsAPI = {
   // حذف إعلان
   async deleteAd(adId: string): Promise<ApiResponse> {
     try {
-      console.log(`Deleting ad: ${adId}`);
-      
       const response = await api.delete(`/api/mobile/ads/${adId}`);
       return response.data;
     } catch (error: any) {
@@ -1122,7 +1165,30 @@ export const adsAPI = {
       const serverErrorMessage = error.response?.data?.message;
       return {
         success: false,
-        message: serverErrorMessage || 'حدث خطأ أثناء حذف الإعلان',
+        message: serverErrorMessage || `خطأ أثناء حذف الإعلان`,
+      };
+    }
+  },
+
+  // تعليم إعلان كمحلول
+  async markAsResolved(adId: string, isResolved: boolean): Promise<ApiResponse> {
+    try {
+      const response = await api.put(`/api/mobile/ads/${adId}/resolve`, { isResolved });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating ad resolution status:', error);
+      
+      if (error.message === 'Network Error') {
+        return {
+          success: false,
+          message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+        };
+      }
+      
+      const serverErrorMessage = error.response?.data?.message;
+      return {
+        success: false,
+        message: serverErrorMessage || `خطأ أثناء تحديث حالة الإعلان`,
       };
     }
   },
@@ -1133,57 +1199,76 @@ export const adsAPI = {
     reason: string;
   }): Promise<ApiResponse> {
     try {
-      console.log('Sending contact request for ad:', data.advertisementId);
-      console.log('Contact request data:', data);
+      if (__DEV__) {
+        console.log('Dev Only - Sending contact request for ad:', data.advertisementId);
+      }
       
       // التحقق من وجود التوكن قبل الطلب
       const token = await AsyncStorage.getItem('userToken');
       if (!token) {
-        console.warn('No authentication token found before sending contact request');
+        if (__DEV__) {
+          console.warn('Dev Only - No authentication token found before sending contact request');
+        }
         return {
           success: false,
           message: 'لم يتم العثور على رمز المصادقة. يرجى تسجيل الدخول مرة أخرى.'
         };
       }
       
-      // إعداد الطلب مع رأس مصادقة صريح
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      };
+      // قبل الاتصال بالخادم، تحقق من اتصال الإنترنت
+      const netInfo = await NetInfo.fetch();
+      if (!netInfo.isConnected) {
+        // عدم وجود اتصال بالإنترنت
+        return {
+          success: false,
+          message: 'يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى',
+          isNetworkError: true
+        };
+      }
       
-      // إرسال البيانات للخادم
-      const response = await api.post('/api/mobile/contact-requests', data, { headers });
-      console.log('Contact request response status:', response.status);
-      console.log('Contact request response data:', JSON.stringify(response.data));
+      // إرسال البيانات للخادم (التوكن سيتم إضافته تلقائياً بواسطة المعترض)
+      const response = await api.post('/api/mobile/contact-requests', data);
+      
+      if (__DEV__) {
+        console.log('Dev Only - Contact request response status:', response.status);
+      }
       
       return response.data;
     } catch (error: any) {
-      console.error('Error sending contact request:', error);
+      if (__DEV__) {
+        console.error('Dev Only - Error sending contact request:', error);
+      }
+      
+      // معالجة خطأ المصادقة
+      if (error.response && error.response.status === 401) {
+        return {
+          success: false,
+          message: 'لا تملك صلاحية لإرسال هذا الطلب. يرجى تسجيل الدخول مرة أخرى.'
+        };
+      }
       
       // التحقق من نوع الخطأ وعرض المزيد من المعلومات
       if (error.message === 'Network Error') {
-        console.error('Network error while sending contact request');
         return {
           success: false,
           message: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+          isNetworkError: true
         };
       }
       
       // تفاصيل استجابة الخطأ إذا كانت متاحة
       if (error.response) {
-        console.error('Server error response:', error.response.status, JSON.stringify(error.response.data));
         const serverErrorMessage = error.response.data?.message;
         return {
           success: false,
-          message: serverErrorMessage || `خطأ من الخادم (${error.response.status}): ${JSON.stringify(error.response.data)}`,
+          message: serverErrorMessage || 'حدث خطأ أثناء إرسال طلب التواصل'
         };
       }
       
       // خطأ عام
       return {
         success: false,
-        message: `حدث خطأ أثناء إرسال طلب التواصل: ${error.message}`,
+        message: 'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى'
       };
     }
   },

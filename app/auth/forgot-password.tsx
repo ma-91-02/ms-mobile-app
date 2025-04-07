@@ -40,48 +40,83 @@ export default function ForgotPasswordScreen() {
     return number.length >= 10 && number.length <= 15;
   };
 
-  // إرسال طلب إعادة تعيين كلمة المرور
-  const handleRequestReset = async () => {
+  // إرسال طلب نسيان كلمة المرور
+  const handleForgotPassword = async () => {
     try {
-      // التحقق من صحة رقم الهاتف
-      if (!isPhoneValid || !validatePhoneNumber(phoneNumber)) {
-        setPhoneError(t('invalidPhoneNumber', { ns: 'auth' }));
+      // التحقق من إدخال رقم الهاتف
+      if (!phoneNumber) {
+        Alert.alert(
+          t('error', { ns: 'common' }), 
+          t('enterPhoneNumber', { ns: 'auth' })
+        );
         return;
       }
-
+      
+      // طباعة المزيد من معلومات التشخيص حول رقم الهاتف
+      console.log('=============== تشخيص رقم الهاتف ===============');
+      console.log('رقم الهاتف كما تم إدخاله:', phoneNumber);
+      console.log('رقم الهاتف المنسق:', formattedPhoneNumber);
+      console.log('طول رقم الهاتف:', phoneNumber.length);
+      console.log('طول رقم الهاتف المنسق:', formattedPhoneNumber.length);
+      console.log('================================================');
+      
       setLoading(true);
       
-      console.log('==========================================');
-      console.log('تشخيص طلب استعادة كلمة المرور:');
-      console.log('API URL:', API_BASE_URL);
-      console.log('Requesting password reset for:', formattedPhoneNumber);
-      console.log('Phone number validation state:', { isPhoneValid, phoneNumber, formattedPhoneNumber });
+      // استخدام رقم الهاتف المنسق (formattedPhoneNumber) بدلاً من phoneNumber
+      // قد يكون هذا هو سبب المشكلة، لأنه يجب استخدام التنسيق الدولي الكامل (+79005138049)
+      const phoneToUse = formattedPhoneNumber;
+      console.log('سيتم طلب إعادة تعيين كلمة المرور باستخدام رقم الهاتف المنسق:', phoneToUse);
       
-      // استدعاء API لطلب إعادة التعيين
-      console.log('Calling API: requestPasswordReset');
-      const response = await authAPI.requestPasswordReset(formattedPhoneNumber);
+      const response = await authAPI.requestPasswordReset(phoneToUse);
+      console.log('Request password reset response:', response);
       
-      console.log('Password reset request response:', response);
-      
+      // التحقق من نجاح العملية
       if (!response.success) {
-        console.error('Password reset request failed:', response.message);
-        Alert.alert(t('error', { ns: 'common' }), response.message || t('otpSendFailed', { ns: 'auth' }));
+        // التحقق من نوع الخطأ
+        if (response.isNetworkError) {
+          Alert.alert(
+            t('noInternetConnection'), 
+            t('noInternetMessage')
+          );
+          setLoading(false);
+          return;
+        }
+        
+        Alert.alert(
+          t('error', { ns: 'common' }), 
+          response.message || t('otpSendFailed', { ns: 'auth' })
+        );
         setLoading(false);
         return;
       }
       
-      console.log('Password reset request successful');
-      console.log('==========================================');
+      // عرض رسالة نجاح في وضع التطوير للمساعدة في الاختبار
+      if (__DEV__ && response.demoOtp) {
+        console.log(`[DEV] OTP sent for password reset: ${response.demoOtp}`);
+      }
       
-      // الانتقال إلى شاشة إدخال رمز التحقق
-      console.log('Navigating to verify-otp screen with resetPassword=true');
-      router.push({
-        pathname: '/auth/verify-otp',
-        params: { 
-          phoneNumber: formattedPhoneNumber,
-          resetPassword: 'true'
-        }
-      });
+      // عرض رسالة بإرسال OTP
+      Alert.alert(
+        t('success', { ns: 'common' }),
+        t('otpSent', { ns: 'auth' }),
+        [
+          {
+            text: t('ok', { ns: 'common' }),
+            onPress: () => {
+              // الانتقال إلى شاشة التحقق من OTP مع وضع إعادة تعيين كلمة المرور
+              console.log('Navigating to verify-otp screen with resetPassword=true');
+              router.push({
+                pathname: '/auth/verify-otp',
+                params: {
+                  // استخدام نفس رقم الهاتف المنسق
+                  phoneNumber: phoneToUse,
+                  resetPassword: 'true'
+                }
+              });
+            },
+          },
+        ]
+      );
     } catch (error: any) {
       console.error('==========================================');
       console.error('خطأ في طلب استعادة كلمة المرور:');
@@ -177,7 +212,7 @@ export default function ForgotPasswordScreen() {
                 { backgroundColor: appColors.primary },
                 (!isPhoneValid || loading) && styles.disabledButton
               ]}
-              onPress={handleRequestReset}
+              onPress={handleForgotPassword}
               disabled={!isPhoneValid || loading}
               activeOpacity={0.8}
             >
