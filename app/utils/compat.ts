@@ -7,16 +7,16 @@ export const Haptics = {
   ImpactFeedbackStyle: {
     Light: 'light',
     Medium: 'medium',
-    Heavy: 'heavy'
+    Heavy: 'heavy',
   },
   NotificationFeedbackType: {
     Success: 'success',
     Warning: 'warning',
-    Error: 'error'
-  }
+    Error: 'error',
+  },
 };
 
-// استخدام هذا الملف في جميع أنحاء التطبيق بدلاً من استيراد المكتبات مباشرة 
+// استخدام هذا الملف في جميع أنحاء التطبيق بدلاً من استيراد المكتبات مباشرة
 
 // إضافة تصدير افتراضي
-export default { Haptics }; 
+export default { Haptics };

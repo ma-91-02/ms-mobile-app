@@ -44,25 +44,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>{children}</ThemeContext.Provider>
   );
 };
 
 // Theme provider component
-export const ThemeProviderWithStorage: React.FC<{children: React.ReactNode}> = ({ children }) => {
+export const ThemeProviderWithStorage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Get the device color scheme
   const deviceColorScheme = useColorScheme();
-  
+
   // State for dark mode
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
-  
+
   // Load the saved theme preference
   const loadThemePreference = async () => {
     try {
       const themePreference = await AsyncStorage.getItem('theme-preference');
-      
+
       if (themePreference !== null) {
         // If user has explicitly set a preference, use it
         setIsDarkMode(themePreference === 'dark');
@@ -76,7 +74,7 @@ export const ThemeProviderWithStorage: React.FC<{children: React.ReactNode}> = (
       setIsDarkMode(deviceColorScheme === 'dark');
     }
   };
-  
+
   const toggleTheme = async () => {
     try {
       const newMode = !isDarkMode;
@@ -86,10 +84,10 @@ export const ThemeProviderWithStorage: React.FC<{children: React.ReactNode}> = (
       console.error('Error saving theme preference', error);
     }
   };
-  
+
   // Use the appropriate theme based on dark mode state
   const theme = isDarkMode ? Colors.dark : Colors.light;
-  
+
   // Function to set dark mode explicitly
   const setDarkMode = async (value: boolean) => {
     try {
@@ -99,7 +97,7 @@ export const ThemeProviderWithStorage: React.FC<{children: React.ReactNode}> = (
       console.error('Error saving theme preference', error);
     }
   };
-  
+
   return (
     <ThemeContext.Provider value={{ theme, isDarkMode, toggleTheme, setDarkMode }}>
       {children}
@@ -107,4 +105,4 @@ export const ThemeProviderWithStorage: React.FC<{children: React.ReactNode}> = (
   );
 };
 
-export default ThemeContext; 
+export default ThemeContext;

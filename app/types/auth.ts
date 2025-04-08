@@ -68,4 +68,4 @@ export interface LoginResponse {
 }
 
 // إضافة تصدير افتراضي
-export default {}; 
+export default {};

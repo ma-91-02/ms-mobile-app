@@ -13,16 +13,16 @@ export default function AppFonts({ children }) {
     if (fontsLoaded) {
       // تطبيق خط Cairo على جميع النصوص في التطبيق
       Text.defaultProps = Text.defaultProps || {};
-      Text.defaultProps.style = { 
+      Text.defaultProps.style = {
         fontFamily: 'Cairo-Regular',
-        ...(Text.defaultProps?.style || {})
+        ...(Text.defaultProps?.style || {}),
       };
-      
+
       // تطبيق خط Cairo على جميع حقول الإدخال في التطبيق
       TextInput.defaultProps = TextInput.defaultProps || {};
-      TextInput.defaultProps.style = { 
+      TextInput.defaultProps.style = {
         fontFamily: 'Cairo-Regular',
-        ...(TextInput.defaultProps?.style || {})
+        ...(TextInput.defaultProps?.style || {}),
       };
     }
   }, [fontsLoaded]);
@@ -32,4 +32,4 @@ export default function AppFonts({ children }) {
   }
 
   return children;
-} 
+}

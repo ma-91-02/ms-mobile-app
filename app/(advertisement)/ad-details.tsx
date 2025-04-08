@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Image, 
-  ScrollView, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  TouchableOpacity,
   Linking,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -57,66 +57,52 @@ export default function AdDetails() {
   }, [id]);
 
   const handleContactRequest = async () => {
-    Alert.alert(
-      t('contactRequest'),
-      t('contactRequestMessage'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        { 
-          text: t('confirm'), 
-          onPress: async () => {
-            try {
-              // إرسال طلب التواصل إلى الخادم
-              const contactData = {
-                advertisementId: id as string,
-                reason: "أود التواصل مع صاحب الإعلان للاستفسار عن تفاصيل المستند المفقود"
-              };
-              
-              // عرض مؤشر التحميل
-              setLoading(true);
-              
-              // استدعاء واجهة برمجة التطبيق لإرسال طلب التواصل
-              const response = await adsAPI.sendContactRequest(contactData);
-              
-              // إخفاء مؤشر التحميل
-              setLoading(false);
-              
-              if (response.success) {
-                // عرض رسالة نجاح
-                Alert.alert(
-                  t('requestSent'),
-                  t('requestSentMessage'),
-                  [{ text: t('ok') }]
-                );
-              } else {
-                // عرض رسالة خطأ
-                Alert.alert(
-                  t('error'),
-                  response.message || t('errorContactingAdvertiser'),
-                  [{ text: t('ok') }]
-                );
-              }
-            } catch (error) {
-              // إخفاء مؤشر التحميل
-              setLoading(false);
-              
-              // عرض رسالة خطأ عامة
-              console.error('Error sending contact request:', error);
-              Alert.alert(
-                t('error'),
-                t('errorContactingAdvertiser'),
-                [{ text: t('ok') }]
-              );
+    Alert.alert(t('contactRequest'), t('contactRequestMessage'), [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('confirm'),
+        onPress: async () => {
+          try {
+            // إرسال طلب التواصل إلى الخادم
+            const contactData = {
+              advertisementId: id as string,
+              reason: 'أود التواصل مع صاحب الإعلان للاستفسار عن تفاصيل المستند المفقود',
+            };
+
+            // عرض مؤشر التحميل
+            setLoading(true);
+
+            // استدعاء واجهة برمجة التطبيق لإرسال طلب التواصل
+            const response = await adsAPI.sendContactRequest(contactData);
+
+            // إخفاء مؤشر التحميل
+            setLoading(false);
+
+            if (response.success) {
+              // عرض رسالة نجاح
+              Alert.alert(t('requestSent'), t('requestSentMessage'), [{ text: t('ok') }]);
+            } else {
+              // عرض رسالة خطأ
+              Alert.alert(t('error'), response.message || t('errorContactingAdvertiser'), [
+                { text: t('ok') },
+              ]);
             }
+          } catch (error) {
+            // إخفاء مؤشر التحميل
+            setLoading(false);
+
+            // عرض رسالة خطأ عامة
+            console.error('Error sending contact request:', error);
+            Alert.alert(t('error'), t('errorContactingAdvertiser'), [{ text: t('ok') }]);
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   const renderCategoryIcon = (category: string) => {
     let iconName = 'document-text-outline';
-    
+
     switch (category) {
       case 'passport':
         iconName = 'document-text-outline';
@@ -130,7 +116,7 @@ export default function AdDetails() {
       default:
         iconName = 'document-outline';
     }
-    
+
     return <Ionicons name={iconName as any} size={24} color={appColors.primary} />;
   };
 
@@ -147,7 +133,9 @@ export default function AdDetails() {
     return (
       <View style={[styles.errorContainer, { backgroundColor: appColors.background }]}>
         <Ionicons name="alert-circle-outline" size={60} color={appColors.error} />
-        <Text style={[styles.errorText, { color: appColors.text }]}>{error || t('adNotFound')}</Text>
+        <Text style={[styles.errorText, { color: appColors.text }]}>
+          {error || t('adNotFound')}
+        </Text>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: appColors.primary }]}
           onPress={() => router.back()}
@@ -163,14 +151,11 @@ export default function AdDetails() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons 
-              name={isRTL ? "chevron-forward" : "chevron-back"} 
-              size={24} 
-              color={appColors.text} 
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons
+              name={isRTL ? 'chevron-forward' : 'chevron-back'}
+              size={24}
+              color={appColors.text}
             />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: appColors.text }]}>
@@ -180,11 +165,7 @@ export default function AdDetails() {
 
         {/* الصورة (إذا كانت متوفرة) */}
         {ad.images && ad.images.length > 0 ? (
-          <Image 
-            source={{ uri: ad.images[0] }} 
-            style={styles.image}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: ad.images[0] }} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={[styles.imagePlaceholder, { backgroundColor: appColors.secondary }]}>
             {renderCategoryIcon(ad.category)}
@@ -193,47 +174,64 @@ export default function AdDetails() {
             </Text>
           </View>
         )}
-        
+
         {/* حالة الإعلان */}
-        <View style={[styles.statusContainer, { 
-          backgroundColor: ad.type === 'lost' ? '#ffedee' : '#e6f7ee',
-          flexDirection: isRTL ? 'row-reverse' : 'row'
-        }]}>
-          <Ionicons 
-            name={ad.type === 'lost' ? "alert-circle-outline" : "checkmark-circle-outline"} 
-            size={24} 
-            color={ad.type === 'lost' ? '#e74c3c' : '#27ae60'} 
+        <View
+          style={[
+            styles.statusContainer,
+            {
+              backgroundColor: ad.type === 'lost' ? '#ffedee' : '#e6f7ee',
+              flexDirection: isRTL ? 'row-reverse' : 'row',
+            },
+          ]}
+        >
+          <Ionicons
+            name={ad.type === 'lost' ? 'alert-circle-outline' : 'checkmark-circle-outline'}
+            size={24}
+            color={ad.type === 'lost' ? '#e74c3c' : '#27ae60'}
           />
-          <Text style={[
-            styles.statusText, 
-            { color: ad.type === 'lost' ? '#e74c3c' : '#27ae60' },
-            { marginRight: isRTL ? 8 : 0, marginLeft: isRTL ? 0 : 8 }
-          ]}>
+          <Text
+            style={[
+              styles.statusText,
+              { color: ad.type === 'lost' ? '#e74c3c' : '#27ae60' },
+              { marginRight: isRTL ? 8 : 0, marginLeft: isRTL ? 0 : 8 },
+            ]}
+          >
             {ad.type === 'lost' ? t('lostItemStatus') : t('foundItemStatus')}
           </Text>
         </View>
 
         {/* معلومات المستمسك */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: appColors.textSecondary }]}>{t('documentInfo')}</Text>
-          
+          <Text style={[styles.sectionTitle, { color: appColors.textSecondary }]}>
+            {t('documentInfo')}
+          </Text>
+
           <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>{t('documentType')}:</Text>
+            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>
+              {t('documentType')}:
+            </Text>
             <Text style={[styles.infoValue, { color: appColors.text }]}>{t(ad.category)}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>{t('ownerName')}:</Text>
+            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>
+              {t('ownerName')}:
+            </Text>
             <Text style={[styles.infoValue, { color: appColors.text }]}>{ad.ownerName}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>{t('documentNumber')}:</Text>
+            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>
+              {t('documentNumber')}:
+            </Text>
             <Text style={[styles.infoValue, { color: appColors.text }]}>{ad.itemNumber}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>{t('governorate')}:</Text>
+            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>
+              {t('governorate')}:
+            </Text>
             <Text style={[styles.infoValue, { color: appColors.text }]}>{ad.governorate}</Text>
           </View>
 
@@ -247,21 +245,27 @@ export default function AdDetails() {
 
         {/* الوصف */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: appColors.textSecondary }]}>{t('description')}</Text>
+          <Text style={[styles.sectionTitle, { color: appColors.textSecondary }]}>
+            {t('description')}
+          </Text>
           <Text style={[styles.description, { color: appColors.text }]}>{ad.description}</Text>
         </View>
 
         {/* معلومات المعلن */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: appColors.textSecondary }]}>{t('advertiserInfo')}</Text>
-          
+          <Text style={[styles.sectionTitle, { color: appColors.textSecondary }]}>
+            {t('advertiserInfo')}
+          </Text>
+
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>{t('name')}:</Text>
             <Text style={[styles.infoValue, { color: appColors.text }]}>{ad.userId.fullName}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>{t('contactPhone')}:</Text>
+            <Text style={[styles.infoLabel, { color: appColors.textSecondary }]}>
+              {t('contactPhone')}:
+            </Text>
             <Text style={[styles.infoValue, { color: appColors.text }]}>
               {ad.hideContactInfo ? t('contactHidden') : ad.contactPhone}
             </Text>
@@ -284,117 +288,117 @@ export default function AdDetails() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    fontFamily: 'Cairo-Medium',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    marginTop: 16,
-    marginBottom: 24,
-    fontSize: 16,
-    textAlign: 'center',
-    fontFamily: 'Cairo-Medium',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
   backButton: {
     padding: 8,
   },
-  headerTitle: {
-    fontSize: 22,
+  button: {
+    alignItems: 'center',
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 8,
+    padding: 16,
+  },
+  buttonText: {
+    color: '#fff',
     fontFamily: 'Cairo-Bold',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  buttonsContainer: {
+    marginBottom: 32,
+    padding: 16,
+  },
+  container: {
+    flex: 1,
+  },
+  description: {
+    fontFamily: 'Cairo-Regular',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontFamily: 'Cairo-Medium',
+    fontSize: 16,
+    marginBottom: 24,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    padding: 16,
+  },
+  headerTitle: {
+    fontFamily: 'Cairo-Bold',
+    fontSize: 22,
     marginLeft: 8,
   },
   image: {
-    width: '100%',
-    height: 250,
     backgroundColor: '#f0f0f0',
+    height: 250,
+    width: '100%',
   },
   imagePlaceholder: {
-    width: '100%',
+    alignItems: 'center',
     height: 250,
     justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
   },
-  placeholderText: {
-    marginTop: 12,
-    fontSize: 16,
+  infoLabel: {
     fontFamily: 'Cairo-Medium',
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 8,
-  },
-  statusText: {
     fontSize: 16,
-    fontFamily: 'Cairo-Bold',
-  },
-  section: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 12,
-    fontFamily: 'Cairo-Bold',
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 8,
   },
-  infoLabel: {
-    fontSize: 16,
-    fontFamily: 'Cairo-Medium',
-  },
   infoValue: {
-    fontSize: 16,
     fontFamily: 'Cairo-Regular',
-  },
-  description: {
     fontSize: 16,
-    lineHeight: 24,
-    fontFamily: 'Cairo-Regular',
   },
-  buttonsContainer: {
-    padding: 16,
-    marginBottom: 32,
-  },
-  button: {
-    flexDirection: 'row',
+  loadingContainer: {
     alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
-    padding: 16,
-    borderRadius: 8,
-    marginVertical: 8,
   },
-  buttonText: {
-    color: '#fff',
+  loadingText: {
+    fontFamily: 'Cairo-Medium',
     fontSize: 16,
-    marginLeft: 8,
-    fontFamily: 'Cairo-Bold',
+    marginTop: 16,
   },
-}); 
+  placeholderText: {
+    fontFamily: 'Cairo-Medium',
+    fontSize: 16,
+    marginTop: 12,
+  },
+  section: {
+    borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    padding: 16,
+  },
+  sectionTitle: {
+    fontFamily: 'Cairo-Bold',
+    fontSize: 18,
+    marginBottom: 12,
+  },
+  statusContainer: {
+    alignItems: 'center',
+    borderRadius: 8,
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 12,
+  },
+  statusText: {
+    fontFamily: 'Cairo-Bold',
+    fontSize: 16,
+  },
+});

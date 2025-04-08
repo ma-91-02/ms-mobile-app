@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Modal, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
   Dimensions,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -24,14 +24,14 @@ type NetworkStatusAlertProps = {
   containerStyle?: object;
 };
 
-const NetworkStatusAlert = ({ 
+const NetworkStatusAlert = ({
   automaticCheck = true,
   requiredForContent = true,
   customMessage,
   showLoadingIndicator = false,
   onRetry,
-  iconName = "wifi-outline",
-  containerStyle = {}
+  iconName = 'wifi-outline',
+  containerStyle = {},
 }: NetworkStatusAlertProps) => {
   const { t } = useTranslation();
   const { isConnected, checkConnection } = useNetworkStatus();
@@ -44,7 +44,7 @@ const NetworkStatusAlert = ({
   const noConnectionTitle = t('noInternetConnection');
   const noConnectionMessage = customMessage || t('noInternetMessage');
   const retryButtonText = t('retry');
-  
+
   useEffect(() => {
     if (automaticCheck) {
       // إذا كان هناك تغيير في حالة الاتصال
@@ -63,7 +63,7 @@ const NetworkStatusAlert = ({
 
   const handleRetry = async () => {
     setIsRetrying(true);
-    
+
     try {
       if (onRetry) {
         onRetry();
@@ -81,7 +81,7 @@ const NetworkStatusAlert = ({
       setIsRetrying(false);
     }
   };
-  
+
   const closeModal = () => {
     setShowAlert(false);
   };
@@ -98,21 +98,19 @@ const NetworkStatusAlert = ({
         <View style={styles.iconContainer}>
           <Ionicons name={iconName as any} size={50} color={appColors.error} />
         </View>
-        
-        <Text style={[styles.title, { color: appColors.text }]}>
-          {noConnectionTitle}
-        </Text>
-        
+
+        <Text style={[styles.title, { color: appColors.text }]}>{noConnectionTitle}</Text>
+
         <Text style={[styles.message, { color: appColors.textSecondary }]}>
           {noConnectionMessage}
         </Text>
-        
+
         <TouchableOpacity
           style={[styles.retryButton, { backgroundColor: appColors.primary }]}
           onPress={handleRetry}
           disabled={isRetrying}
         >
-          {(showLoadingIndicator || isRetrying) ? (
+          {showLoadingIndicator || isRetrying ? (
             <ActivityIndicator size="small" color="#fff" style={styles.loadingIndicator} />
           ) : null}
           <Text style={styles.retryButtonText}>{retryButtonText}</Text>
@@ -123,39 +121,29 @@ const NetworkStatusAlert = ({
 
   // عرض كنافذة منبثقة في حالة عدم ضرورة الاتصال لعرض المحتوى
   return (
-    <Modal
-      visible={showAlert}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={closeModal}
-    >
+    <Modal visible={showAlert} transparent={true} animationType="fade" onRequestClose={closeModal}>
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContainer, { backgroundColor: appColors.background }]}>
-          <TouchableOpacity 
-            style={styles.closeButton} 
-            onPress={closeModal}
-          >
+          <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
             <Ionicons name="close" size={24} color={appColors.text} />
           </TouchableOpacity>
-          
+
           <View style={styles.iconContainer}>
             <Ionicons name={iconName as any} size={50} color={appColors.error} />
           </View>
-          
-          <Text style={[styles.title, { color: appColors.text }]}>
-            {noConnectionTitle}
-          </Text>
-          
+
+          <Text style={[styles.title, { color: appColors.text }]}>{noConnectionTitle}</Text>
+
           <Text style={[styles.message, { color: appColors.textSecondary }]}>
             {noConnectionMessage}
           </Text>
-          
+
           <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: appColors.primary }]}
             onPress={handleRetry}
             disabled={isRetrying}
           >
-            {(showLoadingIndicator || isRetrying) ? (
+            {showLoadingIndicator || isRetrying ? (
               <ActivityIndicator size="small" color="#fff" style={styles.loadingIndicator} />
             ) : null}
             <Text style={styles.retryButtonText}>{retryButtonText}</Text>
@@ -169,70 +157,70 @@ const NetworkStatusAlert = ({
 const windowWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 20,
-  },
-  modalContainer: {
-    width: windowWidth * 0.85,
-    borderRadius: 16,
-    padding: 24,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    alignItems: 'center',
+  closeButton: {
+    padding: 4,
+    position: 'absolute',
+    right: 12,
+    top: 12,
+    zIndex: 10,
   },
   fullScreenContainer: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
   },
   iconContainer: {
     marginBottom: 16,
   },
-  title: {
-    fontSize: 20,
-    fontFamily: 'Cairo-Bold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  message: {
-    fontSize: 16,
-    fontFamily: 'Cairo-Regular',
-    marginBottom: 24,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  retryButton: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    minWidth: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: 'Cairo-Bold',
-  },
   loadingIndicator: {
     marginRight: 8,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 10,
-    padding: 4,
+  message: {
+    fontFamily: 'Cairo-Regular',
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalContainer: {
+    alignItems: 'center',
+    borderRadius: 16,
+    elevation: 5,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    width: windowWidth * 0.85,
+  },
+  modalOverlay: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  retryButton: {
+    alignItems: 'center',
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    minWidth: 120,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontFamily: 'Cairo-Bold',
+    fontSize: 16,
+  },
+  title: {
+    fontFamily: 'Cairo-Bold',
+    fontSize: 20,
+    marginBottom: 12,
+    textAlign: 'center',
   },
 });
 
-export default NetworkStatusAlert; 
+export default NetworkStatusAlert;

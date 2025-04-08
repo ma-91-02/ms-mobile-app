@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, Platform, Modal, FlatList, Keyboard, KeyboardAvoidingView, I18nManager, SafeAreaView } from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  Platform,
+  Modal,
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  I18nManager,
+  SafeAreaView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import AppColors from '../../constants/AppColors';
@@ -32,7 +45,7 @@ const COUNTRIES = [
   { code: 'MR', name: 'موريتانيا', dialCode: '+222', flag: '🇲🇷' },
   { code: 'DJ', name: 'جيبوتي', dialCode: '+253', flag: '🇩🇯' },
   { code: 'KM', name: 'جزر القمر', dialCode: '+269', flag: '🇰🇲' },
-  
+
   // دول أوروبية
   { code: 'RU', name: 'روسيا', dialCode: '+7', flag: '🇷🇺' },
   { code: 'GB', name: 'المملكة المتحدة', dialCode: '+44', flag: '🇬🇧' },
@@ -56,12 +69,12 @@ const COUNTRIES = [
   { code: 'RO', name: 'رومانيا', dialCode: '+40', flag: '🇷🇴' },
   { code: 'CZ', name: 'التشيك', dialCode: '+420', flag: '🇨🇿' },
   { code: 'HU', name: 'المجر', dialCode: '+36', flag: '🇭🇺' },
-  
+
   // أمريكا الشمالية
   { code: 'US', name: 'الولايات المتحدة', dialCode: '+1', flag: '🇺🇸' },
   { code: 'CA', name: 'كندا', dialCode: '+1', flag: '🇨🇦' },
   { code: 'MX', name: 'المكسيك', dialCode: '+52', flag: '🇲🇽' },
-  
+
   // آسيا
   { code: 'TR', name: 'تركيا', dialCode: '+90', flag: '🇹🇷' },
   { code: 'IR', name: 'إيران', dialCode: '+98', flag: '🇮🇷' },
@@ -80,7 +93,7 @@ const COUNTRIES = [
   { code: 'KZ', name: 'كازاخستان', dialCode: '+7', flag: '🇰🇿' },
   { code: 'UZ', name: 'أوزبكستان', dialCode: '+998', flag: '🇺🇿' },
   { code: 'AZ', name: 'أذربيجان', dialCode: '+994', flag: '🇦🇿' },
-  
+
   // أفريقيا
   { code: 'ZA', name: 'جنوب أفريقيا', dialCode: '+27', flag: '🇿🇦' },
   { code: 'NG', name: 'نيجيريا', dialCode: '+234', flag: '🇳🇬' },
@@ -88,11 +101,11 @@ const COUNTRIES = [
   { code: 'ET', name: 'إثيوبيا', dialCode: '+251', flag: '🇪🇹' },
   { code: 'GH', name: 'غانا', dialCode: '+233', flag: '🇬🇭' },
   { code: 'TZ', name: 'تنزانيا', dialCode: '+255', flag: '🇹🇿' },
-  
+
   // أوقيانوسيا
   { code: 'AU', name: 'أستراليا', dialCode: '+61', flag: '🇦🇺' },
   { code: 'NZ', name: 'نيوزيلندا', dialCode: '+64', flag: '🇳🇿' },
-  
+
   // أمريكا الجنوبية
   { code: 'BR', name: 'البرازيل', dialCode: '+55', flag: '🇧🇷' },
   { code: 'AR', name: 'الأرجنتين', dialCode: '+54', flag: '🇦🇷' },
@@ -145,7 +158,7 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const { t } = useTranslation();
-  
+
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [countryPickerVisible, setCountryPickerVisible] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState(value);
@@ -167,41 +180,41 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
   // تحويل الأرقام العربية إلى إنجليزية
   const convertArabicToEnglish = (text: string): string => {
     return text
-      .replace(/[\u0660-\u0669]/g, (c) => (c.charCodeAt(0) - 0x0660).toString())
-      .replace(/[\u06f0-\u06f9]/g, (c) => (c.charCodeAt(0) - 0x06f0).toString());
+      .replace(/[\u0660-\u0669]/g, c => (c.charCodeAt(0) - 0x0660).toString())
+      .replace(/[\u06f0-\u06f9]/g, c => (c.charCodeAt(0) - 0x06f0).toString());
   };
 
   // معالجة تغيير رقم الهاتف
   const handlePhoneNumberChange = (text: string) => {
     // تحويل الأرقام العربية إلى إنجليزية
     const englishNumbers = convertArabicToEnglish(text);
-    
+
     // إزالة أي أحرف غير رقمية
     const cleanedText = englishNumbers.replace(/[^0-9]/g, '');
-    
+
     // تحديث حالة رقم الهاتف
     setPhoneNumber(cleanedText);
-    
+
     // إرسال رقم الهاتف بدون رمز الدولة للمكون الأب
     onChangeText(cleanedText);
-    
+
     // إرسال رقم الهاتف مع رمز الدولة للمكون الأب (إذا كان مطلوبًا)
     if (onChangeFormattedText && selectedCountry) {
       onChangeFormattedText(`${selectedCountry.dialCode}${cleanedText}`);
     }
-    
+
     // التحقق من صحة رقم الهاتف
     if (onValidityChange && selectedCountry) {
       // تحقق من أن رقم الهاتف يحتوي على 9-10 أرقام للعراق
       let isValid = false;
-      
+
       if (selectedCountry.code === 'IQ') {
         isValid = cleanedText.length >= 9 && cleanedText.length <= 10;
       } else {
         // قاعدة تحقق عامة لباقي الدول
         isValid = cleanedText.length >= 6 && cleanedText.length <= 15;
       }
-      
+
       onValidityChange(isValid);
     }
   };
@@ -210,36 +223,37 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
   const handleCountrySelect = (country: Country) => {
     setSelectedCountry(country);
     setCountryPickerVisible(false);
-    
+
     if (onChangeCountry) {
       onChangeCountry(country);
     }
-    
+
     // إرسال رقم الهاتف مع رمز الدولة الجديد للمكون الأب (إذا كان مطلوبًا)
     if (onChangeFormattedText) {
       onChangeFormattedText(`${country.dialCode}${phoneNumber}`);
     }
-    
+
     // التحقق من صحة رقم الهاتف مع الدولة الجديدة
     if (onValidityChange) {
       let isValid = false;
-      
+
       if (country.code === 'IQ') {
         isValid = phoneNumber.length >= 9 && phoneNumber.length <= 10;
       } else {
         isValid = phoneNumber.length >= 6 && phoneNumber.length <= 15;
       }
-      
+
       onValidityChange(isValid);
     }
   };
 
   // تصفية الدول بناءً على البحث
   const filterCountries = (query: string) => {
-    const filtered = COUNTRIES.filter(country => 
-      country.name.toLowerCase().includes(query.toLowerCase()) || 
-      country.dialCode.includes(query) ||
-      country.code.toLowerCase().includes(query.toLowerCase())
+    const filtered = COUNTRIES.filter(
+      country =>
+        country.name.toLowerCase().includes(query.toLowerCase()) ||
+        country.dialCode.includes(query) ||
+        country.code.toLowerCase().includes(query.toLowerCase()),
     );
     setFilteredCountries(filtered);
   };
@@ -252,13 +266,12 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
 
   // عرض عنصر الدولة
   const renderCountryItem = ({ item }: { item: Country }) => (
-    <TouchableOpacity 
-      style={styles.countryItem} 
-      onPress={() => handleCountrySelect(item)}
-    >
+    <TouchableOpacity style={styles.countryItem} onPress={() => handleCountrySelect(item)}>
       <Text style={styles.countryFlag}>{item.flag}</Text>
       <Text style={[styles.countryName, { color: appColors.text }]}>{item.name}</Text>
-      <Text style={[styles.countryDialCode, { color: appColors.textSecondary }]}>{item.dialCode}</Text>
+      <Text style={[styles.countryDialCode, { color: appColors.textSecondary }]}>
+        {item.dialCode}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -274,10 +287,7 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
       >
         {/* زر اختيار الدولة */}
         <TouchableOpacity
-          style={[
-            styles.countryPickerButton,
-            { flexDirection: isRTL ? 'row-reverse' : 'row' },
-          ]}
+          style={[styles.countryPickerButton, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
           onPress={() => setCountryPickerVisible(true)}
         >
           {selectedCountry && (
@@ -305,7 +315,7 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
             styles.input,
             { color: appColors.text },
             { textAlign: isRTL ? 'right' : 'left' },
-            textStyle
+            textStyle,
           ]}
           value={phoneNumber}
           onChangeText={handlePhoneNumberChange}
@@ -319,11 +329,7 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
       </View>
 
       {/* رسالة الخطأ */}
-      {error && (
-        <Text style={[styles.errorText, { color: appColors.danger }]}>
-          {error}
-        </Text>
-      )}
+      {error && <Text style={[styles.errorText, { color: appColors.danger }]}>{error}</Text>}
 
       {/* منتقي الدولة */}
       <Modal
@@ -334,7 +340,7 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
       >
         <SafeAreaView style={[styles.modalContainer, { backgroundColor: appColors.background }]}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setCountryPickerVisible(false)}
             >
@@ -344,7 +350,7 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
               {t('selectCountry') || 'اختر الدولة'}
             </Text>
           </View>
-          
+
           <View style={[styles.searchContainer, { backgroundColor: appColors.secondary }]}>
             <Ionicons name="search" size={20} color={appColors.textSecondary} />
             <TextInput
@@ -362,11 +368,11 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
               </TouchableOpacity>
             )}
           </View>
-          
+
           <FlatList
             data={filteredCountries}
             renderItem={renderCountryItem}
-            keyExtractor={(item) => item.code}
+            keyExtractor={item => item.code}
             style={styles.countryList}
             initialNumToRender={20}
             keyboardShouldPersistTaps="handled"
@@ -378,102 +384,102 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
 };
 
 const styles = StyleSheet.create({
+  closeButton: {
+    padding: 8,
+  },
   container: {
-    width: '100%',
     marginBottom: 16,
+    width: '100%',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    height: 50,
-    overflow: 'hidden',
+  countryCode: {
+    fontFamily: 'Cairo-Regular',
+    fontSize: 16,
   },
-  countryPickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    height: '100%',
+  countryDialCode: {
+    fontFamily: 'Cairo-Regular',
+    fontSize: 14,
+    marginLeft: 8,
   },
   countryFlag: {
     fontSize: 18,
     marginRight: 8,
   },
-  countryCode: {
-    fontSize: 16,
+  countryItem: {
+    alignItems: 'center',
+    borderBottomColor: '#e0e0e0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    padding: 16,
+  },
+  countryList: {
+    flex: 1,
+  },
+  countryName: {
+    flex: 1,
     fontFamily: 'Cairo-Regular',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  countryPickerButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    height: '100%',
+    paddingHorizontal: 12,
   },
   divider: {
-    width: 1,
     height: '70%',
+    width: 1,
+  },
+  errorText: {
+    fontFamily: 'Cairo-Regular',
+    fontSize: 14,
+    marginTop: 4,
   },
   input: {
     flex: 1,
+    fontFamily: 'Cairo-Regular',
+    fontSize: 16,
     height: '100%',
     paddingHorizontal: 12,
-    fontSize: 16,
-    fontFamily: 'Cairo-Regular',
   },
-  errorText: {
-    fontSize: 14,
-    marginTop: 4,
-    fontFamily: 'Cairo-Regular',
+  inputContainer: {
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    height: 50,
+    overflow: 'hidden',
   },
   modalContainer: {
     flex: 1,
   },
   modalHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-  },
-  closeButton: {
-    padding: 8,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    padding: 16,
   },
   modalTitle: {
+    fontFamily: 'Cairo-Bold',
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 16,
-    fontFamily: 'Cairo-Bold',
   },
   searchContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 8,
+    flexDirection: 'row',
+    height: 48,
     margin: 16,
     paddingHorizontal: 12,
-    height: 48,
-    borderRadius: 8,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
     fontFamily: 'Cairo-Regular',
-  },
-  countryList: {
-    flex: 1,
-  },
-  countryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  countryName: {
-    flex: 1,
     fontSize: 16,
     marginLeft: 8,
-    fontFamily: 'Cairo-Regular',
-  },
-  countryDialCode: {
-    fontSize: 14,
-    marginLeft: 8,
-    fontFamily: 'Cairo-Regular',
   },
 });
 
-export default CustomPhoneInput; 
+export default CustomPhoneInput;

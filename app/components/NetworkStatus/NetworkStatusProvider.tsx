@@ -22,19 +22,19 @@ export const NetworkStatusProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const state = await NetInfo.fetch();
       const connectionStatus = !!state.isConnected;
-      
+
       if (__DEV__) {
         console.log('Dev Only - Network connection checked:', connectionStatus);
         console.log('Dev Only - Network state details:', state);
       }
-      
+
       setIsConnected(connectionStatus);
       return connectionStatus;
     } catch (error) {
       if (__DEV__) {
         console.error('Dev Only - Error checking network connection:', error);
       }
-      
+
       // في حالة الخطأ، نفترض أن هناك اتصالًا
       setIsConnected(true);
       return true;
@@ -49,12 +49,14 @@ export const NetworkStatusProvider: React.FC<{ children: React.ReactNode }> = ({
     // إعداد مستمع لتغييرات الشبكة
     const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
       const connectionStatus = !!state.isConnected;
-      
+
       if (__DEV__ && isConnected !== connectionStatus) {
-        console.log(`Dev Only - Network status changed: ${connectionStatus ? 'Connected' : 'Disconnected'}`);
+        console.log(
+          `Dev Only - Network status changed: ${connectionStatus ? 'Connected' : 'Disconnected'}`,
+        );
         console.log('Dev Only - Network state details:', state);
       }
-      
+
       setIsConnected(connectionStatus);
     });
 
@@ -72,4 +74,4 @@ export const NetworkStatusProvider: React.FC<{ children: React.ReactNode }> = ({
 };
 
 // Hook لاستخدام سياق حالة الشبكة
-export const useNetworkStatus = () => useContext(NetworkStatusContext); 
+export const useNetworkStatus = () => useContext(NetworkStatusContext);

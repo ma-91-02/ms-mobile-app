@@ -1,5 +1,9 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider as NavigationThemeProvider,
+} from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,7 +12,7 @@ import { I18nextProvider } from 'react-i18next';
 import { View, I18nManager, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from './context/ThemeContext';
-import i18n, { loadSavedLanguage, RTL_LANGUAGES } from './i18n';
+import i18n, { loadSavedLanguage, RTL_LANGUAGES } from './i18n/index';
 import AppFonts from './components/AppFonts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NetworkStatusProvider } from './components/NetworkStatus/NetworkStatusProvider';
@@ -64,14 +68,16 @@ export default function RootLayout() {
         if (__DEV__) {
           try {
             // التحقق من ما إذا كانت هذه هي المرة الأولى لتشغيل التطبيق في وضع التطوير
-            const isFirstDevRun = await AsyncStorage.getItem('dev-first-run') === null;
-            
+            const isFirstDevRun = (await AsyncStorage.getItem('dev-first-run')) === null;
+
             if (isFirstDevRun) {
-              console.log('[DEV] First development run detected, ensuring translations are loaded...');
-              
+              console.log(
+                '[DEV] First development run detected, ensuring translations are loaded...',
+              );
+
               // حفظ إشارة بأن التطبيق قد تم تشغيله مرة واحدة على الأقل في وضع التطوير
               await AsyncStorage.setItem('dev-first-run', 'true');
-              
+
               if (savedLanguage) {
                 // إعادة تطبيق اللغة للتأكد من تحميل الترجمات بشكل صحيح
                 await i18n.changeLanguage(savedLanguage);
@@ -129,4 +135,4 @@ export default function RootLayout() {
       </ThemeProvider>
     </I18nextProvider>
   );
-} 
+}

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   Platform,
   TouchableOpacity,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,13 +54,13 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
   status,
   onPress,
   showStatus = true,
-  location
+  location,
 }) => {
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
-  
+
   // حالة تحميل الصورة
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isImageError, setIsImageError] = useState(false);
@@ -74,14 +74,19 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
     if (cat === '2') return t('nationalID', { ns: 'common' });
     if (cat === '3') return t('drivingLicense', { ns: 'common' });
     if (cat === '4') return t('otherDocuments', { ns: 'common' });
-    
+
     // التحويل من قيم API
-    switch(cat) {
-      case 'passport': return 'جواز سفر';
-      case 'national_id': return 'هوية وطنية';
-      case 'driving_license': return 'رخصة قيادة';
-      case 'other': return 'مستند آخر';
-      default: return cat;
+    switch (cat) {
+      case 'passport':
+        return 'جواز سفر';
+      case 'national_id':
+        return 'هوية وطنية';
+      case 'driving_license':
+        return 'رخصة قيادة';
+      case 'other':
+        return 'مستند آخر';
+      default:
+        return cat;
     }
   };
 
@@ -104,13 +109,17 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
     if (category === '2') return 'card-outline';
     if (category === '3') return 'car-sport-outline';
     if (category === '4') return 'ellipsis-horizontal-outline';
-    
+
     // دعم قيم API
-    switch(category) {
-      case 'passport': return 'document-text-outline';
-      case 'national_id': return 'card-outline';
-      case 'driving_license': return 'car-sport-outline';
-      default: return 'ellipsis-horizontal-outline';
+    switch (category) {
+      case 'passport':
+        return 'document-text-outline';
+      case 'national_id':
+        return 'card-outline';
+      case 'driving_license':
+        return 'car-sport-outline';
+      default:
+        return 'ellipsis-horizontal-outline';
     }
   };
 
@@ -126,13 +135,18 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
    */
   const getStatusText = () => {
     if (!status) return null;
-    
-    switch(status) {
-      case 'pending': return t('pending', { ns: 'common' });
-      case 'approved': return t('approved', { ns: 'common' });
-      case 'rejected': return t('rejected', { ns: 'common' });
-      case 'resolved': return t('resolved', { ns: 'common' });
-      default: return status;
+
+    switch (status) {
+      case 'pending':
+        return t('pending', { ns: 'common' });
+      case 'approved':
+        return t('approved', { ns: 'common' });
+      case 'rejected':
+        return t('rejected', { ns: 'common' });
+      case 'resolved':
+        return t('resolved', { ns: 'common' });
+      default:
+        return status;
     }
   };
 
@@ -141,13 +155,18 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
    */
   const getStatusColor = () => {
     if (!status) return '';
-    
-    switch(status) {
-      case 'pending': return appColors.warning;
-      case 'approved': return appColors.success;
-      case 'rejected': return appColors.error;
-      case 'resolved': return appColors.primary;
-      default: return appColors.textSecondary;
+
+    switch (status) {
+      case 'pending':
+        return appColors.warning;
+      case 'approved':
+        return appColors.success;
+      case 'rejected':
+        return appColors.error;
+      case 'resolved':
+        return appColors.primary;
+      default:
+        return appColors.textSecondary;
     }
   };
 
@@ -155,21 +174,21 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
    * ترجمة اسم المحافظة
    */
   const getProvinceTranslation = (governorate: string): string => {
-    if (!governorate) return "";
-    
+    if (!governorate) return '';
+
     // الوصول إلى ترجمة المحافظة من ملف الترجمة
     const provinceName = t(`provinces.${governorate}`, { ns: 'common' });
-    
+
     // إذا كانت القيمة هي نفس المفتاح، فهذا يعني أنه لم يتم العثور على ترجمة
     return provinceName !== governorate ? provinceName : governorate;
   };
-  
+
   // طريقة مُحسّنة لاستخراج عنوان URL للصورة
   const getDisplayImageUrl = (): string | null => {
     // نحاول أولاً استخدام مصفوفة الصور إن وجدت
     if (images && images.length > 0) {
-      let imagePath = images[0];
-      
+      const imagePath = images[0];
+
       // نتحقق مما إذا كان المسار يبدأ بـ / أو يحتوي على /
       if (imagePath.startsWith('/uploads/')) {
         return `https://ms-bg.com${imagePath}`;
@@ -177,10 +196,10 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
         // إذا لم يكن المسار URL كاملاً، نفترض أنه اسم ملف فقط
         return `https://ms-bg.com/uploads/advertisements/${imagePath}`;
       }
-      
+
       return imagePath; // إرجاع المسار كما هو إذا كان URL كاملاً
     }
-    
+
     // إذا لم تكن هناك مصفوفة صور، نستخدم imageUrl إن وجد
     if (imageUrl) {
       if (imageUrl.startsWith('/uploads/')) {
@@ -190,14 +209,14 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
       }
       return imageUrl;
     }
-    
+
     return null; // لا توجد صورة
   };
-  
+
   // استخدام البيانات الواردة فعلاً من API بدون قيم افتراضية
   const displayDate = date ? date.split('T')[0].split('-').reverse().join('/') : '';
   const documentType = getCategoryName(category);
-  const governorateValue = getProvinceTranslation(location || "");
+  const governorateValue = getProvinceTranslation(location || '');
   const displayImageUrl = getDisplayImageUrl();
 
   // تحميل مسبق للصورة عند ظهور المكون
@@ -216,7 +235,7 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
     setIsImageLoading(false);
     setIsImageError(true);
   };
-  
+
   // عرض كلمة "صورة" كبديل عن الصورة
   const renderImagePlaceholder = () => {
     return (
@@ -279,26 +298,17 @@ const CommonAdCard: React.FC<CommonAdCardProps> = ({
   // إذا كان هناك حدث للنقر، نرجع بطاقة قابلة للنقر
   if (onPress) {
     return (
-      <TouchableOpacity 
-        activeOpacity={0.9}
-        onPress={handlePress}
-        style={styles.touchable}
-      >
+      <TouchableOpacity activeOpacity={0.9} onPress={handlePress} style={styles.touchable}>
         <CardContent />
       </TouchableOpacity>
     );
   }
-  
+
   // وإلا نرجع البطاقة العادية
   return <CardContent />;
 };
 
 const styles = StyleSheet.create({
-  touchable: {
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
   card: {
     backgroundColor: '#E6E6FA', // اللون البنفسجي الفاتح كما في الصورة
     borderRadius: 8,
@@ -307,81 +317,86 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   cardContent: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  infoContainer: {
-    flex: 1,
-    alignItems: 'flex-end',
-    marginRight: 10,
-  },
-  nameText: {
-    fontSize: 18,
-    color: '#333',
-    textAlign: 'right',
-    fontFamily: 'Cairo-Bold',
-    marginBottom: 5,
-  },
-  documentTypeText: {
-    fontSize: 16,
-    color: '#444',
-    textAlign: 'right',
-    fontFamily: 'Cairo-Medium',
-    marginBottom: 5,
-  },
-  locationText: {
-    fontSize: 16,
-    color: '#555',
-    textAlign: 'right',
-    fontFamily: 'Cairo-Regular',
-    marginBottom: 5,
   },
   dateText: {
-    fontSize: 16,
     color: '#666',
-    textAlign: 'right',
     fontFamily: 'Cairo-Regular',
+    fontSize: 16,
+    textAlign: 'right',
   },
-  imageContainer: {
-    width: 120,
-    height: 120,
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  imageWrapper: {
-    width: '100%',
-    height: '100%',
-    position: 'relative',
+  documentTypeText: {
+    color: '#444',
+    fontFamily: 'Cairo-Medium',
+    fontSize: 16,
+    marginBottom: 5,
+    textAlign: 'right',
   },
   image: {
-    width: '100%',
     height: '100%',
-  },
-  loaderContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-  },
-  imagePlaceholder: {
     width: '100%',
-    height: '100%',
-    justifyContent: 'center',
+  },
+  imageContainer: {
     alignItems: 'center',
     backgroundColor: '#fff',
+    borderRadius: 6,
+    height: 120,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: 120,
+  },
+  imagePlaceholder: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    height: '100%',
+    justifyContent: 'center',
+    width: '100%',
   },
   imagePlaceholderText: {
-    fontSize: 22,
     color: '#666',
     fontFamily: 'Cairo-Bold',
+    fontSize: 22,
+  },
+  imageWrapper: {
+    height: '100%',
+    position: 'relative',
+    width: '100%',
+  },
+  infoContainer: {
+    alignItems: 'flex-end',
+    flex: 1,
+    marginRight: 10,
+  },
+  loaderContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    bottom: 0,
+    justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  locationText: {
+    color: '#555',
+    fontFamily: 'Cairo-Regular',
+    fontSize: 16,
+    marginBottom: 5,
+    textAlign: 'right',
+  },
+  nameText: {
+    color: '#333',
+    fontFamily: 'Cairo-Bold',
+    fontSize: 18,
+    marginBottom: 5,
+    textAlign: 'right',
+  },
+  touchable: {
+    borderRadius: 8,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
 });
 

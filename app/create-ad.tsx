@@ -13,7 +13,7 @@ import {
   Switch,
   Image,
   Modal,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from './context/ThemeContext';
 import AppColors from '../constants/AppColors';
-import i18n, { RTL_LANGUAGES } from './i18n';
+import i18n, { RTL_LANGUAGES } from './i18n/index';
 import { adsAPI } from './services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
@@ -40,26 +40,26 @@ interface Province {
 
 // تحديث الفئات
 const CATEGORIES: Category[] = [
-  { 
-    id: '1', 
+  {
+    id: '1',
     name: 'passport',
-    icon: 'document-text-outline' 
+    icon: 'document-text-outline',
   },
-  { 
-    id: '2', 
+  {
+    id: '2',
     name: 'nationalID',
-    icon: 'card-outline' 
+    icon: 'card-outline',
   },
-  { 
-    id: '3', 
+  {
+    id: '3',
     name: 'drivingLicense',
-    icon: 'car-sport-outline' 
+    icon: 'car-sport-outline',
   },
-  { 
-    id: '4', 
+  {
+    id: '4',
     name: 'otherDocuments',
-    icon: 'ellipsis-horizontal-outline' 
-  }
+    icon: 'ellipsis-horizontal-outline',
+  },
 ];
 
 // إضافة المحافظات
@@ -81,31 +81,50 @@ const PROVINCES: Province[] = [
   { id: 'qadisiyyah', name: 'qadisiyyah' },
   { id: 'saladin', name: 'saladin' },
   { id: 'thi_qar', name: 'thi_qar' },
-  { id: 'wasit', name: 'wasit' }
+  { id: 'wasit', name: 'wasit' },
 ];
 
 // الحصول على إحداثيات المحافظة
 const getCoordinatesForProvince = (provinceId: string): [number, number] => {
   switch (provinceId) {
-    case 'baghdad': return [44.3661, 33.3152];
-    case 'basra': return [47.7804, 30.5085];
-    case 'erbil': return [44.0091, 36.1911];
-    case 'sulaymaniyah': return [45.4485, 35.5657];
-    case 'najaf': return [44.3414, 32.0284];
-    case 'karbala': return [44.0299, 32.6063];
-    case 'duhok': return [42.9926, 36.8695];
-    case 'anbar': return [42.5000, 33.0000];
-    case 'babil': return [44.4000, 32.5000];
-    case 'diyala': return [45.0000, 33.7500];
-    case 'kirkuk': return [44.3922, 35.4681];
-    case 'misan': return [47.1500, 31.8300];
-    case 'muthanna': return [45.2800, 29.9900];
-    case 'nineveh': return [43.1376, 36.3350];
-    case 'qadisiyyah': return [44.9249, 31.9894];
-    case 'saladin': return [43.8761, 34.6015];
-    case 'thi_qar': return [46.0300, 30.8400];
-    case 'wasit': return [45.7184, 32.5142];
-    default: return [44.3661, 33.3152]; // بغداد كقيمة افتراضية
+    case 'baghdad':
+      return [44.3661, 33.3152];
+    case 'basra':
+      return [47.7804, 30.5085];
+    case 'erbil':
+      return [44.0091, 36.1911];
+    case 'sulaymaniyah':
+      return [45.4485, 35.5657];
+    case 'najaf':
+      return [44.3414, 32.0284];
+    case 'karbala':
+      return [44.0299, 32.6063];
+    case 'duhok':
+      return [42.9926, 36.8695];
+    case 'anbar':
+      return [42.5, 33.0];
+    case 'babil':
+      return [44.4, 32.5];
+    case 'diyala':
+      return [45.0, 33.75];
+    case 'kirkuk':
+      return [44.3922, 35.4681];
+    case 'misan':
+      return [47.15, 31.83];
+    case 'muthanna':
+      return [45.28, 29.99];
+    case 'nineveh':
+      return [43.1376, 36.335];
+    case 'qadisiyyah':
+      return [44.9249, 31.9894];
+    case 'saladin':
+      return [43.8761, 34.6015];
+    case 'thi_qar':
+      return [46.03, 30.84];
+    case 'wasit':
+      return [45.7184, 32.5142];
+    default:
+      return [44.3661, 33.3152]; // بغداد كقيمة افتراضية
   }
 };
 
@@ -126,130 +145,45 @@ export default function CreateAdScreen() {
   const [description, setDescription] = useState('');
   const [hideContactInfo, setHideContactInfo] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   // إضافة حالة للقوائم المنسدلة
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showProvinceModal, setShowProvinceModal] = useState(false);
-  
+
   // إضافة حالة للصور
   const [images, setImages] = useState<string[]>([]);
 
   // تحديث نمط الواجهة
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-    },
-    backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 16,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-    },
-    typeContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      paddingHorizontal: 16,
-    },
-    typeCard: {
-      padding: 20,
-      borderRadius: 10,
-      alignItems: 'center',
-      marginBottom: 20,
-    },
-    typeTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      marginTop: 16,
-      marginBottom: 8,
-    },
-    typeDesc: {
-      fontSize: 14,
-      textAlign: 'center',
-    },
-    form: {
-      padding: 16,
-    },
-    label: {
-      fontSize: 16,
-      marginBottom: 8,
-      fontWeight: 'bold',
-    },
-    input: {
-      height: 50,
-      borderRadius: 8,
-      paddingHorizontal: 16,
-      marginBottom: 16,
-    },
-    textArea: {
-      height: 100,
-      borderRadius: 8,
-      paddingHorizontal: 16,
-      paddingTop: 12,
-      marginBottom: 16,
-    },
-    imagesContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginBottom: 16,
-    },
-    imageWrapper: {
-      position: 'relative',
-      width: 100,
-      height: 100,
-      borderRadius: 8,
-      marginRight: 8,
-      marginBottom: 8,
-    },
-    imagePreview: {
-      width: '100%',
-      height: '100%',
-      borderRadius: 8,
-    },
-    removeImageBtn: {
-      position: 'absolute',
-      top: -10,
-      right: -10,
-      backgroundColor: 'white',
-      borderRadius: 12,
-    },
     addImageBtn: {
-      width: 100,
-      height: 100,
-      borderRadius: 8,
-      justifyContent: 'center',
       alignItems: 'center',
-      marginRight: 8,
+      borderRadius: 8,
+      height: 100,
+      justifyContent: 'center',
       marginBottom: 8,
+      marginRight: 8,
+      width: 100,
     },
     addImageText: {
       fontSize: 12,
       marginTop: 4,
     },
-    switchContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+    backButton: {
       alignItems: 'center',
-      marginBottom: 24,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: 'center',
+      marginRight: 16,
+      width: 40,
     },
-    switchLabel: {
-      fontSize: 16,
+    container: {
+      flex: 1,
     },
     createButton: {
-      height: 50,
-      borderRadius: 8,
-      justifyContent: 'center',
       alignItems: 'center',
+      borderRadius: 8,
+      height: 50,
+      justifyContent: 'center',
       marginBottom: 24,
     },
     createButtonText: {
@@ -258,41 +192,126 @@ export default function CreateAdScreen() {
       fontWeight: 'bold',
     },
     dropdownButton: {
-      height: 50,
       borderRadius: 8,
-      paddingHorizontal: 16,
+      height: 50,
       justifyContent: 'center',
+      paddingHorizontal: 16,
     },
-    modalOverlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    form: {
+      padding: 16,
+    },
+    header: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      padding: 16,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    imagePreview: {
+      borderRadius: 8,
+      height: '100%',
+      width: '100%',
+    },
+    imageWrapper: {
+      borderRadius: 8,
+      height: 100,
+      marginBottom: 8,
+      marginRight: 8,
+      position: 'relative',
+      width: 100,
+    },
+    imagesContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginBottom: 16,
+    },
+    input: {
+      borderRadius: 8,
+      height: 50,
+      marginBottom: 16,
+      paddingHorizontal: 16,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 8,
     },
     modalContent: {
-      maxHeight: '80%',
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
+      maxHeight: '80%',
       paddingBottom: 16,
     },
     modalHeader: {
+      alignItems: 'center',
+      borderBottomColor: '#e0e0e0',
+      borderBottomWidth: 1,
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'center',
       padding: 16,
-      borderBottomWidth: 1,
+    },
+    modalItem: {
       borderBottomColor: '#e0e0e0',
+      borderBottomWidth: 1,
+      paddingHorizontal: 16,
+    },
+    modalItemText: {
+      fontSize: 16,
+    },
+    modalOverlay: {
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      flex: 1,
+      justifyContent: 'flex-end',
     },
     modalTitle: {
       fontSize: 18,
       fontWeight: 'bold',
     },
-    modalItem: {
-      paddingHorizontal: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: '#e0e0e0',
+    removeImageBtn: {
+      backgroundColor: 'white',
+      borderRadius: 12,
+      position: 'absolute',
+      right: -10,
+      top: -10,
     },
-    modalItemText: {
+    switchContainer: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 24,
+    },
+    switchLabel: {
       fontSize: 16,
+    },
+    textArea: {
+      borderRadius: 8,
+      height: 100,
+      marginBottom: 16,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+    },
+    typeCard: {
+      alignItems: 'center',
+      borderRadius: 10,
+      marginBottom: 20,
+      padding: 20,
+    },
+    typeContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+    },
+    typeDesc: {
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    typeTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 8,
+      marginTop: 16,
     },
   });
 
@@ -316,23 +335,17 @@ export default function CreateAdScreen() {
     try {
       // منع إضافة أكثر من 5 صور
       if (images.length >= 5) {
-        Alert.alert(
-          t('error', { ns: 'common' }),
-          t('maxImagesReached', { ns: 'common' })
-        );
+        Alert.alert(t('error', { ns: 'common' }), t('maxImagesReached', { ns: 'common' }));
         return;
       }
-      
+
       // طلب إذن الوصول للصور
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          t('error', { ns: 'common' }),
-          t('cameraPermissionRequired', { ns: 'common' })
-        );
+        Alert.alert(t('error', { ns: 'common' }), t('cameraPermissionRequired', { ns: 'common' }));
         return;
       }
-      
+
       // فتح معرض الصور
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -341,38 +354,32 @@ export default function CreateAdScreen() {
         quality: 0.1, // تقليل جودة الصورة لتقليل الحجم (0.1 = 10% من الجودة الأصلية)
         exif: false, // تجاهل بيانات EXIF للتقليل من حجم الصورة
       });
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         try {
           // تحديث واجهة المستخدم لإظهار التحميل
           setLoading(true);
-          
+
           const selectedImageUri = result.assets[0].uri;
           console.log(`تم اختيار صورة بحجم: ${await getImageFileSize(selectedImageUri)} KB`);
-          
+
           // ضغط الصورة لتقليل حجمها
           const compressedImage = await compressImage(selectedImageUri);
           console.log(`تم ضغط الصورة إلى حجم: ${await getImageFileSize(compressedImage.uri)} KB`);
-          
+
           // إضافة الصورة المضغوطة إلى المصفوفة
           setImages([...images, compressedImage.uri]);
-          
+
           setLoading(false);
         } catch (err) {
           console.error('خطأ في معالجة الصورة:', err);
           setLoading(false);
-          Alert.alert(
-            t('error', { ns: 'common' }),
-            t('errorProcessingImage', { ns: 'common' })
-          );
+          Alert.alert(t('error', { ns: 'common' }), t('errorProcessingImage', { ns: 'common' }));
         }
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert(
-        t('error', { ns: 'common' }),
-        t('errorSelectingImage', { ns: 'common' })
-      );
+      Alert.alert(t('error', { ns: 'common' }), t('errorSelectingImage', { ns: 'common' }));
     }
   };
 
@@ -381,57 +388,60 @@ export default function CreateAdScreen() {
     try {
       console.log('بدء معالجة الصورة:', uri);
       console.log('حجم الصورة الأصلي:', await getImageFileSize(uri), 'KB');
-      
+
       // أولاً، تصغير حجم الصورة
       const manipResult = await ImageManipulator.manipulateAsync(
         uri,
         [{ resize: { width: 800 } }], // تقليل العرض إلى 800 بكسل والارتفاع يتغير تناسبيًا
-        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG } // ضغط بنسبة 50%
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }, // ضغط بنسبة 50%
       );
-      
+
       // إذا كان حجم الصورة لا يزال كبيرًا، نضغطها أكثر
       let currentSize = await getImageFileSize(manipResult.uri);
       console.log(`حجم الصورة بعد التعديل الأول: ${currentSize} KB`);
-      
-      if (currentSize > 200) { // إذا كان الحجم أكبر من 200KB
+
+      if (currentSize > 200) {
+        // إذا كان الحجم أكبر من 200KB
         const moreCompressed = await ImageManipulator.manipulateAsync(
           manipResult.uri,
           [{ resize: { width: 600 } }], // تقليل أكثر
-          { compress: 0.3, format: ImageManipulator.SaveFormat.JPEG } // ضغط أكبر
+          { compress: 0.3, format: ImageManipulator.SaveFormat.JPEG }, // ضغط أكبر
         );
-        
+
         currentSize = await getImageFileSize(moreCompressed.uri);
         console.log(`حجم الصورة بعد التعديل الثاني: ${currentSize} KB`);
-        
+
         // إذا كان الحجم لا يزال كبيرًا جدًا، نضغط بشكل أكبر
         if (currentSize > 100) {
           const highlyCompressed = await ImageManipulator.manipulateAsync(
             moreCompressed.uri,
             [{ resize: { width: 400 } }], // تقليل أكثر إلى 400 بكسل
-            { compress: 0.2, format: ImageManipulator.SaveFormat.JPEG } // ضغط عالي جدًا
+            { compress: 0.2, format: ImageManipulator.SaveFormat.JPEG }, // ضغط عالي جدًا
           );
-          
+
           const finalSize = await getImageFileSize(highlyCompressed.uri);
           console.log(`حجم الصورة النهائي بعد الضغط الشديد: ${finalSize} KB`);
-          
+
           // إذا كان الحجم لا يزال كبيرًا جدًا، نضغط بشكل أقصى
           if (finalSize > 50) {
             const extremelyCompressed = await ImageManipulator.manipulateAsync(
               highlyCompressed.uri,
               [{ resize: { width: 300 } }], // تقليل أكثر إلى 300 بكسل
-              { compress: 0.1, format: ImageManipulator.SaveFormat.JPEG } // ضغط قصوي 10%
+              { compress: 0.1, format: ImageManipulator.SaveFormat.JPEG }, // ضغط قصوي 10%
             );
-            
-            console.log(`حجم الصورة النهائي بعد الضغط القصوى: ${await getImageFileSize(extremelyCompressed.uri)} KB`);
+
+            console.log(
+              `حجم الصورة النهائي بعد الضغط القصوى: ${await getImageFileSize(extremelyCompressed.uri)} KB`,
+            );
             return extremelyCompressed;
           }
-          
+
           return highlyCompressed;
         }
-        
+
         return moreCompressed;
       }
-      
+
       return manipResult;
     } catch (error) {
       console.error('خطأ في ضغط الصورة:', error);
@@ -442,7 +452,7 @@ export default function CreateAdScreen() {
   // وظيفة للحصول على حجم ملف الصورة بالكيلوبايت
   const getImageFileSize = async (uri: string): Promise<number> => {
     try {
-      // في أجهزة iOS، الـ URI يكون غالبًا بـ "file://" ونحتاج لإزالة "file://" 
+      // في أجهزة iOS، الـ URI يكون غالبًا بـ "file://" ونحتاج لإزالة "file://"
       const fileInfo = await fetch(uri);
       const blob = await fileInfo.blob();
       return blob.size / 1024; // تحويل من بايت إلى كيلوبايت
@@ -477,25 +487,25 @@ export default function CreateAdScreen() {
           text: t('confirm', { ns: 'common' }),
           onPress: async () => {
             setLoading(true);
-            
+
             try {
               // تحويل معرف الفئة إلى اسم الفئة
-              const categoryMap: {[key: string]: string} = {
+              const categoryMap: { [key: string]: string } = {
                 '1': 'passport',
                 '2': 'national_id',
                 '3': 'driving_license',
-                '4': 'other'
+                '4': 'other',
               };
-              
+
               // طباعة معلومات الصور قبل إرسالها
               console.log('-------- تفاصيل الصور المراد تحميلها --------');
               console.log(`عدد الصور: ${images.length}`);
               for (let i = 0; i < images.length; i++) {
-                console.log(`صورة #${i+1}: ${images[i]}`);
+                console.log(`صورة #${i + 1}: ${images[i]}`);
                 console.log(`نوع المسار: ${typeof images[i]}`);
                 console.log(`اسم الملف: ${images[i].split('/').pop()}`);
               }
-              
+
               // تجهيز بيانات الإعلان - إزالة contactPhone لأنه سيتم استخدام رقم المستخدم تلقائيًا
               const adData = {
                 type: adType,
@@ -507,26 +517,29 @@ export default function CreateAdScreen() {
                 hideContactInfo,
                 images: images, // إضافة الصور
                 location: {
-                  type: "Point",
-                  coordinates: getCoordinatesForProvince(province)
-                }
+                  type: 'Point',
+                  coordinates: getCoordinatesForProvince(province),
+                },
               };
-              
+
               console.log('Sending ad data to server:', JSON.stringify(adData));
-              
+
               // التحقق من توكن المستخدم
               const userToken = await AsyncStorage.getItem('userToken');
               console.log('User token exists:', !!userToken);
-              
+
               // استدعاء الـ API لإنشاء الإعلان
               const response = await adsAPI.createAd(adData);
               console.log('Server response:', JSON.stringify(response));
-              
+
               // التحقق من الصور في الاستجابة
               if (response.success && response.data) {
-                console.log('Returned images from server:', JSON.stringify(response.data.images || []));
+                console.log(
+                  'Returned images from server:',
+                  JSON.stringify(response.data.images || []),
+                );
               }
-              
+
               if (response.success) {
                 Alert.alert(
                   t('success', { ns: 'common' }),
@@ -534,28 +547,28 @@ export default function CreateAdScreen() {
                   [
                     {
                       text: t('ok', { ns: 'common' }),
-                      onPress: () => router.push('/my-ads' as any)
-                    }
-                  ]
+                      onPress: () => router.push('/my-ads' as any),
+                    },
+                  ],
                 );
               } else {
                 Alert.alert(
                   t('error', { ns: 'common' }),
-                  response.message || t('adCreationError', { ns: 'common' })
+                  response.message || t('adCreationError', { ns: 'common' }),
                 );
               }
             } catch (error) {
               console.error('Error creating ad:', error);
               Alert.alert(
                 t('error', { ns: 'common' }),
-                t('adCreationDetailedError', { ns: 'common' })
+                t('adCreationDetailedError', { ns: 'common' }),
               );
             } finally {
               setLoading(false);
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -570,12 +583,9 @@ export default function CreateAdScreen() {
     >
       <TouchableWithoutFeedback onPress={() => setShowCategoryModal(false)}>
         <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+          <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
             <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
-              <View style={[
-                styles.modalHeader,
-                { flexDirection: isRTL ? 'row-reverse' : 'row' }
-              ]}>
+              <View style={[styles.modalHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Text style={[styles.modalTitle, { color: appColors.text }]}>
                   {t('documentType', { ns: 'common' })}
                 </Text>
@@ -583,20 +593,21 @@ export default function CreateAdScreen() {
                   <Ionicons name="close" size={24} color={appColors.text} />
                 </TouchableOpacity>
               </View>
-              
+
               <ScrollView showsVerticalScrollIndicator={false}>
-                {CATEGORIES.map((cat) => (
+                {CATEGORIES.map(cat => (
                   <TouchableOpacity
                     key={cat.id}
                     style={[
                       styles.modalItem,
-                      { 
-                        backgroundColor: category === cat.id ? appColors.secondary : appColors.background,
+                      {
+                        backgroundColor:
+                          category === cat.id ? appColors.secondary : appColors.background,
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        paddingVertical: 15
-                      }
+                        paddingVertical: 15,
+                      },
                     ]}
                     onPress={() => {
                       setCategory(cat.id);
@@ -604,20 +615,26 @@ export default function CreateAdScreen() {
                     }}
                     activeOpacity={0.7}
                   >
-                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', flex: 1 }}>
-                      <Ionicons 
-                        name={cat.icon as any} 
-                        size={20} 
-                        color={category === cat.id ? appColors.primary : appColors.text} 
-                        style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} 
+                    <View
+                      style={{
+                        flexDirection: isRTL ? 'row-reverse' : 'row',
+                        alignItems: 'center',
+                        flex: 1,
+                      }}
+                    >
+                      <Ionicons
+                        name={cat.icon as any}
+                        size={20}
+                        color={category === cat.id ? appColors.primary : appColors.text}
+                        style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}
                       />
-                      <Text 
+                      <Text
                         style={[
-                          styles.modalItemText, 
-                          { 
+                          styles.modalItemText,
+                          {
                             color: category === cat.id ? appColors.primary : appColors.text,
-                            fontSize: 16
-                          }
+                            fontSize: 16,
+                          },
                         ]}
                       >
                         {t(cat.name, { ns: 'common' })}
@@ -647,12 +664,9 @@ export default function CreateAdScreen() {
     >
       <TouchableWithoutFeedback onPress={() => setShowProvinceModal(false)}>
         <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+          <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
             <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
-              <View style={[
-                styles.modalHeader,
-                { flexDirection: isRTL ? 'row-reverse' : 'row' }
-              ]}>
+              <View style={[styles.modalHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Text style={[styles.modalTitle, { color: appColors.text }]}>
                   {t('governorate', { ns: 'common' })}
                 </Text>
@@ -660,24 +674,25 @@ export default function CreateAdScreen() {
                   <Ionicons name="close" size={24} color={appColors.text} />
                 </TouchableOpacity>
               </View>
-              
+
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
-                {PROVINCES.map((prov) => {
+                {PROVINCES.map(prov => {
                   const translationKey = `provinces.${prov.id}`;
                   const displayName = t(translationKey);
-                  
+
                   return (
                     <TouchableOpacity
                       key={prov.id}
                       style={[
                         styles.modalItem,
-                        { 
-                          backgroundColor: province === prov.id ? appColors.secondary : appColors.background,
+                        {
+                          backgroundColor:
+                            province === prov.id ? appColors.secondary : appColors.background,
                           flexDirection: 'row',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          paddingVertical: 15
-                        }
+                          paddingVertical: 15,
+                        },
                       ]}
                       onPress={() => {
                         setProvince(prov.id);
@@ -685,14 +700,14 @@ export default function CreateAdScreen() {
                       }}
                       activeOpacity={0.7}
                     >
-                      <Text 
+                      <Text
                         style={[
-                          styles.modalItemText, 
-                          { 
+                          styles.modalItemText,
+                          {
                             color: province === prov.id ? appColors.primary : appColors.text,
                             flex: 1,
-                            fontSize: 16
-                          }
+                            fontSize: 16,
+                          },
                         ]}
                       >
                         {displayName}
@@ -716,14 +731,14 @@ export default function CreateAdScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: appColors.secondary }]} 
+          <TouchableOpacity
+            style={[styles.backButton, { backgroundColor: appColors.secondary }]}
             onPress={handleGoBack}
           >
-            <Ionicons 
-              name={isRTL ? "arrow-forward" : "arrow-back"} 
-              size={24} 
-              color={appColors.text} 
+            <Ionicons
+              name={isRTL ? 'arrow-forward' : 'arrow-back'}
+              size={24}
+              color={appColors.text}
             />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: appColors.text }]}>
@@ -772,21 +787,20 @@ export default function CreateAdScreen() {
         >
           <ScrollView>
             <View style={styles.header}>
-              <TouchableOpacity 
-                style={[styles.backButton, { backgroundColor: appColors.secondary }]} 
+              <TouchableOpacity
+                style={[styles.backButton, { backgroundColor: appColors.secondary }]}
                 onPress={handleGoBack}
               >
-                <Ionicons 
-                  name={isRTL ? "arrow-forward" : "arrow-back"} 
-                  size={24} 
-                  color={appColors.text} 
+                <Ionicons
+                  name={isRTL ? 'arrow-forward' : 'arrow-back'}
+                  size={24}
+                  color={appColors.text}
                 />
               </TouchableOpacity>
               <Text style={[styles.headerTitle, { color: appColors.text }]}>
-                {adType === 'lost' 
+                {adType === 'lost'
                   ? t('createLostAd', { ns: 'common' })
-                  : t('createFoundAd', { ns: 'common' })
-                }
+                  : t('createFoundAd', { ns: 'common' })}
               </Text>
             </View>
 
@@ -796,29 +810,33 @@ export default function CreateAdScreen() {
                 {t('documentType', { ns: 'common' })} *
               </Text>
               <TouchableOpacity
-                style={[
-                  styles.dropdownButton,
-                  { backgroundColor: appColors.secondary }
-                ]}
+                style={[styles.dropdownButton, { backgroundColor: appColors.secondary }]}
                 onPress={() => setShowCategoryModal(true)}
               >
-                <View style={{ 
-                  flexDirection: isRTL ? 'row-reverse' : 'row', 
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flex: 1
-                }}>
-                  <View style={{ 
-                    flexDirection: isRTL ? 'row-reverse' : 'row', 
-                    alignItems: 'center' 
-                  }}>
+                <View
+                  style={{
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flex: 1,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      alignItems: 'center',
+                    }}
+                  >
                     {category ? (
                       <>
-                        <Ionicons 
-                          name={(CATEGORIES.find(c => c.id === category)?.icon || 'document-text-outline') as any} 
-                          size={20} 
-                          color={appColors.primary} 
-                          style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} 
+                        <Ionicons
+                          name={
+                            (CATEGORIES.find(c => c.id === category)?.icon ||
+                              'document-text-outline') as any
+                          }
+                          size={20}
+                          color={appColors.primary}
+                          style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}
                         />
                         <Text style={{ color: appColors.text }}>
                           {t(CATEGORIES.find(c => c.id === category)?.name || '', { ns: 'common' })}
@@ -833,27 +851,28 @@ export default function CreateAdScreen() {
                   <Ionicons name="chevron-down" size={20} color={appColors.text} />
                 </View>
               </TouchableOpacity>
-              
+
               {/* المحافظة - زر القائمة المنسدلة */}
               <Text style={[styles.label, { color: appColors.text, marginTop: 16 }]}>
                 {t('governorate', { ns: 'common' })} *
               </Text>
               <TouchableOpacity
-                style={[
-                  styles.dropdownButton,
-                  { backgroundColor: appColors.secondary }
-                ]}
+                style={[styles.dropdownButton, { backgroundColor: appColors.secondary }]}
                 onPress={() => setShowProvinceModal(true)}
               >
-                <View style={{ 
-                  flexDirection: isRTL ? 'row-reverse' : 'row', 
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flex: 1
-                }}>
-                  <Text style={{ 
-                    color: province ? appColors.text : appColors.textSecondary
-                  }}>
+                <View
+                  style={{
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flex: 1,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: province ? appColors.text : appColors.textSecondary,
+                    }}
+                  >
                     {province ? t(`provinces.${province}`) : t('selectProvince', { ns: 'common' })}
                   </Text>
                   <Ionicons name="chevron-down" size={20} color={appColors.text} />
@@ -867,7 +886,7 @@ export default function CreateAdScreen() {
               <TextInput
                 style={[
                   styles.input,
-                  { backgroundColor: appColors.secondary, color: appColors.text }
+                  { backgroundColor: appColors.secondary, color: appColors.text },
                 ]}
                 value={ownerName}
                 onChangeText={setOwnerName}
@@ -882,7 +901,7 @@ export default function CreateAdScreen() {
               <TextInput
                 style={[
                   styles.input,
-                  { backgroundColor: appColors.secondary, color: appColors.text }
+                  { backgroundColor: appColors.secondary, color: appColors.text },
                 ]}
                 value={itemNumber}
                 onChangeText={setItemNumber}
@@ -897,7 +916,7 @@ export default function CreateAdScreen() {
               <TextInput
                 style={[
                   styles.textArea,
-                  { backgroundColor: appColors.secondary, color: appColors.text }
+                  { backgroundColor: appColors.secondary, color: appColors.text },
                 ]}
                 value={description}
                 onChangeText={setDescription}
@@ -912,12 +931,12 @@ export default function CreateAdScreen() {
               <Text style={[styles.label, { color: appColors.text }]}>
                 {t('images', { ns: 'common' })}
               </Text>
-              
+
               <View style={styles.imagesContainer}>
                 {images.map((uri, index) => (
                   <View key={index} style={styles.imageWrapper}>
                     <Image source={{ uri }} style={styles.imagePreview} />
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.removeImageBtn}
                       onPress={() => removeImage(index)}
                     >
@@ -925,8 +944,8 @@ export default function CreateAdScreen() {
                     </TouchableOpacity>
                   </View>
                 ))}
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                   style={[styles.addImageBtn, { backgroundColor: appColors.secondary }]}
                   onPress={pickImage}
                 >
@@ -959,19 +978,17 @@ export default function CreateAdScreen() {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.createButtonText}>
-                    {t('createAd', { ns: 'common' })}
-                  </Text>
+                  <Text style={styles.createButtonText}>{t('createAd', { ns: 'common' })}</Text>
                 )}
               </TouchableOpacity>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-        
+
         {/* Render the modals */}
         <CategoryModal />
         <ProvinceModal />
       </SafeAreaView>
     );
   }
-} 
+}

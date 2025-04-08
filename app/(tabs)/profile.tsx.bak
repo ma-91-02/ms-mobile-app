@@ -1,0 +1,537 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Image, 
+  SafeAreaView, 
+  StatusBar, 
+  ActivityIndicator,
+  ScrollView,
+  Alert,
+  RefreshControl,
+  Platform
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
+import i18n, { RTL_LANGUAGES } from '../i18n/index';
+import AppColors from '../../constants/AppColors';
+import { User } from '../types/auth';
+import { adsAPI, API_BASE_URL } from '../services/api';
+
+// Profile option interface
+interface ProfileOptionProps {
+  icon: string;
+  title: string;
+  onPress: () => void;
+  appColors: any;
+  isRTL: boolean;
+  showBorder?: boolean;
+}
+
+// A single profile option component designed with iOS look
+const ProfileOption = ({ 
+  icon, 
+  title, 
+  onPress, 
+  appColors, 
+  isRTL, 
+  showBorder = true 
+}: ProfileOptionProps) => (
+  <TouchableOpacity
+    style={[
+      styles.optionItem,
+      showBorder && { 
+        borderBottomWidth: 0.5, 
+        borderBottomColor: appColors.border 
+      }
+    ]}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
+    <View style={[
+      styles.optionContent,
+      { flexDirection: isRTL ? 'row-reverse' : 'row' }
+    ]}>
+      <Ionicons 
+        name={icon as any} 
+        size={24} 
+        color={appColors.primary} 
+        style={styles.optionIcon}
+      />
+      <Text style={[
+        styles.optionTitle,
+        { color: appColors.text, fontFamily: 'Cairo-Regular' },
+        isRTL ? { marginRight: 15 } : { marginLeft: 15 }
+      ]}>
+        {title}
+      </Text>
+      <View style={{ flex: 1 }} />
+      <Ionicons
+        name={isRTL ? "chevron-back" : "chevron-forward"}
+        size={20}
+        color={appColors.textSecondary}
+        style={styles.chevron}
+      />
+    </View>
+  </TouchableOpacity>
+);
+
+// Profile screen with iOS style
+export default function ProfileScreen() {
+  const { t } = useTranslation();
+  const { isDarkMode } = useTheme();
+  const appColors = isDarkMode ? AppColors.dark : AppColors.light;
+  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [userStats, setUserStats] = useState({ adsCount: 0 });
+  
+  // Check if user is logged in and load user data
+  const loadUserData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const userToken = await AsyncStorage.getItem('userToken');
+      const storedUserData = await AsyncStorage.getItem('userData');
+      
+      if (userToken && storedUserData) {
+        setIsLoggedIn(true);
+        setUserData(JSON.parse(storedUserData));
+        await loadUserStats();
+      } else {
+        setIsLoggedIn(false);
+        setUserData(null);
+      }
+    } catch (err) {
+      console.error('Error checking login status:', err);
+      setIsLoggedIn(false);
+      setUserData(null);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  // Load user stats (ad count)
+  const loadUserStats = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      if (!userToken) {
+        setUserStats(prev => ({ ...prev, adsCount: 0 }));
+        return;
+      }
+      
+      const myAdsResponse = await adsAPI.getMyAds();
+      
+      if (myAdsResponse.success && myAdsResponse.data) {
+        setUserStats(prev => ({
+          ...prev,
+          adsCount: myAdsResponse.data?.length || 0
+        }));
+      } else {
+        setUserStats(prev => ({ ...prev, adsCount: 0 }));
+      }
+    } catch (error: any) {
+      console.error('Error loading user stats:', error);
+      setUserStats(prev => ({ ...prev, adsCount: 0 }));
+    }
+  };
+
+  // Load data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [loadUserData])
+  );
+
+  // Refresh handler
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadUserData();
+  }, [loadUserData]);
+
+  // Navigation
+  const navigateToLogin = () => router.push('/auth/login');
+  const navigateToRegister = () => router.push('/auth/register');
+  const navigateToMyAds = () => router.push('/my-ads');
+  const navigateToEditProfile = () => router.push('/auth/edit-profile');
+  const navigateToEditProfileImage = () => router.push('/auth/edit-profile-image');
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      Alert.alert(
+        t('logout', { ns: 'common' }),
+        t('logout_confirm', { ns: 'common', defaultValue: 'Are you sure you want to log out?' }),
+        [
+          {
+            text: t('cancel', { ns: 'common' }),
+            style: 'cancel'
+          },
+          {
+            text: t('logout', { ns: 'common' }),
+            style: 'destructive',
+            onPress: async () => {
+              await AsyncStorage.multiRemove(['userToken', 'userData']);
+              setIsLoggedIn(false);
+              setUserData(null);
+            }
+          }
+        ]
+      );
+    } catch (err) {
+      console.error('Error logging out:', err);
+      Alert.alert(t('error', { ns: 'common' }), t('logout_error', { ns: 'common', defaultValue: 'Error logging out' }));
+    }
+  };
+
+  // Render user profile for logged-in users
+  const renderUserProfile = () => {
+    if (!userData) return null;
+
+    return (
+      <View style={styles.container}>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[appColors.primary]}
+              tintColor={appColors.primary}
+            />
+          }
+          style={styles.scrollView}
+        >
+          {/* Profile Header with Avatar and Info */}
+          <View style={styles.profileHeader}>
+            <TouchableOpacity 
+              style={styles.avatarContainer}
+              onPress={navigateToEditProfileImage}
+              activeOpacity={0.9}
+            >
+              {userData.profileImage ? (
+                <Image
+                  source={{ uri: `${API_BASE_URL}/uploads/${userData.profileImage}` }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: appColors.secondary }]}>
+                  <Ionicons name="person" size={50} color={appColors.primary} />
+                </View>
+              )}
+              <View style={[styles.editAvatarButton, { backgroundColor: appColors.primary }]}>
+                <Ionicons name="camera" size={14} color="#fff" />
+              </View>
+            </TouchableOpacity>
+            
+            <View style={styles.nameContainer}>
+              <Text style={[styles.userName, { color: appColors.text }]}>
+                {userData.firstName} {userData.lastName}
+              </Text>
+              <Text style={[styles.userPhone, { color: appColors.textSecondary }]}>
+                {userData.phoneNumber}
+              </Text>
+              
+              <TouchableOpacity
+                style={[styles.editButton, { backgroundColor: appColors.primary }]}
+                onPress={navigateToEditProfile}
+              >
+                <Text style={styles.editButtonText}>
+                  {t('edit', { ns: 'common' })}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Options */}
+          <View style={[styles.optionsSection, { backgroundColor: appColors.secondary }]}>
+            <ProfileOption
+              icon="newspaper-outline"
+              title={t('myAds', { ns: 'common', defaultValue: 'My Ads' })}
+              onPress={navigateToMyAds}
+              appColors={appColors}
+              isRTL={isRTL}
+            />
+            
+            <ProfileOption
+              icon="person-outline"
+              title={t('edit_profile', { ns: 'common', defaultValue: 'Edit Profile' })}
+              onPress={navigateToEditProfile}
+              appColors={appColors}
+              isRTL={isRTL}
+            />
+            
+            <ProfileOption
+              icon="log-out-outline"
+              title={t('logout', { ns: 'common', defaultValue: 'Logout' })}
+              onPress={handleLogout}
+              appColors={appColors}
+              isRTL={isRTL}
+              showBorder={false}
+            />
+          </View>
+
+          {/* User Stats */}
+          <View style={[styles.statsContainer, { backgroundColor: appColors.secondary }]}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: appColors.primary }]}>
+                {userStats.adsCount}
+              </Text>
+              <Text style={[styles.statLabel, { color: appColors.textSecondary }]}>
+                {t('published_ads', { ns: 'common', defaultValue: 'Published Ads' })}
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  };
+
+  // Render login/register options for non-logged-in users
+  const renderAuthOptions = () => (
+    <View style={styles.container}>
+      <View style={styles.authContainer}>
+        <View style={[styles.authIconContainer, { backgroundColor: appColors.secondary }]}>
+          <Ionicons name="person-circle-outline" size={80} color={appColors.primary} />
+        </View>
+        
+        <Text style={[styles.authTitle, { color: appColors.text }]}>
+          {t('loginRequired', { ns: 'common', defaultValue: 'Login Required' })}
+        </Text>
+        
+        <Text style={[styles.authMessage, { color: appColors.textSecondary }]}>
+          {t('please_login_to_view_profile', { ns: 'common', defaultValue: 'Please login to view your profile and manage your ads' })}
+        </Text>
+        
+        <TouchableOpacity
+          style={[styles.authButton, { backgroundColor: appColors.primary }]}
+          onPress={navigateToLogin}
+        >
+          <Text style={styles.authButtonText}>
+            {t('login', { ns: 'common' })}
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.authButton, styles.registerButton, { borderColor: appColors.primary }]}
+          onPress={navigateToRegister}
+        >
+          <Text style={[styles.registerButtonText, { color: appColors.primary }]}>
+            {t('register', { ns: 'common' })}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  // Main render
+  return (
+    <SafeAreaView style={[{ flex: 1, backgroundColor: appColors.background }]}>
+      <StatusBar 
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'} 
+        backgroundColor={appColors.background} 
+      />
+      
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: appColors.background }]}>
+        <Text style={[styles.headerTitle, { color: appColors.text }]}>
+          {t('profile', { ns: 'common' })}
+        </Text>
+      </View>
+      
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={appColors.primary} />
+        </View>
+      ) : isLoggedIn ? renderUserProfile() : renderAuthOptions()}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    borderBottomWidth: Platform.OS === 'ios' ? 0.5 : 0,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    fontFamily: 'Cairo-Bold',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatar: {
+    width: 85,
+    height: 85,
+    borderRadius: 85 / 2,
+  },
+  avatarPlaceholder: {
+    width: 85,
+    height: 85,
+    borderRadius: 85 / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  nameContainer: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  userName: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 4,
+    fontFamily: 'Cairo-Bold',
+  },
+  userPhone: {
+    fontSize: 14,
+    marginBottom: 12,
+    fontFamily: 'Cairo-Regular',
+  },
+  editButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+    fontFamily: 'Cairo-Medium',
+  },
+  optionsSection: {
+    marginTop: 16,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  optionItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  optionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  optionIcon: {
+    width: 28,
+  },
+  optionTitle: {
+    fontSize: 17,
+    fontWeight: '400',
+  },
+  chevron: {
+    opacity: 0.6,
+  },
+  statsContainer: {
+    marginHorizontal: 16,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  statItem: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  statValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'Cairo-Bold',
+  },
+  statLabel: {
+    fontSize: 14,
+    fontFamily: 'Cairo-Regular',
+  },
+  authContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  authIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  authTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    fontFamily: 'Cairo-Bold',
+    textAlign: 'center',
+  },
+  authMessage: {
+    fontSize: 16,
+    marginBottom: 32,
+    textAlign: 'center',
+    fontFamily: 'Cairo-Regular',
+  },
+  authButton: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  authButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Cairo-Bold',
+  },
+  registerButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+  },
+  registerButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Cairo-Bold',
+  },
+}); 

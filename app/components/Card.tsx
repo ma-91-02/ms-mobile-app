@@ -11,13 +11,15 @@ interface CardProps {
 const Card: React.FC<CardProps> = ({ children, style }) => {
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  
+
   return (
-    <View style={[
-      styles.card,
-      { backgroundColor: appColors.card }, // #E1DCFF
-      style
-    ]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: appColors.card }, // #E1DCFF
+        style,
+      ]}
+    >
       {children}
     </View>
   );
@@ -26,14 +28,14 @@ const Card: React.FC<CardProps> = ({ children, style }) => {
 const styles = StyleSheet.create({
   card: {
     borderRadius: 8,
-    padding: 16,
+    elevation: 2,
     marginVertical: 8,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
   },
 });
 
-export default Card; 
+export default Card;

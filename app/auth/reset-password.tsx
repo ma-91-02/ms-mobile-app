@@ -30,14 +30,14 @@ export default function ResetPasswordScreen() {
   const { t } = useTranslation(['auth', 'common']);
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
   const params = useLocalSearchParams();
-  
+
   // استرجاع المعلمات من الـ params
   const phoneNumber = params.phoneNumber as string;
   const [resetToken, setResetToken] = useState<string | null>(params.resetToken as string);
-  
+
   console.log('Reset password screen - Initial phoneNumber:', phoneNumber);
   console.log('Reset password screen - Initial resetToken:', resetToken);
-  
+
   // قم باسترجاع الرمز من التخزين المحلي إذا لم يتم تمريره عبر الباراميترات
   React.useEffect(() => {
     const fetchResetToken = async () => {
@@ -55,20 +55,23 @@ export default function ResetPasswordScreen() {
               [
                 {
                   text: t('ok', { ns: 'common' }),
-                  onPress: () => router.replace('/auth/forgot-password')
-                }
-              ]
+                  onPress: () => router.replace('/auth/forgot-password'),
+                },
+              ],
             );
           }
         } catch (error) {
-          console.error('Reset password screen - Error fetching resetToken from AsyncStorage:', error);
+          console.error(
+            'Reset password screen - Error fetching resetToken from AsyncStorage:',
+            error,
+          );
         }
       }
     };
-    
+
     fetchResetToken();
   }, [resetToken]);
-  
+
   // حالات الشاشة
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -84,7 +87,7 @@ export default function ResetPasswordScreen() {
       setPasswordError(t('passwordTooShort', { ns: 'auth' }));
       return false;
     }
-    
+
     setPasswordError('');
     return true;
   };
@@ -95,7 +98,7 @@ export default function ResetPasswordScreen() {
       setConfirmPasswordError(t('passwordsDoNotMatch', { ns: 'auth' }));
       return false;
     }
-    
+
     setConfirmPasswordError('');
     return true;
   };
@@ -107,19 +110,22 @@ export default function ResetPasswordScreen() {
       if (!validatePassword(newPassword)) {
         return;
       }
-      
+
       if (!validateConfirmPassword(newPassword, confirmPassword)) {
         return;
       }
-      
+
       // معلومات تشخيصية عن البيانات الموجودة
       console.log('=============== معلومات تشخيصية إعادة تعيين كلمة المرور ===============');
       console.log('رقم الهاتف المستلم:', phoneNumber);
       console.log('نوع بيانات رقم الهاتف:', typeof phoneNumber);
       console.log('طول رقم الهاتف:', phoneNumber?.length);
-      console.log('رمز إعادة التعيين:', resetToken ? `${resetToken.substring(0, 15)}...` : 'غير موجود');
+      console.log(
+        'رمز إعادة التعيين:',
+        resetToken ? `${resetToken.substring(0, 15)}...` : 'غير موجود',
+      );
       console.log('================================================================');
-      
+
       // التحقق من وجود الرمز
       if (!resetToken) {
         Alert.alert(
@@ -128,75 +134,71 @@ export default function ResetPasswordScreen() {
           [
             {
               text: t('ok', { ns: 'common' }),
-              onPress: () => router.replace('/auth/forgot-password')
-            }
-          ]
+              onPress: () => router.replace('/auth/forgot-password'),
+            },
+          ],
         );
         return;
       }
-      
+
       setLoading(true);
       console.log('Resetting password for:', phoneNumber);
       console.log('Using reset token:', resetToken);
-      
+
       // استدعاء API لإعادة تعيين كلمة المرور
       const response = await authAPI.resetPassword({
         phoneNumber,
         resetToken: resetToken,
         newPassword,
-        confirmPassword
+        confirmPassword,
       });
-      
+
       console.log('Reset password API response:', response);
-      
+
       if (!response.success) {
         // التحقق من نوع الخطأ
         if (response.isNetworkError) {
-          Alert.alert(
-            t('noInternetConnection'), 
-            t('noInternetMessage')
-          );
+          Alert.alert(t('noInternetConnection'), t('noInternetMessage'));
           setLoading(false);
           return;
         }
-        
-        Alert.alert(t('error', { ns: 'common' }), response.message || t('passwordResetFailed', { ns: 'auth' }));
+
+        Alert.alert(
+          t('error', { ns: 'common' }),
+          response.message || t('passwordResetFailed', { ns: 'auth' }),
+        );
         setLoading(false);
         return;
       }
-      
+
       // التحقق من توكن المصادقة بعد إعادة التعيين
       if (response.token) {
         console.log('Received auth token after password reset:', response.token);
       } else {
         console.warn('No auth token received after password reset');
       }
-      
+
       console.log('Password reset successful');
-      
+
       // عرض رسالة نجاح ثم الانتقال إلى شاشة تسجيل الدخول
-      Alert.alert(
-        t('success', { ns: 'common' }),
-        t('passwordResetSuccess', { ns: 'auth' }),
-        [
-          {
-            text: t('ok', { ns: 'common' }),
-            onPress: async () => {
-              console.log('Navigating to login screen after password reset');
-              
-              // تنظيف رمز إعادة تعيين كلمة المرور من التخزين المحلي
-              try {
-                await AsyncStorage.removeItem('temp_reset_token');
-                console.log('Reset token removed from AsyncStorage');
-              } catch (error) {
-                console.error('Error removing temp_reset_token from AsyncStorage:', error);
-              }
-              
-              router.replace('/auth/login');
+      Alert.alert(t('success', { ns: 'common' }), t('passwordResetSuccess', { ns: 'auth' }), [
+        {
+          text: t('ok', { ns: 'common' }),
+          onPress: async () => {
+            console.log('Navigating to login screen after password reset');
+
+            // تنظيف رمز إعادة تعيين كلمة المرور من التخزين المحلي
+            try {
+              await AsyncStorage.removeItem('temp_reset_token');
+              console.log('Reset token removed from AsyncStorage');
+            } catch (error) {
+              console.error('Error removing temp_reset_token from AsyncStorage:', error);
             }
-          }
-        ]
-      );
+
+            router.replace('/auth/login');
+          },
+        },
+      ]);
     } catch (error: any) {
       console.error('Password reset error:', error);
       Alert.alert(t('error', { ns: 'common' }), t('passwordResetFailed', { ns: 'auth' }));
@@ -207,86 +209,93 @@ export default function ResetPasswordScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           headerShown: false,
           animation: 'slide_from_right',
-        }} 
+        }}
       />
-      
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={appColors.background} />
-      
-      <KeyboardAvoidingView 
+
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={appColors.background}
+      />
+
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: appColors.secondary }]} 
+          <TouchableOpacity
+            style={[styles.backButton, { backgroundColor: appColors.secondary }]}
             onPress={() => router.back()}
           >
-            <Ionicons 
-              name="arrow-back" 
-              size={24} 
-              color={appColors.text} 
-            />
+            <Ionicons name="arrow-back" size={24} color={appColors.text} />
           </TouchableOpacity>
 
-          <Text style={[
-            styles.title, 
-            { color: appColors.text },
-            { textAlign: isRTL ? 'right' : 'left' },
-            { fontFamily: 'Cairo-Bold' }
-          ]}>
+          <Text
+            style={[
+              styles.title,
+              { color: appColors.text },
+              { textAlign: isRTL ? 'right' : 'left' },
+              { fontFamily: 'Cairo-Bold' },
+            ]}
+          >
             {t('setupNewPassword', { ns: 'auth' })}
           </Text>
-          
-          <Text style={[
-            styles.subtitle, 
-            { color: appColors.textSecondary },
-            { textAlign: isRTL ? 'right' : 'left' }
-          ]}>
+
+          <Text
+            style={[
+              styles.subtitle,
+              { color: appColors.textSecondary },
+              { textAlign: isRTL ? 'right' : 'left' },
+            ]}
+          >
             {t('auth:setupNewPasswordSubtitle')}
           </Text>
 
           {__DEV__ && (
-            <Text style={[
-              styles.devModeText,
-              { color: appColors.primary },
-              { textAlign: isRTL ? 'right' : 'left' }
-            ]}>
+            <Text
+              style={[
+                styles.devModeText,
+                { color: appColors.primary },
+                { textAlign: isRTL ? 'right' : 'left' },
+              ]}
+            >
               {t('auth:devModeReset')}
             </Text>
           )}
 
           <View style={styles.formContainer}>
             {/* حقل كلمة المرور الجديدة */}
-            <Text style={[
-              styles.inputLabel,
-              { color: appColors.text },
-              { textAlign: isRTL ? 'right' : 'left' },
-              { fontFamily: 'Cairo-Medium' }
-            ]}>
+            <Text
+              style={[
+                styles.inputLabel,
+                { color: appColors.text },
+                { textAlign: isRTL ? 'right' : 'left' },
+                { fontFamily: 'Cairo-Medium' },
+              ]}
+            >
               {t('newPassword', { ns: 'auth' })}
             </Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={[
-                  styles.input, 
-                  { 
+                  styles.input,
+                  {
                     backgroundColor: appColors.secondary,
                     color: appColors.text,
                     textAlign: isRTL ? 'right' : 'left',
-                    borderColor: passwordError ? 'red' : appColors.border
-                  }
+                    borderColor: passwordError ? 'red' : appColors.border,
+                  },
                 ]}
                 placeholder={t('enterNewPassword', { ns: 'auth' })}
                 placeholderTextColor={appColors.textSecondary}
                 value={newPassword}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setNewPassword(text);
                   if (confirmPassword) {
                     validateConfirmPassword(text, confirmPassword);
@@ -294,10 +303,10 @@ export default function ResetPasswordScreen() {
                 }}
                 secureTextEntry={!showPassword}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.eyeIcon,
-                  { right: isRTL ? undefined : 15, left: isRTL ? 15 : undefined }
+                  { right: isRTL ? undefined : 15, left: isRTL ? 15 : undefined },
                 ]}
                 onPress={() => setShowPassword(!showPassword)}
               >
@@ -308,44 +317,44 @@ export default function ResetPasswordScreen() {
                 />
               </TouchableOpacity>
             </View>
-            {passwordError ? (
-              <Text style={styles.errorText}>{passwordError}</Text>
-            ) : null}
-            
+            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+
             {/* حقل تأكيد كلمة المرور */}
-            <Text style={[
-              styles.inputLabel,
-              { color: appColors.text },
-              { textAlign: isRTL ? 'right' : 'left' },
-              { fontFamily: 'Cairo-Medium' },
-              { marginTop: 16 }
-            ]}>
+            <Text
+              style={[
+                styles.inputLabel,
+                { color: appColors.text },
+                { textAlign: isRTL ? 'right' : 'left' },
+                { fontFamily: 'Cairo-Medium' },
+                { marginTop: 16 },
+              ]}
+            >
               {t('confirmNewPassword', { ns: 'auth' })}
             </Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={[
-                  styles.input, 
-                  { 
+                  styles.input,
+                  {
                     backgroundColor: appColors.secondary,
                     color: appColors.text,
                     textAlign: isRTL ? 'right' : 'left',
-                    borderColor: confirmPasswordError ? 'red' : appColors.border
-                  }
+                    borderColor: confirmPasswordError ? 'red' : appColors.border,
+                  },
                 ]}
                 placeholder={t('reEnterNewPassword', { ns: 'auth' })}
                 placeholderTextColor={appColors.textSecondary}
                 value={confirmPassword}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setConfirmPassword(text);
                   validateConfirmPassword(newPassword, text);
                 }}
                 secureTextEntry={!showConfirmPassword}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.eyeIcon,
-                  { right: isRTL ? undefined : 15, left: isRTL ? 15 : undefined }
+                  { right: isRTL ? undefined : 15, left: isRTL ? 15 : undefined },
                 ]}
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
@@ -359,12 +368,12 @@ export default function ResetPasswordScreen() {
             {confirmPasswordError ? (
               <Text style={styles.errorText}>{confirmPasswordError}</Text>
             ) : null}
-            
+
             <TouchableOpacity
               style={[
                 styles.resetButton,
                 { backgroundColor: appColors.primary },
-                loading && styles.disabledButton
+                loading && styles.disabledButton,
               ]}
               onPress={handleResetPassword}
               disabled={loading}
@@ -373,10 +382,7 @@ export default function ResetPasswordScreen() {
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={[
-                  styles.buttonText,
-                  { fontFamily: 'Cairo-Bold' }
-                ]}>
+                <Text style={[styles.buttonText, { fontFamily: 'Cairo-Bold' }]}>
                   {t('resetPasswordAndLogin', { ns: 'auth' })}
                 </Text>
               )}
@@ -389,77 +395,77 @@ export default function ResetPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-  },
   backButton: {
-    width: 40,
-    height: 40,
+    alignItems: 'center',
     borderRadius: 20,
+    height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 20,
-  },
-  title: {
-    fontSize: 28,
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: 32,
-  },
-  devModeText: {
-    fontSize: 12,
-    marginTop: 16,
-  },
-  formContainer: {
-    width: '100%',
-  },
-  inputLabel: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  inputContainer: {
-    marginBottom: 8,
-    position: 'relative',
-  },
-  input: {
-    height: 50,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    borderWidth: 1,
-    width: '100%',
-  },
-  eyeIcon: {
-    position: 'absolute',
-    top: 13,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  resetButton: {
-    height: 50,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-  },
-  disabledButton: {
-    opacity: 0.6,
+    width: 40,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
   },
-}); 
+  container: {
+    flex: 1,
+  },
+  devModeText: {
+    fontSize: 12,
+    marginTop: 16,
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    top: 13,
+  },
+  formContainer: {
+    width: '100%',
+  },
+  input: {
+    borderRadius: 10,
+    borderWidth: 1,
+    fontSize: 16,
+    height: 50,
+    paddingHorizontal: 15,
+    width: '100%',
+  },
+  inputContainer: {
+    marginBottom: 8,
+    position: 'relative',
+  },
+  inputLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  resetButton: {
+    alignItems: 'center',
+    borderRadius: 10,
+    height: 50,
+    justifyContent: 'center',
+    marginTop: 32,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    marginBottom: 12,
+  },
+});

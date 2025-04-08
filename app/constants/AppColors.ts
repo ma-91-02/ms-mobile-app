@@ -67,4 +67,4 @@ const AppColors: AppColorsInterface = {
 };
 
 // تصدير كائن الألوان
-export default AppColors; 
+export default AppColors;

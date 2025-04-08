@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  FlatList, 
-  Image, 
-  TextInput, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  TextInput,
   ScrollView,
   StatusBar,
   ImageErrorEventData,
@@ -16,13 +16,13 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
   RefreshControl,
-  Alert
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
-import i18n, { RTL_LANGUAGES } from '../i18n';
+import i18n, { RTL_LANGUAGES } from '../i18n/index';
 import AppColors from '../../constants/AppColors';
 import AdCard from '../components/AdCard';
 import { useFocusEffect } from '@react-navigation/native';
@@ -80,36 +80,32 @@ interface FABProps {
 const FAB: React.FC<FABProps> = ({ style, icon, onPress, label, color }) => (
   <TouchableOpacity style={style} onPress={onPress}>
     {icon()}
-    {label && (
-      <Text style={{ color, marginLeft: 8, fontFamily: 'Cairo-Bold' }}>
-        {label}
-      </Text>
-    )}
+    {label && <Text style={{ color, marginLeft: 8, fontFamily: 'Cairo-Bold' }}>{label}</Text>}
   </TouchableOpacity>
 );
 
 // تحديث الفئات
 const CATEGORIES: Category[] = [
-  { 
-    id: '1', 
+  {
+    id: '1',
     name: 'passport',
-    icon: 'document-text-outline' 
+    icon: 'document-text-outline',
   },
-  { 
-    id: '2', 
+  {
+    id: '2',
     name: 'nationalID',
-    icon: 'card-outline' 
+    icon: 'card-outline',
   },
-  { 
-    id: '3', 
+  {
+    id: '3',
     name: 'drivingLicense',
-    icon: 'car-sport-outline' 
+    icon: 'car-sport-outline',
   },
-  { 
-    id: '4', 
+  {
+    id: '4',
     name: 'otherDocuments',
-    icon: 'ellipsis-horizontal-outline' 
-  }
+    icon: 'ellipsis-horizontal-outline',
+  },
 ];
 
 // إضافة المحافظات
@@ -132,7 +128,7 @@ const PROVINCES: Province[] = [
   { id: 'qadisiyyah', name: 'qadisiyyah' },
   { id: 'saladin', name: 'saladin' },
   { id: 'thi_qar', name: 'thi_qar' },
-  { id: 'wasit', name: 'wasit' }
+  { id: 'wasit', name: 'wasit' },
 ];
 
 // إضافة المدن
@@ -144,7 +140,7 @@ const cities = [
   { id: 'sulaymaniyah', key: 'sulaymaniyah' },
   { id: 'najaf', key: 'najaf' },
   { id: 'karbala', key: 'karbala' },
-  { id: 'duhok', key: 'duhok' }
+  { id: 'duhok', key: 'duhok' },
 ];
 
 // خيارات التصنيف
@@ -157,17 +153,29 @@ const sortOptions = [
 ];
 
 // مكون شريط البحث
-const SearchBar: React.FC<SearchBarProps> = ({ placeholder, onChangeText, value, appColors, isRTL, onSubmitEditing }) => (
+const SearchBar: React.FC<SearchBarProps> = ({
+  placeholder,
+  onChangeText,
+  value,
+  appColors,
+  isRTL,
+  onSubmitEditing,
+}) => (
   <View style={[styles.searchContainer, { backgroundColor: appColors.card }]}>
-    <View style={[styles.searchInputContainer, { backgroundColor: appColors.secondary, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+    <View
+      style={[
+        styles.searchInputContainer,
+        { backgroundColor: appColors.secondary, flexDirection: isRTL ? 'row-reverse' : 'row' },
+      ]}
+    >
       <TextInput
         style={[
-          styles.searchInput, 
-          { 
+          styles.searchInput,
+          {
             color: appColors.text,
             textAlign: isRTL ? 'right' : 'left',
-            fontFamily: 'Cairo-Regular'
-          }
+            fontFamily: 'Cairo-Regular',
+          },
         ]}
         placeholder={placeholder}
         placeholderTextColor={appColors.textSecondary}
@@ -187,7 +195,7 @@ export default function AdsScreen() {
   const { isConnected } = useNetworkStatus();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
   const [selectedProvince, setSelectedProvince] = useState<string>('all');
   const [showProvinceFilter, setShowProvinceFilter] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -201,10 +209,10 @@ export default function AdsScreen() {
   const [adType, setAdType] = useState<string>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   const [showTypeFilter, setShowTypeFilter] = useState(false);
-  
+
   // استخدام ألوان التطبيق الجديدة
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  
+
   // تحديد ما إذا كانت اللغة الحالية هي RTL
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
 
@@ -223,7 +231,7 @@ export default function AdsScreen() {
       console.log('provinces.all:', t('provinces.all'));
       console.log('provinces.baghdad:', t('provinces.baghdad'));
       console.log('provinces.nineveh:', t('provinces.nineveh'));
-      
+
       // اختبار ما إذا كانت الترجمات موجودة
       const hasProvincesAll = i18n.exists('provinces.all');
       const hasProvincesNineveh = i18n.exists('provinces.nineveh');
@@ -245,36 +253,36 @@ export default function AdsScreen() {
     try {
       // تحضير معلمات البحث
       const params: any = {};
-      
+
       // معلومات تشخيصية لجميع المعلمات النشطة
       console.log('=== Current Filter Settings ===');
       console.log('Category:', selectedCategory);
       console.log('Province:', selectedProvince);
       console.log('Type:', adType);
       console.log('Search Query:', searchQuery);
-      
+
       // إضافة فلتر نوع الإعلان (مفقود/موجود)
       if (adType !== 'all') {
         params.type = adType;
         console.log(`Setting ad type filter: ${adType}`);
       }
-      
+
       // إضافة فلتر البحث النصي
       if (searchQuery && searchQuery.trim() !== '') {
         params.search = searchQuery.trim();
         console.log(`Setting search filter: ${searchQuery}`);
       }
-      
+
       // معالجة فلتر الفئة
       if (selectedCategory) {
         // تعيين القيم الصحيحة للفئات التي يتوقعها API
-        const categoryMap: {[key: string]: string} = {
+        const categoryMap: { [key: string]: string } = {
           '1': 'passport',
-          '2': 'national_id', 
+          '2': 'national_id',
           '3': 'driving_license',
-          '4': 'other'
+          '4': 'other',
         };
-        
+
         // استخدام اسم الفئة المناسب
         if (categoryMap[selectedCategory]) {
           params.category = categoryMap[selectedCategory];
@@ -283,26 +291,26 @@ export default function AdsScreen() {
           console.warn(`Unknown category ID: ${selectedCategory}`);
         }
       }
-      
+
       // معالجة فلتر المحافظة
       if (selectedProvince && selectedProvince !== 'all') {
         // تعيين اسم المحافظة مباشرة
         params.governorate = selectedProvince;
         console.log(`Setting governorate filter: ${selectedProvince}`);
       }
-      
+
       // سجل الطلب النهائي للتشخيص
       console.log('Final API request parameters:', JSON.stringify(params, null, 2));
-      
+
       // استدعاء API مع المعلمات المناسبة
       const response = await adsAPI.getAds(params);
-      
+
       // التعامل مع الاستجابة
       if (response.success && response.data) {
         // تحديث قائمة الإعلانات
         setAds(response.data);
         console.log(`Loaded ${response.data.length} ads`);
-        
+
         // طباعة بيانات تشخيصية إضافية
         if (response.data.length > 0) {
           const firstAd = response.data[0];
@@ -326,8 +334,11 @@ export default function AdsScreen() {
     } catch (err: any) {
       // التعامل مع أخطاء الشبكة أو أخطاء أخرى
       console.error('Error fetching ads:', err);
-      
-      if (err.message === 'Network Error' || err?.name === 'AxiosError' && err?.message?.includes('Network')) {
+
+      if (
+        err.message === 'Network Error' ||
+        (err?.name === 'AxiosError' && err?.message?.includes('Network'))
+      ) {
         setError(t('common.noInternetMessage'));
       } else {
         setError(t('common.errorFetchingAds'));
@@ -344,14 +355,14 @@ export default function AdsScreen() {
     // تحويل معرف الفئة إلى اسم الفئة كما هو محدد في API
     const getCategoryNameFromId = (categoryId: string | null): string | null => {
       if (!categoryId) return null;
-      
-      const categoryMap: {[key: string]: string} = {
+
+      const categoryMap: { [key: string]: string } = {
         '1': 'passport',
-        '2': 'national_id', 
+        '2': 'national_id',
         '3': 'driving_license',
-        '4': 'other'
+        '4': 'other',
       };
-      
+
       return categoryMap[categoryId] || categoryId;
     };
 
@@ -363,35 +374,41 @@ export default function AdsScreen() {
 
     return ads.filter(ad => {
       // فلترة حسب البحث النصي
-      const matchesSearch = !searchQuery || 
+      const matchesSearch =
+        !searchQuery ||
         ad.ownerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ad.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ad.itemNumber?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       // فلترة حسب نوع الإعلان (مفقود/موجود)
       const matchesType = adType === 'all' || ad.type === adType;
-      
+
       // فلترة حسب الفئة
       const matchesCategory = !categoryName || ad.category === categoryName;
-      
+
       // فلترة حسب المحافظة
-      const matchesProvince = !selectedProvince || selectedProvince === 'all' || ad.governorate === selectedProvince;
-      
+      const matchesProvince =
+        !selectedProvince || selectedProvince === 'all' || ad.governorate === selectedProvince;
+
       // طباعة معلومات تشخيصية للفلترة المحلية
       if (__DEV__ && (selectedCategory || selectedProvince !== 'all' || adType !== 'all')) {
         if (!matchesCategory && categoryName) {
           console.log(`Ad ${ad._id} filtered out: category ${ad.category} != ${categoryName}`);
         }
-        
+
         if (!matchesProvince && selectedProvince !== 'all') {
-          console.log(`Ad ${ad._id} filtered out: governorate ${ad.governorate} != ${selectedProvince}`);
+          console.log(
+            `Ad ${ad._id} filtered out: governorate ${ad.governorate} != ${selectedProvince}`,
+          );
         }
-        
+
         if (!matchesType && adType !== 'all') {
-          console.log(`Ad ${ad._id} filtered out: type ${ad.type} != ${adType === 'lost' ? 'lost' : 'found'}`);
+          console.log(
+            `Ad ${ad._id} filtered out: type ${ad.type} != ${adType === 'lost' ? 'lost' : 'found'}`,
+          );
         }
       }
-      
+
       // إرجاع الإعلانات التي تطابق جميع الفلاتر النشطة
       return matchesSearch && matchesType && matchesCategory && matchesProvince;
     });
@@ -401,7 +418,7 @@ export default function AdsScreen() {
   const handleImageError = (id: string) => {
     setImageErrors(prev => ({
       ...prev,
-      [id]: true
+      [id]: true,
     }));
   };
 
@@ -430,7 +447,7 @@ export default function AdsScreen() {
   const handlePriceRangeChange = (type: string, value: string) => {
     setPriceRange(prev => ({
       ...prev,
-      [type]: value ? parseInt(value) : 0
+      [type]: value ? parseInt(value) : 0,
     }));
   };
 
@@ -467,54 +484,51 @@ export default function AdsScreen() {
     try {
       // التحقق مما إذا كان المستخدم مسجلاً
       const userToken = await AsyncStorage.getItem('userToken');
-      
+
       if (!userToken) {
         // إذا لم يكن المستخدم مسجلاً، عرض رسالة تنبيه
-        Alert.alert(
-          t('loginRequired'),
-          t('loginToCreateAd', { ns: 'common' }),
-          [
-            { text: t('cancel'), style: 'cancel' },
-            { 
-              text: t('login'), 
-              onPress: () => router.push('/auth/login' as any) 
-            }
-          ]
-        );
+        Alert.alert(t('loginRequired'), t('loginToCreateAd', { ns: 'common' }), [
+          { text: t('cancel'), style: 'cancel' },
+          {
+            text: t('login'),
+            onPress: () => router.push('/auth/login' as any),
+          },
+        ]);
         return;
       }
-      
+
       // إذا كان المستخدم مسجلاً، توجيهه إلى صفحة إنشاء إعلان
       router.push('/create-ad' as any);
     } catch (error) {
       console.error('Error checking authentication:', error);
       // في حالة حدوث خطأ، افترض أن المستخدم غير مسجل
-      Alert.alert(
-        t('error'),
-        t('anErrorOccurred', { ns: 'common' }),
-        [{ text: t('ok') }]
-      );
+      Alert.alert(t('error'), t('anErrorOccurred', { ns: 'common' }), [{ text: t('ok') }]);
     }
   };
-  
+
   // مكون للعرض أثناء التحميل
   const renderFooter = () => {
     if (!loading) return null;
-    
+
     return (
       <View style={styles.footer}>
         <ActivityIndicator color={appColors.primary} size="large" />
-        <Text style={[styles.footerText, { color: appColors.textSecondary, fontFamily: 'Cairo-Regular' }]}>
+        <Text
+          style={[
+            styles.footerText,
+            { color: appColors.textSecondary, fontFamily: 'Cairo-Regular' },
+          ]}
+        >
           {t('loading_more', { ns: 'common' })}
         </Text>
       </View>
     );
   };
-  
+
   // مكون لعرض رسالة الخطأ
   const renderError = () => {
     if (!error) return null;
-    
+
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle-outline" size={60} color={appColors.error} />
@@ -532,11 +546,11 @@ export default function AdsScreen() {
       </View>
     );
   };
-  
+
   // مكون للعرض عندما لا توجد نتائج
   const renderEmpty = () => {
     if (loading || ads.length > 0) return null;
-    
+
     return (
       <View style={styles.emptyContainer}>
         <Ionicons name="search-outline" size={60} color={appColors.textSecondary} />
@@ -546,7 +560,7 @@ export default function AdsScreen() {
       </View>
     );
   };
-  
+
   // تحديث مكون المودال
   const ProvinceFilterModal = () => (
     <Modal
@@ -558,12 +572,9 @@ export default function AdsScreen() {
     >
       <TouchableWithoutFeedback onPress={() => setShowProvinceFilter(false)}>
         <View style={styles.provinceFilterModal}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+          <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
             <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
-              <View style={[
-                styles.modalHeader,
-                { flexDirection: isRTL ? 'row-reverse' : 'row' }
-              ]}>
+              <View style={[styles.modalHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Text style={[styles.modalTitle, { color: appColors.text }]}>
                   {t('governorate')}
                 </Text>
@@ -571,42 +582,48 @@ export default function AdsScreen() {
                   <Ionicons name="close" size={24} color={appColors.text} />
                 </TouchableOpacity>
               </View>
-              
+
               <ScrollView showsVerticalScrollIndicator={false}>
-                {PROVINCES.map((province) => {
+                {PROVINCES.map(province => {
                   // استخدام طريقة مباشرة للوصول إلى ترجمة المحافظات
                   const translationKey = `provinces.${province.id}`;
                   const displayName = t(translationKey);
-                  
+
                   if (__DEV__) {
-                    console.log(`Rendering province: ${province.id}, translation key: ${translationKey}, result: ${displayName}`);
+                    console.log(
+                      `Rendering province: ${province.id}, translation key: ${translationKey}, result: ${displayName}`,
+                    );
                   }
-                  
+
                   return (
                     <TouchableOpacity
                       key={province.id}
                       style={[
                         styles.provinceItem,
-                        { 
-                          backgroundColor: selectedProvince === province.id ? appColors.secondary : appColors.background,
+                        {
+                          backgroundColor:
+                            selectedProvince === province.id
+                              ? appColors.secondary
+                              : appColors.background,
                           flexDirection: 'row',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          paddingVertical: 15
-                        }
+                          paddingVertical: 15,
+                        },
                       ]}
                       onPress={() => handleProvinceSelect(province.id)}
                       activeOpacity={0.7}
                     >
-                      <Text 
+                      <Text
                         style={[
-                          styles.provinceText, 
-                          { 
-                            color: selectedProvince === province.id ? appColors.primary : appColors.text,
+                          styles.provinceText,
+                          {
+                            color:
+                              selectedProvince === province.id ? appColors.primary : appColors.text,
                             fontFamily: 'Cairo-Medium',
                             flex: 1,
-                            fontSize: 16
-                          }
+                            fontSize: 16,
+                          },
                         ]}
                       >
                         {displayName}
@@ -636,12 +653,9 @@ export default function AdsScreen() {
     >
       <TouchableWithoutFeedback onPress={() => setShowCategoryFilter(false)}>
         <View style={styles.provinceFilterModal}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+          <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
             <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
-              <View style={[
-                styles.modalHeader,
-                { flexDirection: isRTL ? 'row-reverse' : 'row' }
-              ]}>
+              <View style={[styles.modalHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Text style={[styles.modalTitle, { color: appColors.text }]}>
                   {t('documentType')}
                 </Text>
@@ -649,19 +663,20 @@ export default function AdsScreen() {
                   <Ionicons name="close" size={24} color={appColors.text} />
                 </TouchableOpacity>
               </View>
-              
+
               <ScrollView showsVerticalScrollIndicator={false}>
                 <TouchableOpacity
                   key="all"
                   style={[
                     styles.provinceItem,
-                    { 
-                      backgroundColor: selectedCategory === null ? appColors.secondary : appColors.background,
+                    {
+                      backgroundColor:
+                        selectedCategory === null ? appColors.secondary : appColors.background,
                       flexDirection: 'row',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      paddingVertical: 15
-                    }
+                      paddingVertical: 15,
+                    },
                   ]}
                   onPress={() => {
                     setSelectedCategory(null);
@@ -669,15 +684,15 @@ export default function AdsScreen() {
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text 
+                  <Text
                     style={[
-                      styles.provinceText, 
-                      { 
+                      styles.provinceText,
+                      {
                         color: selectedCategory === null ? appColors.primary : appColors.text,
                         fontFamily: 'Cairo-Medium',
                         flex: 1,
-                        fontSize: 16
-                      }
+                        fontSize: 16,
+                      },
                     ]}
                   >
                     {t('allCategories')}
@@ -686,19 +701,22 @@ export default function AdsScreen() {
                     <Ionicons name="checkmark" size={24} color={appColors.primary} />
                   )}
                 </TouchableOpacity>
-                
-                {CATEGORIES.map((category) => (
+
+                {CATEGORIES.map(category => (
                   <TouchableOpacity
                     key={category.id}
                     style={[
                       styles.provinceItem,
-                      { 
-                        backgroundColor: selectedCategory === category.id ? appColors.secondary : appColors.background,
+                      {
+                        backgroundColor:
+                          selectedCategory === category.id
+                            ? appColors.secondary
+                            : appColors.background,
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        paddingVertical: 15
-                      }
+                        paddingVertical: 15,
+                      },
                     ]}
                     onPress={() => {
                       setSelectedCategory(category.id);
@@ -706,21 +724,30 @@ export default function AdsScreen() {
                     }}
                     activeOpacity={0.7}
                   >
-                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', flex: 1 }}>
-                      <Ionicons 
-                        name={category.icon as any} 
-                        size={20} 
-                        color={selectedCategory === category.id ? appColors.primary : appColors.text} 
-                        style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} 
+                    <View
+                      style={{
+                        flexDirection: isRTL ? 'row-reverse' : 'row',
+                        alignItems: 'center',
+                        flex: 1,
+                      }}
+                    >
+                      <Ionicons
+                        name={category.icon as any}
+                        size={20}
+                        color={
+                          selectedCategory === category.id ? appColors.primary : appColors.text
+                        }
+                        style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}
                       />
-                      <Text 
+                      <Text
                         style={[
-                          styles.provinceText, 
-                          { 
-                            color: selectedCategory === category.id ? appColors.primary : appColors.text,
+                          styles.provinceText,
+                          {
+                            color:
+                              selectedCategory === category.id ? appColors.primary : appColors.text,
                             fontFamily: 'Cairo-Medium',
-                            fontSize: 16
-                          }
+                            fontSize: 16,
+                          },
                         ]}
                       >
                         {t(category.name)}
@@ -757,52 +784,54 @@ export default function AdsScreen() {
     >
       <TouchableWithoutFeedback onPress={() => setShowTypeFilter(false)}>
         <View style={styles.provinceFilterModal}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+          <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
             <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
-              <View style={[
-                styles.modalHeader,
-                { flexDirection: isRTL ? 'row-reverse' : 'row' }
-              ]}>
-                <Text style={[styles.modalTitle, { color: appColors.text }]}>
-                  نوع الإعلان
-                </Text>
+              <View style={[styles.modalHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                <Text style={[styles.modalTitle, { color: appColors.text }]}>نوع الإعلان</Text>
                 <TouchableOpacity onPress={() => setShowTypeFilter(false)}>
                   <Ionicons name="close" size={24} color={appColors.text} />
                 </TouchableOpacity>
               </View>
-              
+
               <ScrollView showsVerticalScrollIndicator={false}>
                 {/* الكل */}
                 <TouchableOpacity
                   key="all"
                   style={[
                     styles.provinceItem,
-                    { 
-                      backgroundColor: adType === 'all' ? appColors.secondary : appColors.background,
+                    {
+                      backgroundColor:
+                        adType === 'all' ? appColors.secondary : appColors.background,
                       flexDirection: 'row',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      paddingVertical: 15
-                    }
+                      paddingVertical: 15,
+                    },
                   ]}
                   onPress={() => handleTypeSelect('all')}
                   activeOpacity={0.7}
                 >
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', flex: 1 }}>
-                    <Ionicons 
-                      name="filter-outline" 
-                      size={20} 
-                      color={adType === 'all' ? appColors.primary : appColors.text} 
-                      style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} 
+                  <View
+                    style={{
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      alignItems: 'center',
+                      flex: 1,
+                    }}
+                  >
+                    <Ionicons
+                      name="filter-outline"
+                      size={20}
+                      color={adType === 'all' ? appColors.primary : appColors.text}
+                      style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}
                     />
-                    <Text 
+                    <Text
                       style={[
-                        styles.provinceText, 
-                        { 
+                        styles.provinceText,
+                        {
                           color: adType === 'all' ? appColors.primary : appColors.text,
                           fontFamily: 'Cairo-Medium',
-                          fontSize: 16
-                        }
+                          fontSize: 16,
+                        },
                       ]}
                     >
                       الكل
@@ -812,38 +841,45 @@ export default function AdsScreen() {
                     <Ionicons name="checkmark" size={24} color={appColors.primary} />
                   )}
                 </TouchableOpacity>
-                
+
                 {/* مفقود */}
                 <TouchableOpacity
                   key="lost"
                   style={[
                     styles.provinceItem,
-                    { 
-                      backgroundColor: adType === 'lost' ? appColors.secondary : appColors.background,
+                    {
+                      backgroundColor:
+                        adType === 'lost' ? appColors.secondary : appColors.background,
                       flexDirection: 'row',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      paddingVertical: 15
-                    }
+                      paddingVertical: 15,
+                    },
                   ]}
                   onPress={() => handleTypeSelect('lost')}
                   activeOpacity={0.7}
                 >
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', flex: 1 }}>
-                    <Ionicons 
-                      name="search" 
-                      size={20} 
-                      color={adType === 'lost' ? appColors.primary : appColors.text} 
-                      style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} 
+                  <View
+                    style={{
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      alignItems: 'center',
+                      flex: 1,
+                    }}
+                  >
+                    <Ionicons
+                      name="search"
+                      size={20}
+                      color={adType === 'lost' ? appColors.primary : appColors.text}
+                      style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}
                     />
-                    <Text 
+                    <Text
                       style={[
-                        styles.provinceText, 
-                        { 
+                        styles.provinceText,
+                        {
                           color: adType === 'lost' ? appColors.primary : appColors.text,
                           fontFamily: 'Cairo-Medium',
-                          fontSize: 16
-                        }
+                          fontSize: 16,
+                        },
                       ]}
                     >
                       مفقود
@@ -853,38 +889,45 @@ export default function AdsScreen() {
                     <Ionicons name="checkmark" size={24} color={appColors.primary} />
                   )}
                 </TouchableOpacity>
-                
+
                 {/* موجود */}
                 <TouchableOpacity
                   key="found"
                   style={[
                     styles.provinceItem,
-                    { 
-                      backgroundColor: adType === 'found' ? appColors.secondary : appColors.background,
+                    {
+                      backgroundColor:
+                        adType === 'found' ? appColors.secondary : appColors.background,
                       flexDirection: 'row',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      paddingVertical: 15
-                    }
+                      paddingVertical: 15,
+                    },
                   ]}
                   onPress={() => handleTypeSelect('found')}
                   activeOpacity={0.7}
                 >
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', flex: 1 }}>
-                    <Ionicons 
-                      name="hand-right" 
-                      size={20} 
-                      color={adType === 'found' ? appColors.primary : appColors.text} 
-                      style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} 
+                  <View
+                    style={{
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      alignItems: 'center',
+                      flex: 1,
+                    }}
+                  >
+                    <Ionicons
+                      name="hand-right"
+                      size={20}
+                      color={adType === 'found' ? appColors.primary : appColors.text}
+                      style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}
                     />
-                    <Text 
+                    <Text
                       style={[
-                        styles.provinceText, 
-                        { 
+                        styles.provinceText,
+                        {
                           color: adType === 'found' ? appColors.primary : appColors.text,
                           fontFamily: 'Cairo-Medium',
-                          fontSize: 16
-                        }
+                          fontSize: 16,
+                        },
                       ]}
                     >
                       معثور عليه
@@ -904,10 +947,13 @@ export default function AdsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={appColors.background} />
-      
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={appColors.background}
+      />
+
       {/* Search Bar */}
-      <SearchBar 
+      <SearchBar
         placeholder={t('search')}
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -915,12 +961,12 @@ export default function AdsScreen() {
         isRTL={isRTL}
         onSubmitEditing={fetchAds}
       />
-      
+
       {/* Category Filters */}
       <View style={styles.filtersContainer}>
         {/* جميع القوائم المنسدلة في سطر واحد قابل للتمرير أفقياً */}
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.dropdownsRow}
         >
@@ -928,160 +974,174 @@ export default function AdsScreen() {
           <TouchableOpacity
             style={[
               styles.dropdownButton,
-              { 
+              {
                 backgroundColor: appColors.primary,
-                borderWidth: 0, 
+                borderWidth: 0,
                 borderColor: appColors.border,
                 flexDirection: isRTL ? 'row-reverse' : 'row',
                 justifyContent: 'space-between',
-                marginRight: 8
-              }
+                marginRight: 8,
+              },
             ]}
             onPress={() => setShowTypeFilter(true)}
           >
-            <View style={{ 
-              flexDirection: isRTL ? 'row-reverse' : 'row', 
-              alignItems: 'center',
-              flex: 1,
-              flexWrap: 'nowrap'
-            }}>
-              <Ionicons 
+            <View
+              style={{
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                alignItems: 'center',
+                flex: 1,
+                flexWrap: 'nowrap',
+              }}
+            >
+              <Ionicons
                 name={
-                  adType === 'lost' ? 'search' : 
-                  adType === 'found' ? 'hand-right' : 
-                  'filter-outline'
-                } 
-                size={18} 
-                color="#fff" 
-                style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0, flexShrink: 0 }} 
+                  adType === 'lost'
+                    ? 'search'
+                    : adType === 'found'
+                      ? 'hand-right'
+                      : 'filter-outline'
+                }
+                size={18}
+                color="#fff"
+                style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0, flexShrink: 0 }}
               />
-              <Text 
-                style={{ 
-                  color: '#fff', 
+              <Text
+                style={{
+                  color: '#fff',
                   fontFamily: 'Cairo-Medium',
-                  flex: 1
+                  flex: 1,
                 }}
               >
                 {adType === 'all' ? 'نوع الإعلان' : adType === 'lost' ? 'مفقود' : 'معثور عليه'}
               </Text>
             </View>
-            <Ionicons 
-              name="chevron-down" 
-              size={16} 
-              color="#fff" 
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color="#fff"
               style={{ flexShrink: 0, marginLeft: 4 }}
             />
           </TouchableOpacity>
-          
+
           {/* قائمة الفئات */}
           <TouchableOpacity
             style={[
               styles.dropdownButton,
-              { 
-                backgroundColor: appColors.primary, 
-                borderWidth: 0, 
+              {
+                backgroundColor: appColors.primary,
+                borderWidth: 0,
                 borderColor: appColors.border,
                 flexDirection: isRTL ? 'row-reverse' : 'row',
                 justifyContent: 'space-between',
-                marginRight: 8
-              }
+                marginRight: 8,
+              },
             ]}
             onPress={() => setShowCategoryFilter(true)}
           >
-            <View style={{ 
-              flexDirection: isRTL ? 'row-reverse' : 'row', 
-              alignItems: 'center',
-              flex: 1,
-              flexWrap: 'nowrap'
-            }}>
-              {selectedCategory ? 
-                <Ionicons 
-                  name={(CATEGORIES.find(c => c.id === selectedCategory)?.icon || 'document-text-outline') as any} 
-                  size={18} 
-                  color="#fff" 
-                  style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0, flexShrink: 0 }} 
-                /> : 
-                <Ionicons 
-                  name="layers-outline" 
-                  size={18} 
-                  color="#fff" 
-                  style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0, flexShrink: 0 }} 
+            <View
+              style={{
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                alignItems: 'center',
+                flex: 1,
+                flexWrap: 'nowrap',
+              }}
+            >
+              {selectedCategory ? (
+                <Ionicons
+                  name={
+                    (CATEGORIES.find(c => c.id === selectedCategory)?.icon ||
+                      'document-text-outline') as any
+                  }
+                  size={18}
+                  color="#fff"
+                  style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0, flexShrink: 0 }}
                 />
-              }
-              <Text 
-                style={{ 
-                  color: '#fff', 
+              ) : (
+                <Ionicons
+                  name="layers-outline"
+                  size={18}
+                  color="#fff"
+                  style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0, flexShrink: 0 }}
+                />
+              )}
+              <Text
+                style={{
+                  color: '#fff',
                   fontFamily: 'Cairo-Medium',
-                  flex: 1
+                  flex: 1,
                 }}
               >
-                {selectedCategory ? t(CATEGORIES.find(c => c.id === selectedCategory)?.name || '') : t('allCategories')}
+                {selectedCategory
+                  ? t(CATEGORIES.find(c => c.id === selectedCategory)?.name || '')
+                  : t('allCategories')}
               </Text>
             </View>
-            <Ionicons 
-              name="chevron-down" 
-              size={16} 
-              color="#fff" 
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color="#fff"
               style={{ flexShrink: 0, marginLeft: 4 }}
             />
           </TouchableOpacity>
-          
+
           {/* قائمة المحافظات */}
           <TouchableOpacity
             style={[
               styles.dropdownButton,
-              { 
+              {
                 backgroundColor: appColors.primary,
-                borderWidth: 0, 
+                borderWidth: 0,
                 borderColor: appColors.border,
                 flexDirection: isRTL ? 'row-reverse' : 'row',
                 justifyContent: 'space-between',
-                marginRight: 8
-              }
+                marginRight: 8,
+              },
             ]}
             onPress={() => setShowProvinceFilter(true)}
             activeOpacity={0.7}
           >
-            <View style={{ 
-              flexDirection: isRTL ? 'row-reverse' : 'row', 
-              alignItems: 'center',
-              flex: 1,
-              flexWrap: 'nowrap'
-            }}>
-              <Ionicons 
-                name="location-outline" 
-                size={18} 
-                color="#fff" 
-                style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0, flexShrink: 0 }} 
+            <View
+              style={{
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                alignItems: 'center',
+                flex: 1,
+                flexWrap: 'nowrap',
+              }}
+            >
+              <Ionicons
+                name="location-outline"
+                size={18}
+                color="#fff"
+                style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0, flexShrink: 0 }}
               />
-              <Text 
-                style={{ 
-                  color: '#fff', 
+              <Text
+                style={{
+                  color: '#fff',
                   fontFamily: 'Cairo-Medium',
-                  flex: 1
+                  flex: 1,
                 }}
               >
                 {t(`provinces.${selectedProvince}`)}
               </Text>
             </View>
-            <Ionicons 
-              name="chevron-down" 
-              size={16} 
-              color="#fff" 
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color="#fff"
               style={{ flexShrink: 0, marginLeft: 4 }}
             />
           </TouchableOpacity>
         </ScrollView>
       </View>
-      
+
       {/* Error Message */}
       {error && renderError()}
-      
+
       {/* Ads List */}
       {!error && (
         <FlatList
           data={applyFilters()}
-          keyExtractor={(item) => item._id}
+          keyExtractor={item => item._id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.adsListContainer}
           ListEmptyComponent={renderEmpty}
@@ -1107,7 +1167,7 @@ export default function AdsScreen() {
                 onPress={() => {
                   router.push({
                     pathname: `/ad-details/${item._id}`,
-                    params: { id: item._id }
+                    params: { id: item._id },
                   } as any);
                 }}
               />
@@ -1115,49 +1175,60 @@ export default function AdsScreen() {
           )}
         />
       )}
-      
+
       {/* Post Ad Button */}
       <TouchableOpacity
         style={[
-          styles.fab, 
-          { 
+          styles.fab,
+          {
             backgroundColor: appColors.primary,
             flexDirection: isRTL ? 'row-reverse' : 'row',
             paddingHorizontal: 16,
             width: 'auto',
             height: Layout.isSmallDevice ? 46 : 56,
             bottom: Layout.isSmallDevice ? 70 : 85,
-            right: Layout.isSmallDevice ? 16 : 20,
-          }
+            right: isRTL ? (Layout.isSmallDevice ? 16 : 20) : undefined,
+            left: !isRTL ? (Layout.isSmallDevice ? 16 : 20) : undefined,
+            borderRadius: 999,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 5,
+            elevation: 8,
+          },
         ]}
         onPress={handleCreateAd}
         activeOpacity={0.7}
       >
-        <Ionicons 
-          name="add-circle" 
-          size={Layout.isSmallDevice ? 20 : 24} 
-          color="#fff" 
+        <Ionicons
+          name="add-circle"
+          size={Layout.isSmallDevice ? 20 : 24}
+          color="#fff"
           style={{ marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0 }}
         />
-        <Text 
-          style={[
-            styles.fabText,
-            { fontSize: Layout.isSmallDevice ? 14 : 16 }
-          ]}
-        >
-          {t('post_ad')}
+        <Text style={[
+          styles.fabText, 
+          { 
+            fontSize: Layout.isSmallDevice ? 14 : 16,
+            color: '#fff',
+            marginLeft: isRTL ? 0 : 8, 
+            marginRight: isRTL ? 8 : 0,
+            textAlign: isRTL ? 'right' : 'left',
+          }
+        ]}>
+          {t('post_ad', { ns: 'common' })}
         </Text>
       </TouchableOpacity>
-      
+
       {/* Category Filter Modal */}
       <CategoryFilterModal />
-      
+
       {/* Province Filter Modal */}
       <ProvinceFilterModal />
-      
+
       {/* Type Filter Modal */}
       <TypeFilterModal />
-      
+
       {/* Network Status Alert */}
       <NetworkStatusAlert />
     </SafeAreaView>
@@ -1170,30 +1241,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    alignItems: 'center',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
   },
   filterButton: {
-    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 20,
+    flexDirection: 'row',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
   },
   filterButtonText: {
     color: '#fff',
-    marginLeft: 5,
     fontSize: 14,
     fontWeight: 'bold',
+    marginLeft: 5,
   },
   filtersContainer: {
     paddingVertical: 5,
@@ -1204,12 +1275,12 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   typeButton: {
-    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 20,
+    flexDirection: 'row',
+    marginRight: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    marginRight: 8,
   },
   typeText: {
     fontSize: 14,
@@ -1221,12 +1292,12 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   categoryButton: {
-    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 20,
+    flexDirection: 'row',
+    marginRight: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    marginRight: 8,
   },
   categoryText: {
     fontSize: 14,
@@ -1238,10 +1309,10 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   provinceButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
     borderRadius: 20,
     marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   provinceText: {
     fontSize: 14,
@@ -1258,8 +1329,8 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    textAlign: 'center',
     marginTop: 10,
+    textAlign: 'center',
   },
   errorContainer: {
     alignItems: 'center',
@@ -1268,14 +1339,14 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    textAlign: 'center',
-    marginTop: 10,
     marginBottom: 15,
+    marginTop: 10,
+    textAlign: 'center',
   },
   retryButton: {
+    borderRadius: 8,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 8,
   },
   retryButtonText: {
     color: '#fff',
@@ -1283,40 +1354,40 @@ const styles = StyleSheet.create({
   },
   adCard: {
     borderRadius: 12,
+    elevation: 3,
     marginBottom: 15,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
   },
   adCardContent: {
     flexDirection: 'row',
   },
   adImageContainer: {
-    width: 120,
     height: 120,
     position: 'relative',
+    width: 120,
   },
   adImage: {
-    width: '100%',
     height: '100%',
+    width: '100%',
   },
   adImagePlaceholder: {
-    width: 120,
+    alignItems: 'center',
     height: 120,
     justifyContent: 'center',
-    alignItems: 'center',
     position: 'relative',
+    width: 120,
   },
   adTypeTag: {
-    position: 'absolute',
-    top: 8,
+    borderRadius: 4,
     left: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    position: 'absolute',
+    top: 8,
   },
   adTypeText: {
     color: '#fff',
@@ -1325,8 +1396,8 @@ const styles = StyleSheet.create({
   },
   adInfoContainer: {
     flex: 1,
-    padding: 12,
     justifyContent: 'space-between',
+    padding: 12,
   },
   adTitle: {
     fontSize: 16,
@@ -1334,8 +1405,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   adDetailRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 4,
   },
   adDetailText: {
@@ -1344,10 +1415,10 @@ const styles = StyleSheet.create({
   },
   resolvedTag: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
     borderRadius: 4,
     marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   resolvedText: {
     color: '#fff',
@@ -1355,74 +1426,66 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    borderRadius: 28,
-    justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    justifyContent: 'center',
+    position: 'absolute',
     zIndex: 1000,
   },
   provinceFilterModal: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    flex: 1,
+    justifyContent: 'center',
   },
   modalContent: {
-    width: '90%',
     backgroundColor: '#fff',
     borderRadius: 15,
-    padding: 20,
+    elevation: 5,
     maxHeight: '80%',
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    width: '90%',
   },
   modalHeader: {
+    alignItems: 'center',
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
     paddingBottom: 15,
   },
   modalTitle: {
+    fontFamily: 'Cairo-Bold',
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'Cairo-Bold',
   },
   provinceItem: {
-    padding: 15,
-    borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomWidth: 1,
+    padding: 15,
   },
   footer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'center',
     padding: 10,
   },
   footerText: {
-    marginLeft: 10,
     fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 10,
   },
   searchContainer: {
     padding: 10,
   },
   searchInputContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 8,
+    flexDirection: 'row',
   },
   searchInput: {
     flex: 1,
@@ -1438,19 +1501,16 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   dropdownButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    alignItems: 'center',
     borderRadius: 20,
     flex: 1,
-    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   fabText: {
-    color: '#fff',
     fontFamily: 'Cairo-Bold',
-    marginLeft: 8,
-    marginRight: 8,
   },
   adItem: {
     marginBottom: 15,
   },
-}); 
+});

@@ -30,32 +30,25 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: appColors.card }]}>
           <Text style={[styles.title, { color: appColors.text }, { fontFamily: 'Cairo-Bold' }]}>
             {title}
           </Text>
-          
+
           {message && (
-            <Text style={[styles.message, { color: appColors.text }, { fontFamily: 'Cairo-Regular' }]}>
+            <Text
+              style={[styles.message, { color: appColors.text }, { fontFamily: 'Cairo-Regular' }]}
+            >
               {message}
             </Text>
           )}
-          
+
           {showLoading && (
-            <ActivityIndicator 
-              size="large" 
-              color={appColors.primary} 
-              style={styles.loader} 
-            />
+            <ActivityIndicator size="large" color={appColors.primary} style={styles.loader} />
           )}
-          
+
           {buttons.length > 0 && (
             <View style={styles.buttonContainer}>
               {buttons.map((button, index) => (
@@ -69,11 +62,13 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                   ]}
                   onPress={button.onPress}
                 >
-                  <Text style={[
-                    styles.buttonText,
-                    { color: button.style === 'cancel' ? appColors.text : '#fff' },
-                    { fontFamily: 'Cairo-Medium' }
-                  ]}>
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      { color: button.style === 'cancel' ? appColors.text : '#fff' },
+                      { fontFamily: 'Cairo-Medium' },
+                    ]}
+                  >
                     {button.text}
                   </Text>
                 </TouchableOpacity>
@@ -87,17 +82,42 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
+  button: {
     alignItems: 'center',
+    borderRadius: 5,
+    marginHorizontal: 5,
+    minWidth: 80,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   container: {
-    width: '80%',
-    padding: 20,
-    borderRadius: 14,
     alignItems: 'center',
+    borderRadius: 14,
+    padding: 20,
+    width: '80%',
+  },
+  loader: {
+    marginVertical: 20,
+  },
+  message: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  overlay: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    flex: 1,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 18,
@@ -105,31 +125,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  message: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  loader: {
-    marginVertical: 20,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginHorizontal: 5,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
 });
 
-export default CustomAlert; 
+export default CustomAlert;

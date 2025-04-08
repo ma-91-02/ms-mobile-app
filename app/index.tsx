@@ -28,12 +28,14 @@ export default function Index() {
 
   if (isLoading) {
     return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        backgroundColor: Colors.light.background
-      }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: Colors.light.background,
+        }}
+      >
         <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );

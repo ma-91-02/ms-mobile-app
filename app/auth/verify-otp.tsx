@@ -29,39 +29,41 @@ export default function VerifyOTPScreen() {
   const { t } = useTranslation(['auth', 'common']);
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
   const params = useLocalSearchParams();
-  
+
   const phoneNumber = params.phoneNumber as string;
   const isResetPassword = params.resetPassword === 'true';
-  
+
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  
+
   // مراجع لحقول إدخال OTP
-  const inputRefs = Array(6).fill(0).map(() => useRef<TextInput>(null));
-  
+  const inputRefs = Array(6)
+    .fill(0)
+    .map(() => useRef<TextInput>(null));
+
   // طباعة معلومات التشخيص
   useEffect(() => {
     console.log('Verify OTP screen - phoneNumber:', phoneNumber);
     console.log('Verify OTP screen - isResetPassword:', isResetPassword);
   }, [phoneNumber, isResetPassword]);
-  
+
   // بدء العد التنازلي
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    
+
     if (countdown > 0) {
       timer = setTimeout(() => setCountdown(countdown - 1), 1000);
     } else {
       setCanResend(true);
     }
-    
+
     return () => {
       if (timer) clearTimeout(timer);
     };
   }, [countdown]);
-  
+
   const handleVerifyOTP = async () => {
     try {
       // التحقق من اكتمال رمز التحقق
@@ -69,19 +71,19 @@ export default function VerifyOTPScreen() {
         Alert.alert(t('error', { ns: 'common' }), t('pleaseEnterFullOTP', { ns: 'auth' }));
         return;
       }
-      
+
       // طباعة معلومات تشخيصية عن رقم الهاتف
       console.log('=============== تشخيص رقم الهاتف في صفحة التحقق ===============');
       console.log('رقم الهاتف المستلم من الصفحة السابقة:', phoneNumber);
       console.log('نوع بيانات رقم الهاتف:', typeof phoneNumber);
       console.log('طول رقم الهاتف:', phoneNumber.length);
       console.log('================================================================');
-      
+
       setLoading(true);
-      
+
       // استدعاء خدمة التحقق
       let response;
-      
+
       // استخدام API مختلف للتحقق اعتمادًا على نوع العملية
       if (isResetPassword) {
         console.log('Using verifyResetCode for password reset flow');
@@ -90,67 +92,68 @@ export default function VerifyOTPScreen() {
         console.log('Using verifyOTP for regular flow');
         response = await authAPI.verifyOTP(phoneNumber, otp);
       }
-      
+
       // التحقق من نجاح العملية
       if (!response.success) {
         // التحقق من نوع الخطأ
         if (response.isNetworkError) {
-          Alert.alert(
-            t('common.noInternetConnection'), 
-            t('common.noInternetMessage'),
-            [{ text: t('common.ok') }]
-          );
+          Alert.alert(t('common.noInternetConnection'), t('common.noInternetMessage'), [
+            { text: t('common.ok') },
+          ]);
           setLoading(false);
           return;
         }
-        
+
         // عرض رسالة الخطأ للأخطاء الأخرى
-        Alert.alert(t('error', { ns: 'common' }), response.message || t('verificationFailed', { ns: 'auth' }));
+        Alert.alert(
+          t('error', { ns: 'common' }),
+          response.message || t('verificationFailed', { ns: 'auth' }),
+        );
         setLoading(false);
         return;
       }
-      
+
       // التحقق من نوع العملية (تسجيل أو إعادة تعيين)
       if (isResetPassword) {
         // إذا كانت العملية هي إعادة تعيين كلمة المرور
         console.log('Processing password reset verification');
-        
+
         // التحقق من وجود رمز إعادة التعيين
         const resetToken = response.data?.resetToken;
         console.log('Reset token received:', resetToken);
-        
+
         if (!resetToken) {
           console.error('No reset token received from the server');
           Alert.alert(
             t('error', { ns: 'common' }),
-            'لم يتم استلام رمز إعادة تعيين كلمة المرور من الخادم. يرجى المحاولة مرة أخرى.'
+            'لم يتم استلام رمز إعادة تعيين كلمة المرور من الخادم. يرجى المحاولة مرة أخرى.',
           );
           setLoading(false);
           return;
         }
-        
+
         // حفظ الرمز المؤقت في التخزين المحلي للاستخدام في شاشة إعادة تعيين كلمة المرور
         await AsyncStorage.setItem('temp_reset_token', resetToken);
-        
+
         // الانتقال إلى شاشة إعادة تعيين كلمة المرور
         console.log('Navigating to reset password screen with token:', resetToken);
         router.push({
           pathname: '/auth/reset-password',
-          params: { 
-            phoneNumber, 
-            resetToken: resetToken
-          }
+          params: {
+            phoneNumber,
+            resetToken: resetToken,
+          },
         });
       } else {
         // إذا كانت العملية هي تسجيل دخول
         console.log('Processing regular OTP verification');
         console.log('OTP verification successful');
-        
+
         // الانتقال إلى صفحة إكمال الملف الشخصي
         console.log('Navigating to complete profile screen');
         router.push({
           pathname: '/auth/complete-profile',
-          params: { phoneNumber }
+          params: { phoneNumber },
         });
       }
     } catch (error: any) {
@@ -162,140 +165,154 @@ export default function VerifyOTPScreen() {
       setLoading(false);
     }
   };
-  
+
   const handleResendOTP = async () => {
     try {
       setLoading(true);
-      
+
       // استخدام الخادم الحقيقي (وضع الإنتاج)
       const devMode = false;
-      
+
       if (devMode) {
         console.log('DEV MODE: Skipping actual API call for resend');
-        
+
         // إعادة تعيين العد التنازلي
         setCountdown(60);
         setCanResend(false);
-        
+
         Alert.alert(t('success', { ns: 'common' }), t('otpResent', { ns: 'auth' }));
         setLoading(false);
         return;
       }
-      
+
       // إعادة إرسال رمز التحقق
       const response = await authAPI.sendOTP(phoneNumber);
-      
+
       // إعادة تعيين العد التنازلي
       setCountdown(60);
       setCanResend(false);
-      
-      Alert.alert(t('success', { ns: 'common' }), response.message || t('otpResent', { ns: 'auth' }));
+
+      Alert.alert(
+        t('success', { ns: 'common' }),
+        response.message || t('otpResent', { ns: 'auth' }),
+      );
     } catch (error: any) {
       console.error('Error resending OTP:', error);
-      
+
       // عرض رسالة خطأ أكثر تفصيلاً
       let errorMessage = t('resendFailed', { ns: 'auth' });
-      
+
       if (error.message && error.message.includes('Network request failed')) {
         errorMessage = t('networkError', { ns: 'auth' });
       }
-      
+
       Alert.alert(t('error', { ns: 'common' }), errorMessage);
     } finally {
       setLoading(false);
     }
   };
-  
+
   // التعامل مع إدخال OTP
   const handleOtpChange = (text: string, index: number) => {
     // تحديث قيمة OTP
     const newOtp = otp.split('');
     newOtp[index] = text;
     setOtp(newOtp.join(''));
-    
+
     // الانتقال إلى الحقل التالي
     if (text && index < 5) {
       inputRefs[index + 1].current?.focus();
     }
   };
-  
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           headerShown: false,
           animation: 'slide_from_right',
-        }} 
+        }}
       />
-      
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={appColors.background} />
-      
-      <KeyboardAvoidingView 
+
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={appColors.background}
+      />
+
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
         <View style={styles.content}>
-          <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: appColors.secondary }]} 
+          <TouchableOpacity
+            style={[styles.backButton, { backgroundColor: appColors.secondary }]}
             onPress={() => router.back()}
           >
-            <Ionicons 
-              name={isRTL ? "arrow-forward" : "arrow-back"} 
-              size={24} 
-              color={appColors.text} 
+            <Ionicons
+              name={isRTL ? 'arrow-forward' : 'arrow-back'}
+              size={24}
+              color={appColors.text}
             />
           </TouchableOpacity>
 
-          <Text style={[
-            styles.title, 
-            { color: appColors.text },
-            { textAlign: isRTL ? 'right' : 'left' }
-          ]}>
+          <Text
+            style={[
+              styles.title,
+              { color: appColors.text },
+              { textAlign: isRTL ? 'right' : 'left' },
+            ]}
+          >
             {t('verifyPhoneNumber', { ns: 'auth' })}
           </Text>
-          
-          <Text style={[
-            styles.subtitle, 
-            { color: appColors.textSecondary },
-            { textAlign: isRTL ? 'right' : 'left' }
-          ]}>
+
+          <Text
+            style={[
+              styles.subtitle,
+              { color: appColors.textSecondary },
+              { textAlign: isRTL ? 'right' : 'left' },
+            ]}
+          >
             {t('auth:otpSentTo', { phoneNumber })}
           </Text>
 
           {__DEV__ && (
-            <Text style={[
-              styles.devModeText,
-              { color: appColors.primary },
-              { textAlign: isRTL ? 'right' : 'left' }
-            ]}>
+            <Text
+              style={[
+                styles.devModeText,
+                { color: appColors.primary },
+                { textAlign: isRTL ? 'right' : 'left' },
+              ]}
+            >
               {t('auth:devModeOTP')}
             </Text>
           )}
 
           <View style={styles.otpContainer}>
-            {Array(6).fill(0).map((_, index) => (
-              <TextInput
-                key={index}
-                ref={inputRefs[index]}
-                style={[
-                  styles.otpInput,
-                  { 
-                    backgroundColor: appColors.secondary,
-                    color: appColors.text,
-                    borderColor: otp[index] ? appColors.primary : appColors.border
-                  }
-                ]}
-                maxLength={1}
-                keyboardType="number-pad"
-                value={otp[index] || ''}
-                onChangeText={(text) => handleOtpChange(text, index)}
-                onKeyPress={({ nativeEvent }) => {
-                  if (nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-                    inputRefs[index - 1].current?.focus();
-                  }
-                }}
-              />
-            ))}
+            {Array(6)
+              .fill(0)
+              .map((_, index) => (
+                <TextInput
+                  key={index}
+                  ref={inputRefs[index]}
+                  style={[
+                    styles.otpInput,
+                    {
+                      backgroundColor: appColors.secondary,
+                      color: appColors.text,
+                      borderColor: otp[index] ? appColors.primary : appColors.border,
+                    },
+                  ]}
+                  maxLength={1}
+                  keyboardType="number-pad"
+                  value={otp[index] || ''}
+                  onChangeText={text => handleOtpChange(text, index)}
+                  onKeyPress={({ nativeEvent }) => {
+                    if (nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+                      inputRefs[index - 1].current?.focus();
+                    }
+                  }}
+                />
+              ))}
           </View>
 
           <TouchableOpacity
@@ -333,6 +350,14 @@ export default function VerifyOTPScreen() {
 }
 
 const styles = StyleSheet.create({
+  backButton: {
+    alignItems: 'center',
+    borderRadius: 20,
+    height: 40,
+    justifyContent: 'center',
+    marginBottom: 20,
+    width: 40,
+  },
   container: {
     flex: 1,
   },
@@ -340,22 +365,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subtitle: {
+  countdownText: {
     fontSize: 16,
-    marginBottom: 30,
   },
   devModeText: {
     fontSize: 12,
@@ -367,19 +378,42 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   otpInput: {
-    width: 45,
-    height: 50,
     borderRadius: 8,
     borderWidth: 1,
-    textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
+    height: 50,
+    textAlign: 'center',
+    width: 45,
+  },
+  resendContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30,
+  },
+  resendLink: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  resendText: {
+    fontSize: 16,
+    marginRight: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   verifyButton: {
-    height: 50,
-    borderRadius: 10,
-    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 10,
+    height: 50,
+    justifyContent: 'center',
     marginTop: 10,
   },
   verifyButtonText: {
@@ -387,21 +421,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  resendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  resendText: {
-    fontSize: 16,
-    marginRight: 5,
-  },
-  resendLink: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  countdownText: {
-    fontSize: 16,
-  },
-}); 
+});

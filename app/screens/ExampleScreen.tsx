@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  ActivityIndicator, 
-  TouchableOpacity, 
-  SafeAreaView
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNetworkStatus } from '../components/NetworkStatus/NetworkStatusProvider';
@@ -37,18 +37,18 @@ const ExampleScreen = () => {
 
     setIsLoading(true);
     setHasError(false);
-    
+
     try {
       // محاكاة طلب API
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // بيانات تجريبية
       const data: Item[] = Array.from({ length: 20 }, (_, i) => ({
         id: `item-${i + 1}`,
         title: `عنوان العنصر ${i + 1}`,
-        description: `هذا وصف للعنصر رقم ${i + 1}. يوضح هذا النص محتوى العنصر ومعلوماته.`
+        description: `هذا وصف للعنصر رقم ${i + 1}. يوضح هذا النص محتوى العنصر ومعلوماته.`,
       }));
-      
+
       setItems(data);
     } catch (error) {
       // تسجيل الأخطاء في وضع التطوير فقط
@@ -76,14 +76,16 @@ const ExampleScreen = () => {
   const renderItem = ({ item }: { item: Item }) => (
     <View style={[styles.itemContainer, { backgroundColor: appColors.card }]}>
       <Text style={[styles.itemTitle, { color: appColors.text }]}>{item.title}</Text>
-      <Text style={[styles.itemDescription, { color: appColors.textSecondary }]}>{item.description}</Text>
+      <Text style={[styles.itemDescription, { color: appColors.textSecondary }]}>
+        {item.description}
+      </Text>
     </View>
   );
 
   // إذا لم يكن هناك اتصال بالإنترنت ولا توجد بيانات محملة مسبقاً
   if (!isConnected && items.length === 0) {
     return (
-      <NetworkStatusAlert 
+      <NetworkStatusAlert
         requiredForContent={true}
         customMessage={t('common.dataRequiresInternet')}
         onRetry={async () => {
@@ -101,14 +103,14 @@ const ExampleScreen = () => {
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
       {/* إذا كان الاتصال مفقوداً، لكن هناك بيانات معروضة بالفعل (تم تحميلها مسبقاً) */}
       {!isConnected && (
-        <NetworkStatusAlert 
+        <NetworkStatusAlert
           requiredForContent={false}
           customMessage={t('common.someFeaturesMayNotWork')}
         />
       )}
-      
+
       <Text style={[styles.title, { color: appColors.text }]}>{t('common.exampleScreen')}</Text>
-      
+
       {isLoading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={appColors.primary} />
@@ -118,10 +120,8 @@ const ExampleScreen = () => {
         </View>
       ) : hasError ? (
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, { color: appColors.error }]}>
-            {t('common.error')}
-          </Text>
-          <TouchableOpacity 
+          <Text style={[styles.errorText, { color: appColors.error }]}>{t('common.error')}</Text>
+          <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: appColors.primary }]}
             onPress={fetchData}
           >
@@ -141,8 +141,8 @@ const ExampleScreen = () => {
           }
         />
       )}
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={[styles.refreshButton, { backgroundColor: appColors.primary }]}
         onPress={fetchData}
       >
@@ -157,83 +157,83 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  title: {
-    fontSize: 24,
-    fontFamily: 'Cairo-Bold',
-    marginBottom: 16,
+  emptyText: {
+    fontFamily: 'Cairo-Medium',
+    fontSize: 16,
+    marginTop: 24,
     textAlign: 'center',
   },
-  listContent: {
-    flexGrow: 1,
-    paddingBottom: 16,
+  errorContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  errorText: {
+    fontFamily: 'Cairo-Medium',
+    fontSize: 16,
+    marginBottom: 16,
   },
   itemContainer: {
-    padding: 16,
-    marginBottom: 12,
     borderRadius: 8,
     elevation: 1,
+    marginBottom: 12,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
   },
-  itemTitle: {
-    fontSize: 18,
-    fontFamily: 'Cairo-Bold',
-    marginBottom: 8,
-  },
   itemDescription: {
-    fontSize: 14,
     fontFamily: 'Cairo-Regular',
+    fontSize: 14,
     lineHeight: 20,
   },
+  itemTitle: {
+    fontFamily: 'Cairo-Bold',
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  listContent: {
+    flexGrow: 1,
+    paddingBottom: 16,
+  },
   loaderContainer: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   loadingText: {
+    fontFamily: 'Cairo-Medium',
+    fontSize: 16,
     marginTop: 16,
-    fontSize: 16,
-    fontFamily: 'Cairo-Medium',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    marginBottom: 16,
-    fontFamily: 'Cairo-Medium',
-  },
-  retryButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: 'Cairo-Bold',
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 24,
-    fontSize: 16,
-    fontFamily: 'Cairo-Medium',
   },
   refreshButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
     alignItems: 'center',
+    borderRadius: 8,
     marginTop: 16,
+    paddingVertical: 12,
   },
   refreshButtonText: {
     color: '#fff',
-    fontSize: 16,
     fontFamily: 'Cairo-Bold',
+    fontSize: 16,
+  },
+  retryButton: {
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontFamily: 'Cairo-Bold',
+    fontSize: 16,
+  },
+  title: {
+    fontFamily: 'Cairo-Bold',
+    fontSize: 24,
+    marginBottom: 16,
+    textAlign: 'center',
   },
 });
 
-export default ExampleScreen; 
+export default ExampleScreen;

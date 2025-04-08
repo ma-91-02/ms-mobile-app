@@ -13,4 +13,4 @@ export default {
   contentPadding: normalize(16), // Standard content padding
   contentBottomPadding: normalize(95), // Bottom padding to clear the tab bar with extra space for separation
   tabBarTopInset: normalize(5), // Space between content and tab bar for visual separation
-}; 
+};

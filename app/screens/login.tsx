@@ -36,8 +36,11 @@ export default function LoginScreen() {
   console.log('Translation test - register now:', t('registerNow', { ns: 'auth' }));
   console.log('Current i18n namespaces:', i18n.options?.ns);
   console.log('Current i18n language:', i18n.language);
-  console.log('Translation test - enterPhoneAndPassword:', t('enterPhoneAndPassword', { ns: 'auth' }));
-  
+  console.log(
+    'Translation test - enterPhoneAndPassword:',
+    t('enterPhoneAndPassword', { ns: 'auth' }),
+  );
+
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -46,7 +49,11 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
       // استخدام نصوص ثابتة للتنبيهات مؤقتًا
-      console.log('Translation test - would use:', t('warning', { ns: 'common' }), t('enterPhoneAndPassword', { ns: 'auth' }));
+      console.log(
+        'Translation test - would use:',
+        t('warning', { ns: 'common' }),
+        t('enterPhoneAndPassword', { ns: 'auth' }),
+      );
       Alert.alert('تحذير', 'الرجاء إدخال رقم الهاتف وكلمة المرور');
       return;
     }
@@ -54,12 +61,12 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const response = await authAPI.login({ phoneNumber, password });
-      
+
       // حفظ بيانات المستخدم
       if (response && response.token) {
         await AsyncStorage.setItem('userToken', response.token);
         await AsyncStorage.setItem('userData', JSON.stringify(response.user));
-        
+
         // إعادة توجيه المستخدم إلى الصفحة الرئيسية
         router.replace('/(tabs)/ads');
       } else {
@@ -76,19 +83,24 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          <Text style={[styles.title, { color: appColors.text }]}>{t('login', { ns: 'common' })}</Text>
-          
+          <Text style={[styles.title, { color: appColors.text }]}>
+            {t('login', { ns: 'common' })}
+          </Text>
+
           <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: appColors.secondary,
-                color: appColors.text,
-              }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: appColors.secondary,
+                  color: appColors.text,
+                },
+              ]}
               placeholder={t('phoneNumber', { ns: 'common' })}
               placeholderTextColor={appColors.textSecondary}
               value={phoneNumber}
@@ -100,20 +112,20 @@ export default function LoginScreen() {
 
           <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: appColors.secondary,
-                color: appColors.text,
-              }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: appColors.secondary,
+                  color: appColors.text,
+                },
+              ]}
               placeholder={t('password', { ns: 'auth' })}
               placeholderTextColor={appColors.textSecondary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
             />
-            <TouchableOpacity 
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-            >
+            <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                 size={24}
@@ -134,7 +146,7 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.registerLink}
             onPress={() => router.push('/register' as any)}
           >
@@ -152,41 +164,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  keyboardView: {
-    flex: 1,
-  },
   content: {
     flex: 1,
-    padding: 20,
     justifyContent: 'center',
+    padding: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 30,
-    textAlign: 'center',
+  eyeIcon: {
+    left: 15,
+    position: 'absolute',
+    top: 13,
+  },
+  input: {
+    borderRadius: 10,
+    fontSize: 16,
+    height: 50,
+    paddingHorizontal: 15,
+    textAlign: 'right',
   },
   inputContainer: {
     marginBottom: 20,
     position: 'relative',
   },
-  input: {
-    height: 50,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    textAlign: 'right',
-  },
-  eyeIcon: {
-    position: 'absolute',
-    left: 15,
-    top: 13,
+  keyboardView: {
+    flex: 1,
   },
   loginButton: {
-    height: 50,
-    borderRadius: 10,
-    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 10,
+    height: 50,
+    justifyContent: 'center',
     marginTop: 10,
   },
   loginButtonText: {
@@ -195,10 +201,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   registerLink: {
-    marginTop: 20,
     alignItems: 'center',
+    marginTop: 20,
   },
   registerText: {
     fontSize: 16,
   },
-}); 
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+});

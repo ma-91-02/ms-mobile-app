@@ -47,36 +47,45 @@ const Input: React.FC<InputProps> = ({
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const getBorderColor = () => {
     if (error) return appColors.danger;
     if (success) return appColors.success;
     return appColors.border;
   };
-  
+
   return (
     <View style={styles.container}>
-      <Text style={[
-        styles.label,
-        { color: appColors.text },
-        { textAlign: isRTL ? 'right' : 'left' },
-        { fontFamily: 'Cairo-Medium' }
-      ]}>
-        {label} {optional && <Text style={{ color: appColors.textSecondary, fontFamily: 'Cairo-Regular' }}>({i18n.t('optional')})</Text>}
+      <Text
+        style={[
+          styles.label,
+          { color: appColors.text },
+          { textAlign: isRTL ? 'right' : 'left' },
+          { fontFamily: 'Cairo-Medium' },
+        ]}
+      >
+        {label}{' '}
+        {optional && (
+          <Text style={{ color: appColors.textSecondary, fontFamily: 'Cairo-Regular' }}>
+            ({i18n.t('optional')})
+          </Text>
+        )}
       </Text>
-      
-      <View style={[
-        styles.inputContainer,
-        { borderColor: getBorderColor(), backgroundColor: appColors.secondary },
-        { flexDirection: isRTL ? 'row-reverse' : 'row' }
-      ]}>
+
+      <View
+        style={[
+          styles.inputContainer,
+          { borderColor: getBorderColor(), backgroundColor: appColors.secondary },
+          { flexDirection: isRTL ? 'row-reverse' : 'row' },
+        ]}
+      >
         <TextInput
           ref={inputRef}
           style={[
             styles.input,
             { color: appColors.text },
             { textAlign: isRTL ? 'right' : 'left' },
-            { fontFamily: 'Cairo-Regular' }
+            { fontFamily: 'Cairo-Regular' },
           ]}
           placeholder={placeholder}
           placeholderTextColor={appColors.textSecondary}
@@ -92,14 +101,11 @@ const Input: React.FC<InputProps> = ({
           blurOnSubmit={blurOnSubmit}
           autoComplete="off"
           autoCorrect={false}
-          textContentType={secureTextEntry ? "oneTimeCode" : "none"}
+          textContentType={secureTextEntry ? 'oneTimeCode' : 'none'}
         />
-        
+
         {secureTextEntry && (
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.eyeButton}
-          >
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
             <Ionicons
               name={showPassword ? 'eye-off' : 'eye'}
               size={24}
@@ -107,19 +113,21 @@ const Input: React.FC<InputProps> = ({
             />
           </TouchableOpacity>
         )}
-        
+
         {success && !error && (
           <Ionicons name="checkmark-circle" size={20} color={appColors.success} />
         )}
       </View>
-      
+
       {error && (
-        <Text style={[
-          styles.errorText, 
-          { color: appColors.danger },
-          { textAlign: isRTL ? 'right' : 'left' },
-          { fontFamily: 'Cairo-Regular' }
-        ]}>
+        <Text
+          style={[
+            styles.errorText,
+            { color: appColors.danger },
+            { textAlign: isRTL ? 'right' : 'left' },
+            { fontFamily: 'Cairo-Regular' },
+          ]}
+        >
           {error}
         </Text>
       )}
@@ -132,31 +140,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     width: '100%',
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 6,
+  errorText: {
+    fontSize: 12,
+    marginTop: 4,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 50,
+  eyeButton: {
+    padding: 5,
   },
   input: {
     flex: 1,
     fontSize: 16,
     height: '100%',
   },
-  eyeButton: {
-    padding: 5,
+  inputContainer: {
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    height: 50,
+    paddingHorizontal: 12,
   },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 6,
   },
 });
 
-export default Input; 
+export default Input;

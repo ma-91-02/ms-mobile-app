@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Image,
-  Platform,
-  ActivityIndicator
-} from 'react-native';
+import { View, Text, StyleSheet, Image, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
@@ -43,7 +36,7 @@ const AdCard: React.FC<AdCardProps> = ({
   date,
   imageUrl,
   images,
-  status
+  status,
 }) => {
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
@@ -57,20 +50,25 @@ const AdCard: React.FC<AdCardProps> = ({
    */
   const getCategoryName = (cat: string) => {
     console.log('Getting category name for:', cat);
-    
+
     // إذا كانت الفئة رقمية (من واجهة المستخدم)
     if (cat === '1') return t('passport', { ns: 'common' });
     if (cat === '2') return t('nationalID', { ns: 'common' });
     if (cat === '3') return t('drivingLicense', { ns: 'common' });
     if (cat === '4') return t('otherDocuments', { ns: 'common' });
-    
+
     // وإلا استخدم النظام القديم (قيم API)
-    switch(cat) {
-      case 'passport': return t('passport', { ns: 'common' });
-      case 'national_id': return t('nationalID', { ns: 'common' });
-      case 'driving_license': return t('drivingLicense', { ns: 'common' });
-      case 'other': return t('otherDocuments', { ns: 'common' });
-      default: return cat;
+    switch (cat) {
+      case 'passport':
+        return t('passport', { ns: 'common' });
+      case 'national_id':
+        return t('nationalID', { ns: 'common' });
+      case 'driving_license':
+        return t('drivingLicense', { ns: 'common' });
+      case 'other':
+        return t('otherDocuments', { ns: 'common' });
+      default:
+        return cat;
     }
   };
 
@@ -89,19 +87,23 @@ const AdCard: React.FC<AdCardProps> = ({
    */
   const getCategoryIcon = () => {
     console.log('Getting category icon for:', category);
-    
+
     // دعم المعرفات الرقمية للفئات (من واجهة المستخدم)
     if (category === '1') return 'document-text-outline';
     if (category === '2') return 'card-outline';
     if (category === '3') return 'car-sport-outline';
     if (category === '4') return 'ellipsis-horizontal-outline';
-    
+
     // دعم قيم API
-    switch(category) {
-      case 'passport': return 'document-text-outline';
-      case 'national_id': return 'card-outline';
-      case 'driving_license': return 'car-sport-outline';
-      default: return 'ellipsis-horizontal-outline';
+    switch (category) {
+      case 'passport':
+        return 'document-text-outline';
+      case 'national_id':
+        return 'card-outline';
+      case 'driving_license':
+        return 'car-sport-outline';
+      default:
+        return 'ellipsis-horizontal-outline';
     }
   };
 
@@ -120,17 +122,17 @@ const AdCard: React.FC<AdCardProps> = ({
     if (images && images.length > 0) {
       // معالجة الصورة اعتمادًا على كونها مسارًا كاملًا أو جزئيًا
       const imagePath = images[0];
-      
+
       // التحقق مما إذا كان المسار يبدأ بـ /uploads
       if (imagePath.startsWith('/uploads')) {
         return `${API_BASE_URL}${imagePath}`;
       }
-      
+
       // التحقق مما إذا كان المسار يبدأ بـ http:// أو https://
       if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
         return `${API_BASE_URL}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
       }
-      
+
       return imagePath;
     }
 
@@ -140,12 +142,12 @@ const AdCard: React.FC<AdCardProps> = ({
       if (imageUrl.startsWith('/uploads')) {
         return `${API_BASE_URL}${imageUrl}`;
       }
-      
+
       // التحقق مما إذا كان المسار يبدأ بـ http:// أو https://
       if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
         return `${API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
       }
-      
+
       return imageUrl;
     }
 
@@ -158,13 +160,18 @@ const AdCard: React.FC<AdCardProps> = ({
    */
   const getStatusText = () => {
     if (!status) return null;
-    
-    switch(status) {
-      case 'pending': return t('pending', { ns: 'common' });
-      case 'approved': return t('approved', { ns: 'common' });
-      case 'rejected': return t('rejected', { ns: 'common' });
-      case 'resolved': return t('resolved', { ns: 'common' });
-      default: return status;
+
+    switch (status) {
+      case 'pending':
+        return t('pending', { ns: 'common' });
+      case 'approved':
+        return t('approved', { ns: 'common' });
+      case 'rejected':
+        return t('rejected', { ns: 'common' });
+      case 'resolved':
+        return t('resolved', { ns: 'common' });
+      default:
+        return status;
     }
   };
 
@@ -173,13 +180,18 @@ const AdCard: React.FC<AdCardProps> = ({
    */
   const getStatusColor = () => {
     if (!status) return '';
-    
-    switch(status) {
-      case 'pending': return appColors.warning;
-      case 'approved': return appColors.success;
-      case 'rejected': return appColors.error;
-      case 'resolved': return appColors.primary;
-      default: return appColors.textSecondary;
+
+    switch (status) {
+      case 'pending':
+        return appColors.warning;
+      case 'approved':
+        return appColors.success;
+      case 'rejected':
+        return appColors.error;
+      case 'resolved':
+        return appColors.primary;
+      default:
+        return appColors.textSecondary;
     }
   };
 
@@ -212,11 +224,7 @@ const AdCard: React.FC<AdCardProps> = ({
   const renderImagePlaceholder = () => {
     return (
       <View style={[styles.imagePlaceholder, { backgroundColor: appColors.border }]}>
-        <Ionicons 
-          name={getCategoryIcon()} 
-          size={60} 
-          color={appColors.textSecondary} 
-        />
+        <Ionicons name={getCategoryIcon()} size={60} color={appColors.textSecondary} />
       </View>
     );
   };
@@ -228,7 +236,7 @@ const AdCard: React.FC<AdCardProps> = ({
         {
           backgroundColor: appColors.secondary,
           borderColor: appColors.border,
-        }
+        },
       ]}
     >
       <View style={styles.cardContent}>
@@ -249,72 +257,41 @@ const AdCard: React.FC<AdCardProps> = ({
             )}
           </View>
         ) : (
-          <View style={styles.imageContainer}>
-            {renderImagePlaceholder()}
-          </View>
+          <View style={styles.imageContainer}>{renderImagePlaceholder()}</View>
         )}
-        
+
         <View style={styles.contentContainer}>
           <View style={[styles.tagRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-            <View
-              style={[
-                styles.typeTag,
-                { backgroundColor: getTypeColor() }
-              ]}
-            >
+            <View style={[styles.typeTag, { backgroundColor: getTypeColor() }]}>
               {getTypeIcon()}
               <Text style={styles.typeText}>
                 {type === 'lost' ? t('lost', { ns: 'common' }) : t('found', { ns: 'common' })}
               </Text>
             </View>
-            
-            <View style={[
-              styles.categoryTag,
-              { backgroundColor: appColors.primary }
-            ]}>
+
+            <View style={[styles.categoryTag, { backgroundColor: appColors.primary }]}>
               <Ionicons name={getCategoryIcon()} size={14} color="#fff" />
               <Text style={styles.categoryText}>{getCategoryName(category)}</Text>
             </View>
-            
+
             {status && (
-              <View style={[
-                styles.statusTag,
-                { backgroundColor: getStatusColor() }
-              ]}>
+              <View style={[styles.statusTag, { backgroundColor: getStatusColor() }]}>
                 <Text style={styles.statusText}>{getStatusText()}</Text>
               </View>
             )}
           </View>
-          
-          <Text 
-            style={[
-              styles.title,
-              { color: appColors.text }
-            ]}
-            numberOfLines={2}
-          >
+
+          <Text style={[styles.title, { color: appColors.text }]} numberOfLines={2}>
             {title}
           </Text>
-          
-          <Text 
-            style={[
-              styles.description,
-              { color: appColors.textSecondary }
-            ]}
-            numberOfLines={3}
-          >
+
+          <Text style={[styles.description, { color: appColors.textSecondary }]} numberOfLines={3}>
             {truncateDescription(description)}
           </Text>
-          
-          <View style={[
-            styles.footer,
-            { flexDirection: isRTL ? 'row-reverse' : 'row' }
-          ]}>
+
+          <View style={[styles.footer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
             <Ionicons name="time-outline" size={14} color={appColors.textSecondary} />
-            <Text style={[
-              styles.date,
-              { color: appColors.textSecondary }
-            ]}>
+            <Text style={[styles.date, { color: appColors.textSecondary }]}>
               {formatRelativeTime(date)}
             </Text>
           </View>
@@ -327,8 +304,8 @@ const AdCard: React.FC<AdCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     borderRadius: 10,
-    marginBottom: 16,
     borderWidth: 1,
+    marginBottom: 16,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
@@ -345,97 +322,97 @@ const styles = StyleSheet.create({
   cardContent: {
     flexDirection: 'row',
   },
-  imageContainer: {
-    width: 120,
-    height: 'auto',
-    position: 'relative',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    minHeight: 160,
-  },
-  imageLoadingContainer: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.1)',
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    minHeight: 160,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 12,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-    flexWrap: 'wrap',
-  },
-  typeTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  typeText: {
-    color: '#fff',
-    fontSize: 12,
-    marginLeft: 4,
-    fontWeight: '600',
-  },
   categoryTag: {
-    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 4,
+    flexDirection: 'row',
+    marginBottom: 4,
+    marginRight: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
-    marginRight: 8,
-    marginBottom: 4,
   },
   categoryText: {
     color: '#fff',
     fontSize: 12,
     marginLeft: 4,
   },
-  statusTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginBottom: 4,
+  contentContainer: {
+    flex: 1,
+    padding: 12,
   },
-  statusText: {
-    color: '#fff',
+  date: {
     fontSize: 12,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 6,
+    marginLeft: 4,
   },
   description: {
     fontSize: 14,
     marginBottom: 8,
   },
   footer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
-  date: {
+  image: {
+    height: '100%',
+    minHeight: 160,
+    width: '100%',
+  },
+  imageContainer: {
+    height: 'auto',
+    position: 'relative',
+    width: 120,
+  },
+  imageLoadingContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    height: '100%',
+    justifyContent: 'center',
+    position: 'absolute',
+    width: '100%',
+  },
+  imagePlaceholder: {
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'center',
+    minHeight: 160,
+    width: '100%',
+  },
+  statusTag: {
+    borderRadius: 4,
+    marginBottom: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  statusText: {
+    color: '#fff',
     fontSize: 12,
+    fontWeight: '600',
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  typeTag: {
+    alignItems: 'center',
+    borderRadius: 4,
+    flexDirection: 'row',
+    marginBottom: 4,
+    marginRight: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  typeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
     marginLeft: 4,
   },
 });
 
-export default AdCard; 
+export default AdCard;

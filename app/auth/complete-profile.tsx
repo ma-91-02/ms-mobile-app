@@ -31,7 +31,7 @@ const formatDateForAPI = (date: string): string => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return date;
   }
-  
+
   // محاولة تحويل التاريخ إلى تنسيق YYYY-MM-DD
   try {
     const dateObj = new Date(date);
@@ -53,9 +53,9 @@ export default function CompleteProfileScreen() {
   const { t } = useTranslation(['auth', 'common']);
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
   const params = useLocalSearchParams();
-  
+
   const phoneNumber = params.phoneNumber as string;
-  
+
   const [fullName, setFullName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -64,148 +64,148 @@ export default function CompleteProfileScreen() {
   const [birthDate, setBirthDate] = useState('1990-01-01');
   const [loading, setLoading] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  
+
   // حالة التحقق من الإدخال
   const [fullNameError, setFullNameError] = useState('');
   const [lastNameError, setLastNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
-  
+
   // حالة النجاح
   const [fullNameSuccess, setFullNameSuccess] = useState(false);
   const [lastNameSuccess, setLastNameSuccess] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [confirmPasswordSuccess, setConfirmPasswordSuccess] = useState(false);
-  
+
   // مراجع للحقول
   const lastNameRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
-  
+
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        setKeyboardVisible(true);
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setKeyboardVisible(false);
-      }
-    );
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
 
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
   }, []);
-  
+
   const validateFullName = (name: string) => {
     if (!name.trim()) {
       setFullNameError(t('pleaseEnterFirstName', { ns: 'auth' }));
       setFullNameSuccess(false);
       return false;
     }
-    
+
     if (name.trim().length < 2) {
       setFullNameError(t('firstNameTooShort', { ns: 'auth' }));
       setFullNameSuccess(false);
       return false;
     }
-    
+
     setFullNameError('');
     setFullNameSuccess(true);
     return true;
   };
-  
+
   const validateLastName = (name: string) => {
     if (!name.trim()) {
       setLastNameError(t('pleaseEnterLastName', { ns: 'auth' }));
       setLastNameSuccess(false);
       return false;
     }
-    
+
     if (name.trim().length < 2) {
       setLastNameError(t('lastNameTooShort', { ns: 'auth' }));
       setLastNameSuccess(false);
       return false;
     }
-    
+
     setLastNameError('');
     setLastNameSuccess(true);
     return true;
   };
-  
+
   const validateEmail = (email: string) => {
     if (!email.trim()) {
       setEmailError('');
       setEmailSuccess(false);
       return true;
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailError(t('invalidEmail', { ns: 'auth' }));
       setEmailSuccess(false);
       return false;
     }
-    
+
     setEmailError('');
     setEmailSuccess(true);
     return true;
   };
-  
+
   const validatePassword = (password: string) => {
     if (!password) {
       setPasswordError(t('pleaseEnterPassword', { ns: 'auth' }));
       setPasswordSuccess(false);
       return false;
     }
-    
+
     if (password.length < 6) {
       setPasswordError(t('passwordTooShort', { ns: 'auth' }));
       setPasswordSuccess(false);
       return false;
     }
-    
+
     setPasswordError('');
     setPasswordSuccess(true);
     return true;
   };
-  
+
   const validateConfirmPassword = (confirmPassword: string) => {
     if (!confirmPassword) {
       setConfirmPasswordError(t('pleaseConfirmPassword', { ns: 'auth' }));
       setConfirmPasswordSuccess(false);
       return false;
     }
-    
+
     if (confirmPassword !== password) {
       setConfirmPasswordError(t('passwordsDoNotMatch', { ns: 'auth' }));
       setConfirmPasswordSuccess(false);
       return false;
     }
-    
+
     setConfirmPasswordError('');
     setConfirmPasswordSuccess(true);
     return true;
   };
-  
+
   const validateForm = () => {
     const isFullNameValid = validateFullName(fullName);
     const isLastNameValid = validateLastName(lastName);
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
     const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
-    
-    return isFullNameValid && isLastNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid;
+
+    return (
+      isFullNameValid &&
+      isLastNameValid &&
+      isEmailValid &&
+      isPasswordValid &&
+      isConfirmPasswordValid
+    );
   };
-  
+
   const handleSubmit = async () => {
     try {
       // التحقق من الإدخال
@@ -213,36 +213,36 @@ export default function CompleteProfileScreen() {
         Alert.alert(t('error', { ns: 'common' }), t('pleaseEnterFirstName', { ns: 'auth' }));
         return;
       }
-      
+
       if (!lastName.trim()) {
         Alert.alert(t('error', { ns: 'common' }), t('pleaseEnterLastName', { ns: 'auth' }));
         return;
       }
-      
+
       if (password.length < 6) {
         Alert.alert(t('error', { ns: 'common' }), t('passwordTooShort', { ns: 'auth' }));
         return;
       }
-      
+
       if (password !== confirmPassword) {
         Alert.alert(t('error', { ns: 'common' }), t('passwordsDoNotMatch', { ns: 'auth' }));
         return;
       }
-      
+
       // إذا تم إدخال بريد إلكتروني، تحقق من صحته
       if (email.trim() && !validateEmail(email)) {
         Alert.alert(t('error', { ns: 'common' }), t('invalidEmail', { ns: 'auth' }));
         return;
       }
-      
+
       // اختيار تاريخ الميلاد إلزامي
       if (!birthDate) {
         Alert.alert(t('error', { ns: 'common' }), t('pleaseSelectBirthDate', { ns: 'auth' }));
         return;
       }
-      
+
       setLoading(true);
-      
+
       // تحضير بيانات المستخدم للإرسال
       const userData = {
         phoneNumber,
@@ -253,23 +253,26 @@ export default function CompleteProfileScreen() {
         confirmPassword,
         birthDate: formatDateForAPI(birthDate),
       };
-      
+
       console.log('Completing registration with data:', { ...userData, password: '***' });
-      
+
       // إرسال طلب إكمال التسجيل
       const response = await authAPI.completeRegistration(userData);
-      
+
       if (!response.success) {
-        Alert.alert(t('error', { ns: 'common' }), response.message || t('registrationFailed', { ns: 'auth' }));
+        Alert.alert(
+          t('error', { ns: 'common' }),
+          response.message || t('registrationFailed', { ns: 'auth' }),
+        );
         setLoading(false);
         return;
       }
-      
+
       console.log('Registration completed successfully');
-      
+
       // تعيين علامة اختيار اللغة
       await AsyncStorage.setItem('has-selected-language', 'true');
-      
+
       // الانتقال إلى الشاشة الرئيسية
       router.replace('/(tabs)/ads');
     } catch (error: any) {
@@ -279,57 +282,64 @@ export default function CompleteProfileScreen() {
       setLoading(false);
     }
   };
-  
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           headerShown: false,
           animation: 'slide_from_right',
-        }} 
+        }}
       />
-      
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={appColors.background} />
-      
-      <KeyboardAvoidingView 
+
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={appColors.background}
+      />
+
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: keyboardVisible ? 120 : 30 }
+            { paddingBottom: keyboardVisible ? 120 : 30 },
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={true}
         >
           <View style={styles.content}>
-            <TouchableOpacity 
-              style={[styles.backButton, { backgroundColor: appColors.secondary }]} 
+            <TouchableOpacity
+              style={[styles.backButton, { backgroundColor: appColors.secondary }]}
               onPress={() => router.back()}
               activeOpacity={0.7}
             >
-              <Ionicons 
-                name={isRTL ? "arrow-forward" : "arrow-back"} 
-                size={24} 
-                color={appColors.text} 
+              <Ionicons
+                name={isRTL ? 'arrow-forward' : 'arrow-back'}
+                size={24}
+                color={appColors.text}
               />
             </TouchableOpacity>
 
-            <Text style={[
-              styles.title, 
-              { color: appColors.text },
-              { textAlign: isRTL ? 'right' : 'left' }
-            ]}>
+            <Text
+              style={[
+                styles.title,
+                { color: appColors.text },
+                { textAlign: isRTL ? 'right' : 'left' },
+              ]}
+            >
               {t('completeProfile', { ns: 'auth' })}
             </Text>
-            
-            <Text style={[
-              styles.subtitle, 
-              { color: appColors.textSecondary },
-              { textAlign: isRTL ? 'right' : 'left' }
-            ]}>
+
+            <Text
+              style={[
+                styles.subtitle,
+                { color: appColors.textSecondary },
+                { textAlign: isRTL ? 'right' : 'left' },
+              ]}
+            >
               {t('completeProfileInfo', { ns: 'auth' })}
             </Text>
 
@@ -337,7 +347,7 @@ export default function CompleteProfileScreen() {
               <Input
                 label={t('firstName', { ns: 'auth' }) + ' *'}
                 value={fullName}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setFullName(text);
                   validateFullName(text);
                 }}
@@ -350,11 +360,11 @@ export default function CompleteProfileScreen() {
                 blurOnSubmit={false}
                 inputRef={null}
               />
-              
+
               <Input
                 label={t('lastName', { ns: 'auth' }) + ' *'}
                 value={lastName}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setLastName(text);
                   validateLastName(text);
                 }}
@@ -367,11 +377,11 @@ export default function CompleteProfileScreen() {
                 blurOnSubmit={false}
                 inputRef={lastNameRef}
               />
-              
+
               <Input
                 label={t('email', { ns: 'auth' })}
                 value={email}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setEmail(text);
                   validateEmail(text);
                 }}
@@ -386,11 +396,11 @@ export default function CompleteProfileScreen() {
                 blurOnSubmit={false}
                 inputRef={emailRef}
               />
-              
+
               <Input
                 label={t('password', { ns: 'auth' }) + ' *'}
                 value={password}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setPassword(text);
                   validatePassword(text);
                   if (confirmPassword) {
@@ -406,11 +416,11 @@ export default function CompleteProfileScreen() {
                 blurOnSubmit={false}
                 inputRef={passwordRef}
               />
-              
+
               <Input
                 label={t('confirmPassword', { ns: 'auth' }) + ' *'}
                 value={confirmPassword}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setConfirmPassword(text);
                   validateConfirmPassword(text);
                 }}
@@ -430,18 +440,20 @@ export default function CompleteProfileScreen() {
                 loading={loading}
                 disabled={loading}
                 type="primary"
-                icon={isRTL ? "arrow-back" : "arrow-forward"}
+                icon={isRTL ? 'arrow-back' : 'arrow-forward'}
                 iconPosition="right"
                 fullWidth={true}
                 style={{ marginTop: 24 }}
               />
-              
-              <Text style={[
-                styles.helpText,
-                { color: appColors.textSecondary },
-                { textAlign: 'center' },
-                { marginTop: 16 }
-              ]}>
+
+              <Text
+                style={[
+                  styles.helpText,
+                  { color: appColors.textSecondary },
+                  { textAlign: 'center' },
+                  { marginTop: 16 },
+                ]}
+              >
                 {t('registrationDisclaimer', { ns: 'auth' })}
               </Text>
             </View>
@@ -453,39 +465,25 @@ export default function CompleteProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 30,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    borderRadius: 20,
     elevation: 2,
+    height: 40,
+    justifyContent: 'center',
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.5,
+    width: 40,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  container: {
+    flex: 1,
   },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: 30,
-    lineHeight: 22,
+  content: {
+    flex: 1,
+    padding: 20,
   },
   formContainer: {
     width: '100%',
@@ -494,4 +492,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-}); 
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 30,
+  },
+  subtitle: {
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+});
