@@ -25,6 +25,7 @@ import AppColors from '../../constants/AppColors';
 import AdCard from '../components/AdCard';
 import { router } from 'expo-router';
 import useAdvertisements from '../hooks/useAdvertisements';
+import useResponsive from '../hooks/useResponsive';
 import { toCardItem, CATEGORY_IDS } from '../utils/adPresenter';
 
 // Define interfaces for type safety
@@ -191,6 +192,9 @@ export default function AdsScreen() {
   
   // تحديد ما إذا كانت اللغة الحالية هي RTL
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
+
+  // التخطيط يتبع عرض النافذة لا نوع الجهاز
+  const { columns, maxContentWidth } = useResponsive();
 
   // تحديث أنماط العناصر التي تتأثر باتجاه اللغة
   const rtlStyles = {
@@ -383,7 +387,11 @@ export default function AdsScreen() {
       </View>
       
       {/* Post Ad Button */}
-      <TouchableOpacity style={[styles.postAdButton, { backgroundColor: appColors.primary }]}>
+      {/* الزر كان بلا معالج ضغط إطلاقًا — لا شيء يحدث عند الضغط */}
+      <TouchableOpacity
+        style={[styles.postAdButton, { backgroundColor: appColors.primary }]}
+        onPress={() => router.push('/ad/create')}
+      >
         <Ionicons name="add" size={20} color="#fff" />
         <Text style={styles.postAdText}>{t('postAd')}</Text>
       </TouchableOpacity>
@@ -409,7 +417,15 @@ export default function AdsScreen() {
           data={visibleAds}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.adsListContainer}
+          // شبكة متعددة الأعمدة على اللوحي والحاسوب: عمود واحد بعرض
+          // شاشة عريضة يترك مساحة مهدورة وأسطرًا يصعب تتبّعها
+          key={`cols-${columns}`}
+          numColumns={columns}
+          columnWrapperStyle={columns > 1 ? { gap: 12 } : undefined}
+          contentContainerStyle={[
+            styles.adsListContainer,
+            { maxWidth: maxContentWidth, width: '100%', alignSelf: 'center' },
+          ]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -440,13 +456,15 @@ export default function AdsScreen() {
             ) : null
           }
           renderItem={({ item }) => (
-            <AdCard
-              item={item}
-              hasImageError={imageErrors[item.id]}
-              onImageError={() => handleImageError(item.id)}
-              placeholderIcon={getPlaceholderIcon(item.category)}
-              onPress={() => router.push(`/ad/${item.id}` as any)}
-            />
+            <View style={columns > 1 ? { flex: 1 / columns } : undefined}>
+              <AdCard
+                item={item}
+                hasImageError={imageErrors[item.id]}
+                onImageError={() => handleImageError(item.id)}
+                placeholderIcon={getPlaceholderIcon(item.category)}
+                onPress={() => router.push(`/ad/${item.id}` as any)}
+              />
+            </View>
           )}
         />
       )}
