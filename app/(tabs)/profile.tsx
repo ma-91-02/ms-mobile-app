@@ -131,7 +131,13 @@ export default function ProfileScreen() {
             <Text style={styles.loginButtonText}>{t('login')}</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.registerButton}>
+          {/* كان هذا الزرّ بلا `onPress` إطلاقًا: يظهر ويُضغط ولا
+              يفعل شيئًا. وهو مسار التسجيل الوحيد المعروض للزائر على
+              هذه الشاشة */}
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() => router.push('/auth/register')}
+          >
             <Text style={[styles.registerButtonText, { color: appColors.primary }]}>{t('createAccount')}</Text>
           </TouchableOpacity>
         </View>
