@@ -194,7 +194,7 @@ export default function AdsScreen() {
   const isRTL = RTL_LANGUAGES.includes(i18n.language);
 
   // التخطيط يتبع عرض النافذة لا نوع الجهاز
-  const { columns, maxContentWidth } = useResponsive();
+  const { columns, maxContentWidth, isPhone } = useResponsive();
 
   // تحديث أنماط العناصر التي تتأثر باتجاه اللغة
   const rtlStyles = {
@@ -311,6 +311,10 @@ export default function AdsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={appColors.background} />
+
+      {/* حاوية تحصر عرض الرأس والبحث والفلاتر مثل القائمة تمامًا،
+          وإلا امتدّ شريط البحث بعرض 1440 بكسل كاملًا على الحاسوب */}
+      <View style={{ width: '100%', maxWidth: maxContentWidth, alignSelf: 'center' }}>
       
       {/* Header */}
       <View style={[styles.header, { backgroundColor: appColors.background }]}>
@@ -386,15 +390,20 @@ export default function AdsScreen() {
         </ScrollView>
       </View>
       
+      </View>
+
       {/* Post Ad Button */}
-      {/* الزر كان بلا معالج ضغط إطلاقًا — لا شيء يحدث عند الضغط */}
-      <TouchableOpacity
-        style={[styles.postAdButton, { backgroundColor: appColors.primary }]}
-        onPress={() => router.push('/ad/create')}
-      >
-        <Ionicons name="add" size={20} color="#fff" />
-        <Text style={styles.postAdText}>{t('postAd')}</Text>
-      </TouchableOpacity>
+      {/* الزر العائم للهاتف فقط: على الحاسوب يحمل الرأس زرًا مطابقًا،
+          فوجودهما معًا تكرار بصري */}
+      {isPhone && (
+        <TouchableOpacity
+          style={[styles.postAdButton, { backgroundColor: appColors.primary }]}
+          onPress={() => router.push('/ad/create')}
+        >
+          <Ionicons name="add" size={20} color="#fff" />
+          <Text style={styles.postAdText}>{t('postAd')}</Text>
+        </TouchableOpacity>
+      )}
       
       {/* Ads List */}
       {loading ? (

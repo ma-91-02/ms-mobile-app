@@ -19,6 +19,7 @@ import CustomPhoneInput from '../components/CustomPhoneInput';
 import { useTheme } from '../context/ThemeContext';
 import AppColors from '../../constants/AppColors';
 import * as auth from '../services/auth';
+import Logo from '../components/Logo';
 import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
@@ -82,7 +83,8 @@ export default function LoginScreen() {
       >
         <View style={styles.content}>
           <View style={styles.logoContainer}>
-            {/* ... logo code ... */}
+            {/* كانت هذه الحاوية فارغة بتعليق نائب فلا يظهر شعار إطلاقًا */}
+            <Logo height={64} />
           </View>
           
           <View style={styles.formContainer}>
@@ -284,10 +286,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+  // كانت هذه الأنماط تعليقات نائبة فارغة، فيظهر النموذج بلا تنسيق
   logoContainer: {
-    // ... existing logo container styles ...
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 20,
   },
   formContainer: {
-    // ... existing form container styles ...
+    flex: 1,
+    width: '100%',
+    // يمنع تمدّد النموذج بعرض شاشة الحاسوب كاملةً
+    maxWidth: 460,
+    alignSelf: 'center',
   },
 }); 

@@ -8,6 +8,7 @@ import AppColors from '../../constants/AppColors';
 import { View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import InstallBanner from '../components/InstallBanner';
+import DesktopHeader from '../components/DesktopHeader';
 import useResponsive from '../hooks/useResponsive';
 
 /**
@@ -53,17 +54,23 @@ export default function TabLayout() {
         <InstallBanner />
       </SafeAreaView>
 
+      {/* رأس أفقي فوق نقطة الانكسار يحلّ محلّ التبويبات السفلية */}
+      <DesktopHeader />
+
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarStyle: {
-            backgroundColor: appColors.background,
-            borderTopColor: appColors.border,
-            borderTopWidth: 1,
-            height: CONTENT_HEIGHT + bottomInset,
-            paddingTop: VERTICAL_PADDING,
-            paddingBottom: VERTICAL_PADDING + bottomInset,
-          },
+          tabBarStyle: isPhone
+            ? {
+                backgroundColor: appColors.background,
+                borderTopColor: appColors.border,
+                borderTopWidth: 1,
+                height: CONTENT_HEIGHT + bottomInset,
+                paddingTop: VERTICAL_PADDING,
+                paddingBottom: VERTICAL_PADDING + bottomInset,
+              }
+            : // على الشاشات العريضة التنقّل في الرأس، فالشريط السفلي تكرار
+              { display: 'none' },
           tabBarLabelStyle: {
             fontSize: 12,
             lineHeight: LABEL_HEIGHT,

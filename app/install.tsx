@@ -15,6 +15,7 @@ import { useTheme } from './context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from './i18n';
 import AppColors from '../constants/AppColors';
 import useInstallPrompt, { detectPlatform } from './hooks/useInstallPrompt';
+import Logo from './components/Logo';
 
 /**
  * صفحة تثبيت التطبيق.
@@ -101,9 +102,8 @@ export default function InstallScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
-          <View style={[styles.appIcon, { backgroundColor: appColors.primary }]}>
-            <Ionicons name="document-text" size={44} color="#fff" />
-          </View>
+          {/* الشعار الحقيقي بدل أيقونة عامة — هذه أول صفحة يراها الزائر */}
+          <Logo height={72} />
           <Text style={[styles.title, { color: appColors.text }]}>{t('installTitle')}</Text>
           <Text style={[styles.subtitle, { color: appColors.textSecondary }]}>
             {t('installSubtitle')}

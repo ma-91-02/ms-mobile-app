@@ -20,6 +20,8 @@ import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
 import useResponsive from '../hooks/useResponsive';
+import Logo from '../components/Logo';
+import ImagePickerField, { PickedImage } from '../components/ImagePickerField';
 import * as ads from '../services/advertisements';
 import * as auth from '../services/auth';
 import type {
@@ -59,6 +61,7 @@ export default function CreateAdScreen() {
   const [description, setDescription] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [hideContact, setHideContact] = useState(true);
+  const [images, setImages] = useState<PickedImage[]>([]);
 
   useEffect(() => {
     Promise.all([auth.isAuthenticated(), ads.getConstants().catch(() => null)])
@@ -88,16 +91,19 @@ export default function CreateAdScreen() {
     try {
       setSubmitting(true);
 
-      await ads.createAdvertisement({
-        type,
-        category: category!,
-        governorate: governorate!,
-        description: description.trim(),
-        contactPhone: contactPhone.trim(),
-        ownerName: ownerName.trim() || undefined,
-        itemNumber: itemNumber.trim() || undefined,
-        hideContactInfo: hideContact,
-      });
+      await ads.createAdvertisement(
+        {
+          type,
+          category: category!,
+          governorate: governorate!,
+          description: description.trim(),
+          contactPhone: contactPhone.trim(),
+          ownerName: ownerName.trim() || undefined,
+          itemNumber: itemNumber.trim() || undefined,
+          hideContactInfo: hideContact,
+        },
+        images
+      );
 
       Alert.alert(t('done'), t('adPendingReview'), [
         { text: t('ok'), onPress: () => router.replace('/(tabs)/ads') },
@@ -201,6 +207,10 @@ export default function CreateAdScreen() {
               />
             </TouchableOpacity>
             <Text style={[styles.title, { color: appColors.text }]}>{t('postAd')}</Text>
+            {/* الشعار يثبّت هوية الصفحة، خصوصًا حين تُفتح من رابط مباشر */}
+            <View style={{ flex: 1, alignItems: isRTL ? 'flex-start' : 'flex-end' }}>
+              <Logo height={30} />
+            </View>
           </View>
 
           {/* نوع الإعلان أول سؤال لأنه يغيّر معنى بقية الحقول */}
@@ -300,6 +310,9 @@ export default function CreateAdScreen() {
             placeholderTextColor={appColors.textSecondary}
             keyboardType="phone-pad"
           />
+
+          <Text style={[styles.label, { color: appColors.text }, align]}>{t('photos')}</Text>
+          <ImagePickerField images={images} onChange={setImages} max={5} />
 
           <View
             style={[

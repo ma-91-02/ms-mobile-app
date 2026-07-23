@@ -20,6 +20,7 @@ import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
 import * as auth from '../services/auth';
+import Logo from '../components/Logo';
 
 /**
  * إنشاء حساب.
@@ -130,6 +131,10 @@ export default function RegisterScreen() {
               color={appColors.text}
             />
           </TouchableOpacity>
+
+          <View style={{ alignItems: 'center', marginBottom: 18 }}>
+            <Logo height={54} />
+          </View>
 
           <Text style={[styles.title, { color: appColors.text }]}>{t('createAccount')}</Text>
           <Text style={[styles.subtitle, { color: appColors.textSecondary }]}>

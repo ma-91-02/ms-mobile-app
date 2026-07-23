@@ -11,6 +11,11 @@ export const RTL_LANGUAGES = ['ar', 'ku'];
 const resources = {
   en: {
     translation: {
+      photos: 'Photos',
+      addPhoto: 'Add photo',
+      imagesHint: 'Up to {{count}} photos. A clear photo of the document greatly helps identification.',
+      maxImagesReached: 'You can attach up to {{count}} photos',
+      galleryPermissionDenied: 'Gallery access is required to attach photos',
       myAdsDescription: 'View and manage the ads you posted',
       favoritesDescription: 'Ads you saved to come back to',
       notificationsDescription: 'Matches and contact request updates',
@@ -225,6 +230,11 @@ const resources = {
   },
   ar: {
     translation: {
+      photos: 'الصور',
+      addPhoto: 'إضافة صورة',
+      imagesHint: 'حتى {{count}} صور. صورة واضحة للمستمسك تساعد كثيرًا في التعرّف عليه.',
+      maxImagesReached: 'يمكنك إرفاق {{count}} صور كحدّ أقصى',
+      galleryPermissionDenied: 'يلزم الإذن بالوصول إلى الصور لإرفاقها',
       myAdsDescription: 'اعرض إعلاناتك المنشورة وأدرها',
       favoritesDescription: 'الإعلانات التي حفظتها للرجوع إليها',
       notificationsDescription: 'المطابقات وتحديثات طلبات التواصل',
@@ -439,6 +449,11 @@ const resources = {
   },
   ku: {
     translation: {
+      photos: 'وێنەکان',
+      addPhoto: 'زیادکردنی وێنە',
+      imagesHint: 'تا {{count}} وێنە. وێنەیەکی ڕوون زۆر یارمەتیدەرە.',
+      maxImagesReached: 'دەتوانیت تا {{count}} وێنە هاوپێچ بکەیت',
+      galleryPermissionDenied: 'مۆڵەتی گەلەری پێویستە',
       myAdsDescription: 'ڕیکلامە بڵاوکراوەکانت ببینە و بەڕێوەیان ببە',
       favoritesDescription: 'ئەو ڕیکلامانەی پاشەکەوتت کردوون',
       notificationsDescription: 'دۆزینەوەکان و نوێکارییەکانی داواکاری پەیوەندی',
