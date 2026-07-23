@@ -10,7 +10,6 @@ import { View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import InstallBanner from '../components/InstallBanner';
 import DesktopHeader from '../components/DesktopHeader';
-import TabHeader from '../components/TabHeader';
 import useResponsive from '../hooks/useResponsive';
 
 /**
@@ -58,9 +57,6 @@ export default function TabLayout() {
 
       {/* رأس أفقي فوق نقطة الانكسار يحلّ محلّ التبويبات السفلية */}
       <DesktopHeader />
-
-      {/* رأس بالشعار على الهاتف — الحاسوب يعرضه في DesktopHeader */}
-      <TabHeader />
 
       <Tabs
         screenOptions={{
