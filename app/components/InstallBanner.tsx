@@ -71,7 +71,7 @@ export default function InstallBanner() {
       style={[
         styles.banner,
         { backgroundColor: appColors.primary },
-        { flexDirection: isRTL ? 'row-reverse' : 'row' },
+        { flexDirection: 'row' },
       ]}
     >
       <Ionicons name="phone-portrait-outline" size={22} color="#fff" />

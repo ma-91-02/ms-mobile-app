@@ -8,6 +8,7 @@ import useDirection from '../hooks/useDirection';
 import useResponsive from '../hooks/useResponsive';
 import AppColors from '../../constants/AppColors';
 import Logo from './Logo';
+import ScreenHeader from './ScreenHeader';
 
 /**
  * هيكل مشترك للصفحات القانونية.
@@ -38,25 +39,14 @@ export default function LegalPage({ title, updatedAt, intro, sections }: Props) 
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
+      <ScreenHeader trailing={<Logo height={28} />} style={{ paddingHorizontal: gutter, maxWidth: maxContentWidth, width: '100%', alignSelf: 'center' }} />
+
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          {
-            paddingHorizontal: gutter,
-            maxWidth: maxContentWidth,
-            width: '100%',
-            alignSelf: 'center',
-          },
+          { paddingHorizontal: gutter, maxWidth: maxContentWidth, width: '100%', alignSelf: 'center' },
         ]}
       >
-        <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name={backIcon} size={24} color={appColors.text} />
-          </TouchableOpacity>
-          <View style={{ flex: 1, alignItems: isRTL ? 'flex-start' : 'flex-end' }}>
-            <Logo height={28} />
-          </View>
-        </View>
 
         <Text style={[styles.title, { color: appColors.text }, align]}>{title}</Text>
         <Text style={[styles.updated, { color: appColors.textSecondary }, align]}>

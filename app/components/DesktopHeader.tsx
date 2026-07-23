@@ -65,7 +65,7 @@ export default function DesktopHeader() {
           {
             maxWidth: maxContentWidth,
             paddingHorizontal: gutter,
-            flexDirection: isRTL ? 'row-reverse' : 'row',
+            flexDirection: 'row',
           },
         ]}
       >
@@ -73,7 +73,7 @@ export default function DesktopHeader() {
           <Logo height={38} />
         </Pressable>
 
-        <View style={[styles.nav, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        <View style={[styles.nav, { flexDirection: 'row' }]}>
           {NAV.map((item) => {
             const active = isActive(item.href);
             return (
@@ -82,7 +82,7 @@ export default function DesktopHeader() {
                 onPress={() => router.push(item.href as any)}
                 style={[
                   styles.navItem,
-                  { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                  { flexDirection: 'row' },
                   active && { backgroundColor: appColors.secondary },
                 ]}
               >
@@ -105,7 +105,7 @@ export default function DesktopHeader() {
           })}
         </View>
 
-        <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        <View style={[styles.actions, { flexDirection: 'row' }]}>
           <TouchableOpacity
             style={[styles.cta, { backgroundColor: appColors.primary }]}
             onPress={() => router.push('/ad/create')}

@@ -310,10 +310,11 @@ const styles = StyleSheet.create({
   profileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    // gap على الصفّ بدل هامش منطقي: react-native-web لا يترجم
+    // marginInlineStart/End داخل StyleSheet فتنعدم المسافة في العربية
+    gap: 16,
   },
-  avatarContainer: {
-    marginInlineEnd: 16,
-  },
+  avatarContainer: {},
   avatar: {
     width: 80,
     height: 80,
@@ -355,6 +356,7 @@ const styles = StyleSheet.create({
   editProfileButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
@@ -364,7 +366,6 @@ const styles = StyleSheet.create({
   },
   editProfileText: {
     color: '#fff',
-    marginInlineStart: 6,
     fontSize: 14,
   },
   
@@ -376,6 +377,7 @@ const styles = StyleSheet.create({
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
     padding: 16,
     borderRadius: 12,
     shadowColor: '#000',
@@ -390,7 +392,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginInlineEnd: 16,
   },
   optionInfo: {
     flex: 1,

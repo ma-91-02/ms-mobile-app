@@ -74,12 +74,12 @@ export default function ImagePickerField({ images, onChange, max = 5 }: Props) {
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.grid, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+      <View style={[styles.grid, { flexDirection: 'row' }]}>
         {images.map((img) => (
           <View key={img.uri} style={styles.thumbWrapper}>
             <Image source={{ uri: img.uri }} style={styles.thumb} />
             <TouchableOpacity
-              style={styles.removeBadge}
+              style={[styles.removeBadge, isRTL ? { left: -6 } : { right: -6 }]}
               onPress={() => remove(img.uri)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
@@ -121,7 +121,6 @@ const styles = StyleSheet.create({
   removeBadge: {
     position: 'absolute',
     top: -6,
-    insetInlineEnd: -6,
     backgroundColor: '#E8563F',
     width: 24,
     height: 24,

@@ -87,7 +87,7 @@ export default function CountryPicker({ value, onChange }: Props) {
   return (
     <>
       <TouchableOpacity
-        style={[styles.trigger, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+        style={[styles.trigger, { flexDirection: 'row' }]}
         onPress={() => setOpen(true)}
       >
         <Text style={styles.flag}>{flagEmoji(value.code)}</Text>
@@ -98,7 +98,7 @@ export default function CountryPicker({ value, onChange }: Props) {
       <Modal visible={open} animationType="slide" transparent>
         <View style={styles.overlay}>
           <View style={[styles.sheet, { backgroundColor: appColors.background }]}>
-            <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.header, { flexDirection: 'row' }]}>
               <Text style={[styles.title, { color: appColors.text }]}>
                 {t('selectCountry')}
               </Text>
@@ -111,7 +111,7 @@ export default function CountryPicker({ value, onChange }: Props) {
               style={[
                 styles.searchBox,
                 { backgroundColor: appColors.secondary },
-                { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                { flexDirection: 'row' },
               ]}
             >
               <Ionicons name="search-outline" size={20} color={appColors.textSecondary} />
@@ -150,7 +150,7 @@ export default function CountryPicker({ value, onChange }: Props) {
                   <TouchableOpacity
                     style={[
                       styles.row,
-                      { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                      { flexDirection: 'row' },
                       selected && { backgroundColor: appColors.secondary },
                     ]}
                     onPress={() => handleSelect(item)}

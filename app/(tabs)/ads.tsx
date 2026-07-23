@@ -119,7 +119,7 @@ const SearchBar = ({ searchQuery, setSearchQuery, appColors, isRTL, t }: SearchB
     <View style={[
       styles.searchContainer, 
       { backgroundColor: appColors.secondary },
-      { flexDirection: isRTL ? 'row-reverse' : 'row' }
+      { flexDirection: 'row' }
     ]}>
       <Ionicons 
         name="search-outline" 
@@ -199,7 +199,7 @@ export default function AdsScreen() {
 
   // تحديث أنماط العناصر التي تتأثر باتجاه اللغة
   const rtlStyles = {
-    flexDirection: isRTL ? 'row-reverse' : 'row',
+    flexDirection: 'row',
     textAlign: isRTL ? 'right' : 'left',
   };
 
@@ -275,7 +275,7 @@ export default function AdsScreen() {
         <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
           <View style={[
             styles.modalHeader,
-            { flexDirection: isRTL ? 'row-reverse' : 'row' }
+            { flexDirection: 'row' }
           ]}>
             <Text style={[styles.modalTitle, { color: appColors.text }]}>
               {t('selectProvince')}
@@ -398,7 +398,12 @@ export default function AdsScreen() {
           فوجودهما معًا تكرار بصري */}
       {isPhone && (
         <TouchableOpacity
-          style={[styles.postAdButton, { backgroundColor: appColors.primary }]}
+          style={[
+            styles.postAdButton,
+            { backgroundColor: appColors.primary },
+            // الزر العائم في الركن الخلفي: يسارًا في العربية ويمينًا في الإنجليزية
+            isRTL ? { left: 16 } : { right: 16 },
+          ]}
           onPress={() => router.push('/ad/create')}
         >
           <Ionicons name="add" size={20} color="#fff" />
@@ -543,13 +548,15 @@ const styles = StyleSheet.create({
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    // gap على الصفّ بدل هامش منطقي: react-native-web لا يترجم
+    // marginInlineStart/End داخل StyleSheet فتنعدم المسافة في العربية
+    gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    marginInlineEnd: 8,
+    marginHorizontal: 4,
     borderRadius: 16,
   },
   filterButtonText: {
-    marginInlineStart: 4,
     fontSize: 14,
   },
   modalContainer: {
@@ -585,8 +592,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
     position: 'absolute',
-    insetInlineEnd: 16,
     bottom: 16,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -600,7 +607,6 @@ const styles = StyleSheet.create({
   },
   postAdText: {
     color: '#fff',
-    marginInlineStart: 6,
     fontWeight: '600',
   },
   adsListContainer: {

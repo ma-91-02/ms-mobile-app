@@ -25,6 +25,7 @@ import { createContactRequest, addFavorite } from '../services';
 import * as auth from '../services/auth';
 import { toImageUrl, relativeTime } from '../utils/adPresenter';
 import type { Advertisement } from '../types/api';
+import ScreenHeader from '../components/ScreenHeader';
 
 /**
  * تفاصيل الإعلان.
@@ -104,6 +105,8 @@ export default function AdDetailsScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
+        <ScreenHeader title={t('adDetails')} style={{ paddingHorizontal: gutter }} />
+
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={appColors.primary} />
         </View>
@@ -114,6 +117,8 @@ export default function AdDetailsScreen() {
   if (error || !ad) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
+        <ScreenHeader title={t('adDetails')} style={{ paddingHorizontal: gutter }} />
+
         <View style={styles.centered}>
           <Ionicons name="alert-circle-outline" size={64} color={appColors.textSecondary} />
           <Text style={[styles.emptyText, { color: appColors.text }]}>
@@ -144,22 +149,14 @@ export default function AdDetailsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
+      <ScreenHeader title={t('adDetails')} style={{ paddingHorizontal: gutter, maxWidth: maxContentWidth, width: '100%', alignSelf: 'center' }} />
+
       <ScrollView
         contentContainerStyle={[
           styles.content,
           { paddingHorizontal: gutter, maxWidth: maxContentWidth, width: '100%', alignSelf: 'center' },
         ]}
       >
-        <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons
-              name={isRTL ? 'arrow-forward' : 'arrow-back'}
-              size={24}
-              color={appColors.text}
-            />
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: appColors.text }]}>{t('adDetails')}</Text>
-        </View>
 
         {imageUrl ? (
           <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
@@ -170,7 +167,7 @@ export default function AdDetailsScreen() {
         )}
 
         {/* شارة النوع — أول ما يجب أن يفهمه القارئ */}
-        <View style={[styles.badgeRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        <View style={[styles.badgeRow, { flexDirection: 'row' }]}>
           <View
             style={[
               styles.badge,
@@ -194,7 +191,7 @@ export default function AdDetailsScreen() {
             .map((row) => (
               <View
                 key={row.label}
-                style={[styles.row, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+                style={[styles.row, { flexDirection: 'row' }]}
               >
                 <Ionicons name={row.icon} size={18} color={appColors.primary} />
                 <Text style={[styles.rowLabel, { color: appColors.textSecondary }]}>
@@ -216,7 +213,7 @@ export default function AdDetailsScreen() {
 
         {/* بيانات التواصل: مخفية حتى توافق الإدارة على الطلب */}
         <View style={[styles.card, { backgroundColor: appColors.secondary }]}>
-          <View style={[styles.row, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <View style={[styles.row, { flexDirection: 'row' }]}>
             <Ionicons name="call-outline" size={18} color={appColors.primary} />
             <Text style={[styles.rowValue, { color: appColors.text }, align]}>
               {ad.contactPhone}
@@ -278,7 +275,7 @@ export default function AdDetailsScreen() {
               textAlignVertical="top"
             />
 
-            <View style={[styles.modalActions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.modalActions, { flexDirection: 'row' }]}>
               <TouchableOpacity
                 style={[styles.secondaryButton, { borderColor: appColors.border, flex: 1 }]}
                 onPress={() => setRequestOpen(false)}

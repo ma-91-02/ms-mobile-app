@@ -69,7 +69,7 @@ export default function PhoneField({
       style={[
         styles.container,
         { backgroundColor: appColors.secondary },
-        { flexDirection: isRTL ? 'row-reverse' : 'row' },
+        { flexDirection: 'row' },
         containerStyle,
       ]}
     >

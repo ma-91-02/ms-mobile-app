@@ -14,7 +14,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const APP_DIR = path.join(__dirname, '..', 'app');
+const ROOT = path.join(__dirname, '..');
+const APP_DIR = path.join(ROOT, 'app');
 const I18N_FILE = path.join(APP_DIR, 'i18n.ts');
 const LANGUAGES = ['en', 'ar', 'ku'];
 
@@ -94,6 +95,36 @@ for (const lang of LANGUAGES) {
   console.log(`[${lang}] ${keys.size} مفتاحًا`);
   report(`${lang} — مفاتيح مستخدمة وغير معرّفة`, [...usedKeys].filter((k) => !keys.has(k)).sort());
   report(`${lang} — قيم تعدادات غير مترجَمة`, ENUM_VALUES.filter((v) => !keys.has(v)));
+}
+
+/**
+ * تهيئة i18next يجب أن تكون واحدة فقط.
+ *
+ * كان في المستودع ملف `translations/i18n.ts` يستدعي `.init()` ثانيةً على
+ * المفرد نفسه بموارد فارغة و`fallbackLng: 'en'`. ولأن `app/index.tsx`
+ * كان يستورده، فكل مستخدم يدخل من جذر الموقع — وهو الطريق الطبيعي —
+ * يُقلع بالإنجليزية واتجاه LTR مهما كانت لغته المحفوظة. عطب صامت لا
+ * يظهر إلا بقياس `document.documentElement.dir`، ولا تكشفه فحوص
+ * المفاتيح. هذا الحارس يمنع عودته.
+ */
+const initSites = [];
+const scanInits = (dir) => {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) scanInits(full);
+    else if (/\.tsx?$/.test(entry.name)) {
+      const src = fs.readFileSync(full, 'utf8');
+      if (/\.init\(\s*\{/.test(src) && /i18next|i18n\b/.test(src)) initSites.push(full);
+    }
+  }
+};
+scanInits(ROOT);
+
+if (initSites.length > 1) {
+  failed = true;
+  console.error(`\n  ✗ تهيئة i18next مكرّرة في ${initSites.length} ملفات:`);
+  for (const f of initSites) console.error(`      ${path.relative(ROOT, f)}`);
 }
 
 if (failed) {

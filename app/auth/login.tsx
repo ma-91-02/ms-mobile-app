@@ -23,6 +23,8 @@ import Logo from '../components/Logo';
 import { useTranslation } from 'react-i18next';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import useDirection from '../hooks/useDirection';
+import useResponsive from '../hooks/useResponsive';
+import ScreenHeader from '../components/ScreenHeader';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -31,6 +33,7 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   // المحاذاة تتبع اللغة المختارة لا العربية دائمًا
   const { isRTL } = useDirection();
+  const { gutter } = useResponsive();
   const align = { textAlign: (isRTL ? 'right' : 'left') as 'right' | 'left' };
 
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -86,22 +89,16 @@ export default function LoginScreen() {
         style={styles.container}
       >
         <View style={styles.content}>
+          {/* الرأس أعلى الشاشة دائمًا وبلا حشوة علوية، فيقع على الارتفاع
+              نفسه في كل شاشة */}
+          <ScreenHeader style={{ paddingHorizontal: gutter }} />
+
           <View style={styles.logoContainer}>
             {/* كانت هذه الحاوية فارغة بتعليق نائب فلا يظهر شعار إطلاقًا */}
             <Logo height={64} />
           </View>
           
-          <View style={styles.formContainer}>
-            <TouchableOpacity 
-              style={[styles.backButton, { backgroundColor: appColors.secondary }]} 
-              onPress={() => router.back()}
-            >
-              <Ionicons 
-                name={isRTL ? 'arrow-forward' : 'arrow-back'} 
-                size={24} 
-                color={appColors.text} 
-              />
-            </TouchableOpacity>
+          <View style={[styles.formContainer, { paddingHorizontal: gutter }]}>
 
             <Text style={[styles.title, { color: appColors.text }, align]}>{t('login')}</Text>
             
@@ -142,8 +139,8 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
-              <TouchableOpacity 
-                style={styles.eyeIcon}
+              <TouchableOpacity
+                style={[styles.eyeIcon, isRTL ? { left: 15 } : { right: 15 }]}
                 onPress={() => setShowPassword(!showPassword)}
               >
                 <Ionicons
@@ -200,7 +197,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
+    paddingBottom: 20,
   },
   backButton: {
     width: 40,
@@ -227,8 +224,7 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     position: 'absolute',
-    // insetInlineStart يتبع اتجاه الصفحة تلقائيًا بدل يسار ثابت
-    insetInlineStart: 15,
+    // الجانب يُمرَّر inline من الاتجاه: نهاية الحقل لا بدايته
     top: 13,
   },
   loginButton: {

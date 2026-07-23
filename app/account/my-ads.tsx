@@ -20,6 +20,7 @@ import useResponsive from '../hooks/useResponsive';
 import { getMyAdvertisements } from '../services/advertisements';
 import { relativeTime } from '../utils/adPresenter';
 import type { Advertisement } from '../types/api';
+import ScreenHeader from '../components/ScreenHeader';
 
 /**
  * إعلانات المستخدم.
@@ -64,21 +65,7 @@ export default function MyAdsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <View
-        style={[
-          styles.header,
-          { flexDirection: isRTL ? 'row-reverse' : 'row', paddingHorizontal: gutter },
-        ]}
-      >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons
-            name={isRTL ? 'arrow-forward' : 'arrow-back'}
-            size={24}
-            color={appColors.text}
-          />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: appColors.text }]}>{t('my_ads')}</Text>
-      </View>
+      <ScreenHeader title={t('my_ads')} style={{ paddingHorizontal: gutter }} />
 
       {loading ? (
         <View style={styles.centered}>
@@ -135,7 +122,7 @@ export default function MyAdsScreen() {
               ]}
               onPress={() => router.push(`/ad/${item.id}` as any)}
             >
-              <View style={[styles.cardTop, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+              <View style={[styles.cardTop, { flexDirection: 'row' }]}>
                 <Text style={[styles.cardTitle, { color: appColors.text }]} numberOfLines={1}>
                   {t(item.type === 'lost' ? 'lostItem' : 'foundItem')} — {t(item.category)}
                 </Text>

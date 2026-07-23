@@ -121,7 +121,7 @@ export default function InstallScreen() {
           ].map((benefit) => (
             <View
               key={benefit.icon}
-              style={[styles.benefitRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+              style={[styles.benefitRow, { flexDirection: 'row' }]}
             >
               <Ionicons name={benefit.icon} size={20} color={appColors.primary} />
               <Text
@@ -168,7 +168,7 @@ export default function InstallScreen() {
               style={[
                 styles.stepRow,
                 { backgroundColor: appColors.secondary },
-                { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                { flexDirection: 'row' },
               ]}
             >
               <View style={[styles.stepNumber, { backgroundColor: appColors.primary }]}>

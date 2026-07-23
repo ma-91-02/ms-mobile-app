@@ -110,7 +110,7 @@ export default function Settings() {
     const Wrapper: any = onPress ? TouchableOpacity : View;
     return (
       <Wrapper
-        style={[styles.row, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+        style={[styles.row, { flexDirection: 'row' }]}
         onPress={onPress}
       >
         <Ionicons name={icon} size={24} color={appColors.primary} />
@@ -282,7 +282,7 @@ export default function Settings() {
                   key={option.code}
                   style={[
                     styles.option,
-                    { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                    { flexDirection: 'row' },
                     selected && { backgroundColor: appColors.secondary },
                   ]}
                   onPress={() => handleSelectLanguage(option.code)}
@@ -328,7 +328,7 @@ export default function Settings() {
               {t('resetLanguageConfirm')}
             </Text>
 
-            <View style={[styles.dialogActions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.dialogActions, { flexDirection: 'row' }]}>
               <TouchableOpacity
                 style={[styles.dialogButton, { borderColor: appColors.border }]}
                 onPress={() => setResetOpen(false)}

@@ -24,6 +24,7 @@ import {
 } from '../services';
 import { relativeTime } from '../utils/adPresenter';
 import type { Notification } from '../types/api';
+import ScreenHeader from '../components/ScreenHeader';
 
 /**
  * الإشعارات.
@@ -96,27 +97,19 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <View
-        style={[
-          styles.header,
-          { flexDirection: isRTL ? 'row-reverse' : 'row', paddingHorizontal: gutter },
-        ]}
-      >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons
-            name={isRTL ? 'arrow-forward' : 'arrow-back'}
-            size={24}
-            color={appColors.text}
-          />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: appColors.text }]}>{t('notifications')}</Text>
-
-        {unread > 0 && (
-          <TouchableOpacity onPress={handleMarkAll}>
-            <Text style={[styles.markAll, { color: appColors.primary }]}>{t('markAllRead')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <ScreenHeader
+        title={t('notifications')}
+        style={{ paddingHorizontal: gutter }}
+        trailing={
+          unread > 0 ? (
+            <TouchableOpacity onPress={handleMarkAll}>
+              <Text style={[styles.markAll, { color: appColors.primary }]}>
+                {t('markAllRead')}
+              </Text>
+            </TouchableOpacity>
+          ) : null
+        }
+      />
 
       {loading ? (
         <View style={styles.centered}>
@@ -165,7 +158,7 @@ export default function NotificationsScreen() {
                   borderStartWidth: 3,
                   borderStartColor: appColors.primary,
                 },
-                { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                { flexDirection: 'row' },
               ]}
               onPress={() => handleOpen(item)}
             >

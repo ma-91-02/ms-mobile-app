@@ -372,6 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
     minWidth: 100,
   },
   nextButtonText: {
@@ -380,7 +381,5 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
-  nextButtonIcon: {
-    marginInlineStart: 8,
-  },
+  nextButtonIcon: {},
 }); 

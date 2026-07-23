@@ -21,6 +21,7 @@ import AdCard from '../components/AdCard';
 import { getFavorites, removeFavorite } from '../services';
 import { toCardItem, CATEGORY_TO_ID } from '../utils/adPresenter';
 import type { Advertisement } from '../types/api';
+import ScreenHeader from '../components/ScreenHeader';
 
 /** الإعلانات التي حفظها المستخدم */
 export default function FavoritesScreen() {
@@ -66,21 +67,7 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <View
-        style={[
-          styles.header,
-          { flexDirection: isRTL ? 'row-reverse' : 'row', paddingHorizontal: gutter },
-        ]}
-      >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons
-            name={isRTL ? 'arrow-forward' : 'arrow-back'}
-            size={24}
-            color={appColors.text}
-          />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: appColors.text }]}>{t('favorites')}</Text>
-      </View>
+      <ScreenHeader title={t('favorites')} style={{ paddingHorizontal: gutter }} />
 
       {loading ? (
         <View style={styles.centered}>

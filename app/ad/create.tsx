@@ -25,6 +25,7 @@ import Logo from '../components/Logo';
 import ImagePickerField, { PickedImage } from '../components/ImagePickerField';
 import * as ads from '../services/advertisements';
 import * as auth from '../services/auth';
+import ScreenHeader from '../components/ScreenHeader';
 import type {
   AdvertisementType,
   ItemCategory,
@@ -119,6 +120,8 @@ export default function CreateAdScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
+        <ScreenHeader title={t('postAd')} style={{ paddingHorizontal: gutter }} />
+
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={appColors.primary} />
         </View>
@@ -130,6 +133,10 @@ export default function CreateAdScreen() {
   if (!authed) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
+        {/* الرأس هنا أيضًا: بدونه تصبح البوّابة طريقًا مسدودًا لا مخرج
+            منه إلا تسجيل الدخول */}
+        <ScreenHeader title={t('postAd')} style={{ paddingHorizontal: gutter }} />
+
         <View style={styles.centered}>
           <Ionicons name="lock-closed-outline" size={64} color={appColors.textSecondary} />
           <Text style={[styles.emptyTitle, { color: appColors.text }]}>
@@ -162,7 +169,7 @@ export default function CreateAdScreen() {
     value: T | null;
     onChange: (v: T) => void;
   }) => (
-    <View style={[styles.chips, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+    <View style={[styles.chips, { flexDirection: 'row' }]}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -195,6 +202,14 @@ export default function CreateAdScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        {/* الرأس خارج ScrollView: يبقى ثابتًا عند التمرير وعلى الارتفاع
+            نفسه في كل شاشة بدل أن يرث حشوة المحتوى */}
+        <ScreenHeader
+          title={t('postAd')}
+          trailing={<Logo height={28} />}
+          style={{ paddingHorizontal: gutter, maxWidth: maxContentWidth, width: '100%', alignSelf: 'center' }}
+        />
+
         <ScrollView
           contentContainerStyle={[
             styles.content,
@@ -202,24 +217,10 @@ export default function CreateAdScreen() {
           ]}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons
-                name={isRTL ? 'arrow-forward' : 'arrow-back'}
-                size={24}
-                color={appColors.text}
-              />
-            </TouchableOpacity>
-            <Text style={[styles.title, { color: appColors.text }]}>{t('postAd')}</Text>
-            {/* الشعار يثبّت هوية الصفحة، خصوصًا حين تُفتح من رابط مباشر */}
-            <View style={{ flex: 1, alignItems: isRTL ? 'flex-start' : 'flex-end' }}>
-              <Logo height={30} />
-            </View>
-          </View>
 
           {/* نوع الإعلان أول سؤال لأنه يغيّر معنى بقية الحقول */}
           <Text style={[styles.label, { color: appColors.text }, align]}>{t('adType')}</Text>
-          <View style={[styles.typeRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <View style={[styles.typeRow, { flexDirection: 'row' }]}>
             {(['lost', 'found'] as AdvertisementType[]).map((option) => {
               const selected = type === option;
               return (
@@ -322,7 +323,7 @@ export default function CreateAdScreen() {
             style={[
               styles.switchRow,
               { backgroundColor: appColors.secondary },
-              { flexDirection: isRTL ? 'row-reverse' : 'row' },
+              { flexDirection: 'row' },
             ]}
           >
             <View style={{ flex: 1 }}>

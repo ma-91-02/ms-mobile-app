@@ -2,6 +2,15 @@ import { useTranslation } from 'react-i18next';
 import { RTL_LANGUAGES } from '../i18n';
 
 /**
+ * ملاحظة اتجاه: لا نعكس `flexDirection` يدويًا.
+ *
+ * الوثيقة تحمل `dir="rtl"` في الواجهة العربية، والمتصفّح يعكس ترتيب
+ * الصفوف تلقائيًا؛ فإضافة `row-reverse` فوق ذلك تعكسها مرة ثانية
+ * وتُعيدها للاتجاه اللاتيني. وعلى الجوال يقوم `I18nManager` بالدور نفسه.
+ * لذا `flexDirection: 'row'` وحده هو الصحيح على المنصّتين.
+ */
+
+/**
  * اتجاه الواجهة حسب اللغة المختارة.
  *
  * الشاشات كانت تحسبه بـ `RTL_LANGUAGES.includes(i18n.language)` مباشرةً
@@ -29,7 +38,7 @@ export const useDirection = (): Direction => {
 
   return {
     isRTL,
-    row: isRTL ? 'row-reverse' : 'row',
+    row: 'row',
     textAlign: isRTL ? 'right' : 'left',
     alignItems: isRTL ? 'flex-end' : 'flex-start',
     backIcon: isRTL ? 'arrow-forward' : 'arrow-back',

@@ -46,7 +46,7 @@ export default function AdCard({
       style={[
         styles.adCard,
         { backgroundColor: appColors.secondary },
-        { flexDirection: isRTL ? 'row-reverse' : 'row' }
+        { flexDirection: 'row' }
       ]}
       onPress={onPress}
     >
@@ -90,11 +90,11 @@ export default function AdCard({
         </Text>
         <View style={[
           styles.adDetails,
-          { flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8 }
+          { flexDirection: 'row', gap: 8 }
         ]}>
           <View style={[
             styles.adLocation,
-            { flexDirection: isRTL ? 'row-reverse' : 'row' }
+            { flexDirection: 'row' }
           ]}>
             <Ionicons name="location-outline" size={14} color={appColors.textSecondary} />
             <Text style={[

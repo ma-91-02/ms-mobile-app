@@ -19,9 +19,11 @@ import PhoneField, { isValidPhone } from '../components/PhoneField';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import useDirection from '../hooks/useDirection';
+import useResponsive from '../hooks/useResponsive';
 import AppColors from '../../constants/AppColors';
 import * as auth from '../services/auth';
 import Logo from '../components/Logo';
+import ScreenHeader from '../components/ScreenHeader';
 
 /**
  * إنشاء حساب.
@@ -38,6 +40,7 @@ export default function RegisterScreen() {
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const { isRTL } = useDirection();
+  const { gutter } = useResponsive();
 
 
   const [configLoading, setConfigLoading] = useState(true);
@@ -123,14 +126,9 @@ export default function RegisterScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        <ScreenHeader style={[styles.headerBar, { paddingHorizontal: gutter }]} />
+
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity style={styles.back} onPress={() => router.back()}>
-            <Ionicons
-              name={isRTL ? 'arrow-forward' : 'arrow-back'}
-              size={24}
-              color={appColors.text}
-            />
-          </TouchableOpacity>
 
           <View style={{ alignItems: 'center', marginBottom: 18 }}>
             <Logo height={54} />
@@ -228,7 +226,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   // النموذج لا يتمدّد بعرض شاشة الحاسوب — يبقى بعرض مقروء متوسَّطًا
-  content: { padding: 20, paddingBottom: 40, width: '100%', maxWidth: 480, alignSelf: 'center' },
+  headerBar: { width: '100%', maxWidth: 480, alignSelf: 'center' },
+  content: { paddingHorizontal: 20, paddingBottom: 40, width: '100%', maxWidth: 480, alignSelf: 'center' },
   back: { marginBottom: 12 },
   title: { fontSize: 26, fontWeight: 'bold', marginBottom: 6 },
   subtitle: { fontSize: 14, marginBottom: 22, lineHeight: 20 },
