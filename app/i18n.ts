@@ -11,6 +11,8 @@ export const RTL_LANGUAGES = ['ar', 'ku'];
 const resources = {
   en: {
     translation: {
+      phoneNumber: 'Phone number',
+      password: 'Password',
       photos: 'Photos',
       addPhoto: 'Add photo',
       imagesHint: 'Up to {{count}} photos. A clear photo of the document greatly helps identification.',
@@ -230,6 +232,8 @@ const resources = {
   },
   ar: {
     translation: {
+      phoneNumber: 'رقم الهاتف',
+      password: 'كلمة المرور',
       photos: 'الصور',
       addPhoto: 'إضافة صورة',
       imagesHint: 'حتى {{count}} صور. صورة واضحة للمستمسك تساعد كثيرًا في التعرّف عليه.',
@@ -449,6 +453,8 @@ const resources = {
   },
   ku: {
     translation: {
+      phoneNumber: 'ژمارەی مۆبایل',
+      password: 'وشەی نهێنی',
       photos: 'وێنەکان',
       addPhoto: 'زیادکردنی وێنە',
       imagesHint: 'تا {{count}} وێنە. وێنەیەکی ڕوون زۆر یارمەتیدەرە.',

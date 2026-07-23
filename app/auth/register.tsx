@@ -232,7 +232,8 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: 20, paddingBottom: 40 },
+  // النموذج لا يتمدّد بعرض شاشة الحاسوب — يبقى بعرض مقروء متوسَّطًا
+  content: { padding: 20, paddingBottom: 40, width: '100%', maxWidth: 480, alignSelf: 'center' },
   back: { marginBottom: 12 },
   title: { fontSize: 26, fontWeight: 'bold', marginBottom: 6 },
   subtitle: { fontSize: 14, marginBottom: 22, lineHeight: 20 },
