@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,16 @@ export default function LoginScreen() {
   const [formattedPhoneNumber, setFormattedPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  /** استعادة كلمة المرور تحتاج إيصال رمز برسالة — تُخفى ما لم يكن مفعّلًا */
+  const [otpAvailable, setOtpAvailable] = useState(false);
+
+  useEffect(() => {
+    auth
+      .getAuthConfig()
+      .then((config) => setOtpAvailable(config.otpRequired))
+      .catch(() => setOtpAvailable(false));
+  }, []);
   const [loading, setLoading] = useState(false);
 
   // تعديل مثال رقم الهاتف العراقي
@@ -151,15 +161,29 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* إضافة زر نسيت كلمة السر */}
-            <TouchableOpacity 
-              style={styles.forgotPasswordButton}
-              onPress={() => router.push('/auth/forgot-password')}
-            >
-              <Text style={[styles.forgotPasswordText, { color: appColors.primary }]}>
-                {t('forgotPassword')}
-              </Text>
-            </TouchableOpacity>
+            {/*
+              * «نسيت كلمة السر؟» كان يوجّه إلى `/auth/forgot-password`
+              * بلا ملف يقابله، فيسقط المستخدم على شاشة expo-router
+              * الافتراضية بالإنجليزية خارج تصميم التطبيق.
+              *
+              * الاستعادة مبنية في الخادم فعلًا، لكن إيصال الرمز يمرّ
+              * على `smsService` وهو محاكاة حتى يُربط مزوّد الرسائل.
+              * بناء الشاشة الآن يصنع مسارًا يبدو عاملًا ولا يصل الرمز
+              * فيه أبدًا — وهو أسوأ من رابط ميت.
+              *
+              * الرابط مربوط بقدرة الخادم المعلَنة: يظهر حين يصبح
+              * التحقّق بالرسائل مفعَّلًا، بلا تعديل في الكود.
+              */}
+            {otpAvailable && (
+              <TouchableOpacity 
+                style={styles.forgotPasswordButton}
+                onPress={() => router.push('/auth/forgot-password')}
+              >
+                <Text style={[styles.forgotPasswordText, { color: appColors.primary }]}>
+                  {t('forgotPassword')}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.loginButton, { backgroundColor: appColors.primary }]}

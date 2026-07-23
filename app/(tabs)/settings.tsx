@@ -20,6 +20,7 @@ import useDirection from '../hooks/useDirection';
 import useResponsive from '../hooks/useResponsive';
 import AppColors from '../../constants/AppColors';
 import { changeLanguage } from '../i18n';
+import { showAlert } from '../utils/alert';
 
 /**
  * الإعدادات.
@@ -86,9 +87,20 @@ export default function Settings() {
 
   const handleContact = async () => {
     const url = `mailto:${SUPPORT_EMAIL}`;
-    // على الويب قد لا يوجد عميل بريد مسجَّل، فنتحقق قبل الفتح
-    const supported = await Linking.canOpenURL(url).catch(() => false);
-    if (supported) Linking.openURL(url);
+    /*
+     * `canOpenURL` كانت تحرس هذا الاستدعاء، وهي تُرجع `false` دائمًا
+     * لـ `mailto:` على react-native-web لأنها لا تستطيع معرفة ما إذا
+     * كان للنظام عميل بريد. فكان الصفّ لا يفعل شيئًا إطلاقًا على
+     * الويب — وهو المنصّة التي يُستخدم فيها التطبيق.
+     *
+     * المحاولة مباشرةً هي الصحيح: المتصفّح يتولّى `mailto` بنفسه. وإن
+     * تعذّر، يُعرض العنوان كي ينسخه المستخدم بدل أن يبقى بلا حيلة.
+     */
+    try {
+      await Linking.openURL(url);
+    } catch {
+      showAlert(t('contactUs'), SUPPORT_EMAIL);
+    }
   };
 
   const chevron = isRTL ? 'chevron-back' : 'chevron-forward';
