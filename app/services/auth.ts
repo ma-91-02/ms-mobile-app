@@ -17,6 +17,37 @@ const persistSession = async (token: string, user: User) => {
   ]);
 };
 
+export interface AuthConfig {
+  /** حين يكون false يُتاح التسجيل المباشر بلا رمز تحقق */
+  otpRequired: boolean;
+  demoMode: boolean;
+}
+
+/**
+ * إعدادات المصادقة من الخادم.
+ *
+ * تُقرأ عند الإقلاع فتتكيّف الشاشات مع تشغيل التحقق أو إيقافه دون
+ * إعادة بناء التطبيق ونشره — والإيقاف هنا مؤقت ريثما يُربط مزوّد الرسائل.
+ */
+export const getAuthConfig = async (): Promise<AuthConfig> => {
+  const { data } = await client.get<{ success: boolean; data: AuthConfig }>('/auth/config');
+  return data.data;
+};
+
+/** تسجيل مباشر برقم وكلمة مرور — لا يقبله الخادم إلا حين OTP_REQUIRED=false */
+export const register = async (payload: {
+  phoneNumber: string;
+  password: string;
+  fullName: string;
+  lastName?: string;
+  email?: string;
+}): Promise<AuthResponse> => {
+  const { data } = await client.post<AuthResponse>('/auth/register', payload);
+
+  if (data.token) await persistSession(data.token, data.user);
+  return data;
+};
+
 export const sendOtp = async (
   phoneNumber: string,
   isRegistration = false
@@ -128,6 +159,8 @@ export const resetPassword = async (resetToken: string, newPassword: string) => 
 };
 
 export default {
+  getAuthConfig,
+  register,
   sendOtp,
   verifyOtp,
   completeRegistration,

@@ -11,6 +11,22 @@ export const RTL_LANGUAGES = ['ar', 'ku'];
 const resources = {
   en: {
     translation: {
+      // التسجيل وشريط التثبيت
+      alreadyHaveAccount: 'Already have an account? Sign in',
+      registerWithOtpHint: 'We will send a verification code to your phone number.',
+      registerDirectHint: 'Enter your details to create an account right away.',
+      fullName: 'Full name',
+      fullNameRequired: 'Please enter your full name',
+      confirmPassword: 'Confirm password',
+      passwordsDoNotMatch: 'Passwords do not match',
+      passwordTooShort: 'Password must be at least 6 characters',
+      invalidPhone: 'Invalid phone number',
+      sendCode: 'Send code',
+      alert: 'Notice',
+      error: 'Error',
+      install: 'Install',
+      installBannerTitle: 'Install the app',
+      installBannerSubtitle: 'Faster access, straight from your home screen',
       // صفحة التثبيت
       installTitle: 'Install مستمسكاتي',
       installSubtitle: 'Add the app to your home screen and use it like any other app — no app store needed.',
@@ -160,6 +176,22 @@ const resources = {
   },
   ar: {
     translation: {
+      // التسجيل وشريط التثبيت
+      alreadyHaveAccount: 'لديك حساب؟ سجّل الدخول',
+      registerWithOtpHint: 'سنرسل رمز تحقق إلى رقم هاتفك.',
+      registerDirectHint: 'أدخل بياناتك لإنشاء حسابك مباشرةً.',
+      fullName: 'الاسم الكامل',
+      fullNameRequired: 'يرجى إدخال الاسم الكامل',
+      confirmPassword: 'تأكيد كلمة المرور',
+      passwordsDoNotMatch: 'كلمتا المرور غير متطابقتين',
+      passwordTooShort: 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل',
+      invalidPhone: 'رقم الهاتف غير صحيح',
+      sendCode: 'إرسال الرمز',
+      alert: 'تنبيه',
+      error: 'خطأ',
+      install: 'تثبيت',
+      installBannerTitle: 'ثبّت التطبيق',
+      installBannerSubtitle: 'وصول أسرع من شاشتك الرئيسية مباشرةً',
       // صفحة التثبيت
       installTitle: 'ثبّت تطبيق مستمسكاتي',
       installSubtitle: 'أضف التطبيق إلى شاشتك الرئيسية واستخدمه كأي تطبيق آخر — دون الحاجة لمتجر.',
@@ -309,6 +341,22 @@ const resources = {
   },
   ku: {
     translation: {
+      // التسجيل وشريط التثبيت
+      alreadyHaveAccount: 'هەژمارت هەیە؟ بچۆ ژوورەوە',
+      registerWithOtpHint: 'کۆدی پشتڕاستکردنەوە بۆ ژمارەکەت دەنێرین.',
+      registerDirectHint: 'زانیارییەکانت بنووسە بۆ دروستکردنی هەژمار.',
+      fullName: 'ناوی تەواو',
+      fullNameRequired: 'تکایە ناوی تەواو بنووسە',
+      confirmPassword: 'دووپاتکردنەوەی وشەی نهێنی',
+      passwordsDoNotMatch: 'وشە نهێنییەکان وەک یەک نین',
+      passwordTooShort: 'وشەی نهێنی دەبێت لانیکەم ٦ پیت بێت',
+      invalidPhone: 'ژمارەی مۆبایل هەڵەیە',
+      sendCode: 'ناردنی کۆد',
+      alert: 'ئاگاداری',
+      error: 'هەڵە',
+      install: 'دامەزراندن',
+      installBannerTitle: 'ئەپەکە دابمەزرێنە',
+      installBannerSubtitle: 'دەستڕاگەیشتنی خێراتر لە ڕوونمای سەرەکییەوە',
       // صفحة التثبيت
       installTitle: 'ئەپی مستمسكاتی دابمەزرێنە',
       installSubtitle: 'ئەپەکە بۆ ڕوونمای سەرەکی زیاد بکە و وەک هەر ئەپێکی تر بەکاریبهێنە — بێ پێویست بە کۆگا.',
