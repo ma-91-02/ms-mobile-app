@@ -23,7 +23,10 @@ export const CATEGORY_TO_ID: Record<ItemCategory, string> = {
   other: '4',
 };
 
-/** الصور تعود كمسارات نسبية (`/uploads/...`) فتحتاج أصل الخادم */
+/**
+ * الصور تعود كمسارات نسبية (`/uploads/...`).
+ * حين يكون `API_BASE_URL` فارغًا (نطاق واحد على الويب) يبقى المسار نسبيًا.
+ */
 export const toImageUrl = (path?: string): string | null => {
   if (!path) return null;
   if (path.startsWith('http')) return path;

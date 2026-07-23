@@ -11,13 +11,25 @@ import { Platform } from 'react-native';
  *   - جهاز حقيقي على نفس الشبكة: http://<IP-جهازك>:3001
  *   - الإنتاج: https://api.example.com
  */
+const explicit = process.env.EXPO_PUBLIC_API_URL;
+
 const FALLBACK = Platform.select({
   // المحاكي في أندرويد يرى المضيف عبر هذا العنوان الخاص لا عبر localhost
   android: 'http://10.0.2.2:3001',
   default: 'http://localhost:3001',
 });
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || FALLBACK;
+/**
+ * على الويب في الإنتاج يكون التطبيق والخادم على نطاق واحد خلف بوابة
+ * واحدة، فالعنوان النسبي هو الصحيح: يلغي CORS تمامًا ويجعل الحزمة
+ * صالحة لأي نطاق دون إعادة بناء.
+ *
+ * المنصات الأصلية لا أصل لها تنسب إليه، فتبقى بحاجة لعنوان مطلق —
+ * ولهذا لا تُطبَّق القاعدة إلا على الويب.
+ */
+const sameOrigin = Platform.OS === 'web' && explicit === '';
+
+export const API_BASE_URL = sameOrigin ? '' : explicit || FALLBACK;
 
 export const MOBILE_API = `${API_BASE_URL}/api/mobile`;
 
