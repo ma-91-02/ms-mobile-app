@@ -21,6 +21,8 @@ import AppColors from '../../constants/AppColors';
 import * as auth from '../services/auth';
 import Logo from '../components/Logo';
 import { useTranslation } from 'react-i18next';
+import i18n, { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -28,6 +30,9 @@ export default function LoginScreen() {
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const phoneInput = useRef<any>(null);
   const { t } = useTranslation();
+  // المحاذاة تتبع اللغة المختارة لا العربية دائمًا
+  const { isRTL } = useDirection();
+  const align = { textAlign: (isRTL ? 'right' : 'left') as 'right' | 'left' };
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [formattedPhoneNumber, setFormattedPhoneNumber] = useState('');
@@ -43,7 +48,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
-      Alert.alert('تنبيه', 'الرجاء إدخال رقم الهاتف وكلمة المرور');
+      Alert.alert(t('alert'), t('enterPhoneAndPassword'));
       return;
     }
 
@@ -57,12 +62,12 @@ export default function LoginScreen() {
         await auth.login(formattedPhoneNumber, password);
         router.replace('/(tabs)/ads');
       } catch (error: any) {
-        Alert.alert('خطأ', error.message);
+        Alert.alert(t('error'), error.message);
       } finally {
         setLoading(false);
       }
     } else {
-      Alert.alert('خطأ', 'رقم الهاتف غير صحيح');
+      Alert.alert(t('error'), t('invalidPhone'));
     }
   };
 
@@ -93,13 +98,13 @@ export default function LoginScreen() {
               onPress={() => router.back()}
             >
               <Ionicons 
-                name="arrow-back" 
+                name={isRTL ? 'arrow-forward' : 'arrow-back'} 
                 size={24} 
                 color={appColors.text} 
               />
             </TouchableOpacity>
 
-            <Text style={[styles.title, { color: appColors.text }]}>تسجيل الدخول</Text>
+            <Text style={[styles.title, { color: appColors.text }, align]}>{t('login')}</Text>
             
             {/* تعديل مثال رقم الهاتف */}
             <TouchableOpacity 
@@ -108,7 +113,7 @@ export default function LoginScreen() {
             >
               <View style={styles.exampleContainer}>
                 <Text style={[styles.exampleLabel, { color: appColors.text }]}>
-                  مثال: رقم هاتف
+                  {t('phoneExample')}
                 </Text>
                 <Text style={[styles.exampleText, { color: appColors.text }]}>
                   <Text style={styles.phoneNumberExample}>780 30 18 150</Text>
@@ -128,11 +133,11 @@ export default function LoginScreen() {
 
             <View style={styles.inputContainer}>
               <TextInput
-                style={[styles.input, { 
+                style={[styles.input, {
                   backgroundColor: appColors.secondary,
                   color: appColors.text,
-                }]}
-                placeholder="كلمة المرور"
+                }, align]}
+                placeholder={t('password')}
                 placeholderTextColor={appColors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
@@ -156,7 +161,7 @@ export default function LoginScreen() {
               onPress={() => router.push('/auth/forgot-password')}
             >
               <Text style={[styles.forgotPasswordText, { color: appColors.primary }]}>
-                نسيت كلمة السر؟
+                {t('forgotPassword')}
               </Text>
             </TouchableOpacity>
 
@@ -168,7 +173,7 @@ export default function LoginScreen() {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.loginButtonText}>تسجيل الدخول</Text>
+                <Text style={styles.loginButtonText}>{t('login')}</Text>
               )}
             </TouchableOpacity>
 
@@ -177,7 +182,7 @@ export default function LoginScreen() {
               onPress={() => router.push('/auth/register')}
             >
               <Text style={[styles.registerText, { color: appColors.textSecondary }]}>
-                ليس لديك حساب؟ سجل الآن
+                {t('noAccountRegister')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -210,7 +215,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 30,
-    textAlign: 'right',
   },
   inputContainer: {
     marginBottom: 20,
@@ -221,11 +225,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
-    textAlign: 'right',
   },
   eyeIcon: {
     position: 'absolute',
-    left: 15,
+    // insetInlineStart يتبع اتجاه الصفحة تلقائيًا بدل يسار ثابت
+    insetInlineStart: 15,
     top: 13,
   },
   loginButton: {

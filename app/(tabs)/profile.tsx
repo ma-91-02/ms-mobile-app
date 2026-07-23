@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 import type { User } from '../types/api';
 import * as auth from '../services/auth';
@@ -19,7 +20,7 @@ export default function ProfileScreen() {
   const { theme, isDarkMode } = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userData, setUserData] = useState<User | null>(null);
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
   const [isLoading, setIsLoading] = useState(true);
   
   // استخدام ألوان التطبيق الجديدة
@@ -72,7 +73,7 @@ export default function ProfileScreen() {
       setUserData(null);
     } catch (err) {
       console.error('Error logging out:', err);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تسجيل الخروج');
+      Alert.alert(t('error'), t('logoutError'));
     }
   };
 
@@ -104,7 +105,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
         <View style={styles.loginPromptContainer}>
-          <Text style={[styles.loginTitle, { color: appColors.text }]}>جاري التحميل...</Text>
+          <Text style={[styles.loginTitle, { color: appColors.text }]}>{t('loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -311,7 +312,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarContainer: {
-    marginRight: 16,
+    marginInlineEnd: 16,
   },
   avatar: {
     width: 80,
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   },
   editProfileText: {
     color: '#fff',
-    marginLeft: 6,
+    marginInlineStart: 6,
     fontSize: 14,
   },
   
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginInlineEnd: 16,
   },
   optionInfo: {
     flex: 1,

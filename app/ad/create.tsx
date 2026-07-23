@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 import useResponsive from '../hooks/useResponsive';
 import Logo from '../components/Logo';
@@ -45,7 +46,7 @@ export default function CreateAdScreen() {
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
   const { maxContentWidth, gutter, isPhone } = useResponsive();
 
   const [constants, setConstants] = useState<AppConstants | null>(null);
@@ -176,8 +177,11 @@ export default function CreateAdScreen() {
               },
             ]}
           >
+            {/* التسمية تأتي من الخادم بالعربية دائمًا، فتظهر عربية في
+                الواجهة الإنجليزية. الخادم مصدر القيم الصالحة لا لغتها،
+                والترجمة تجري محليًا بمفاتيح i18n */}
             <Text style={{ color: selected ? '#fff' : appColors.text, fontSize: 14 }}>
-              {option.label}
+              {t(option.value)}
             </Text>
           </TouchableOpacity>
         );

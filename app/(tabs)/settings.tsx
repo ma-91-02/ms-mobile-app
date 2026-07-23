@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppColors from '../../constants/AppColors';
 import { I18nManager } from 'react-native';
@@ -31,7 +32,7 @@ const normalize = (size: number): number => {
 export default function Settings() {
   const { t, i18n } = useTranslation();
   const { isDarkMode, toggleTheme } = useTheme();
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
   
   // استخدام ألوان التطبيق الجديدة
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
     fontSize: normalize(16),
     fontWeight: '600',
     marginBottom: normalize(12),
-    marginLeft: normalize(12),
+    marginInlineStart: normalize(12),
   },
   card: {
     borderRadius: normalize(12),
@@ -261,7 +262,7 @@ const styles = StyleSheet.create({
     minHeight: normalize(50), // إضافة ارتفاع أدنى
   },
   settingIcon: {
-    marginRight: normalize(16),
+    marginInlineEnd: normalize(16),
     width: normalize(24),
     height: normalize(24),
   },
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1, // نترك ارتفاع الخط الفاصل ثابتاً
-    marginLeft: normalize(56),
+    marginInlineStart: normalize(56),
     opacity: 0.2, // تحسين مظهر الخط الفاصل
   },
 });

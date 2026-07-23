@@ -381,6 +381,6 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   nextButtonIcon: {
-    marginLeft: 8,
+    marginInlineStart: 8,
   },
 }); 

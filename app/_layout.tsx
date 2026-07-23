@@ -8,11 +8,15 @@ import { I18nextProvider } from 'react-i18next';
 import { View, I18nManager, Platform } from 'react-native';
 import { ThemeProvider } from './context/ThemeContext';
 import i18n, { loadSavedLanguage, RTL_LANGUAGES } from './i18n';
+import useDocumentDirection from './hooks/useDocumentDirection';
 
 // منع إخفاء شاشة السبلاش تلقائياً
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // يزامن اتجاه صفحة الويب مع اللغة — الثابت في index.html عربي دائمًا
+  useDocumentDirection();
+
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,

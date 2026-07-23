@@ -18,6 +18,7 @@ import { router } from 'expo-router';
 import PhoneInput from 'react-native-phone-number-input';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 import * as auth from '../services/auth';
 import Logo from '../components/Logo';
@@ -36,7 +37,7 @@ export default function RegisterScreen() {
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
 
   const phoneInput = useRef<PhoneInput>(null);
 

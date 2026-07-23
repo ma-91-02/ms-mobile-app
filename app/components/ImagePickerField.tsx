@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 
 /**
@@ -33,7 +34,7 @@ export default function ImagePickerField({ images, onChange, max = 5 }: Props) {
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
 
   const pick = async () => {
     if (images.length >= max) {

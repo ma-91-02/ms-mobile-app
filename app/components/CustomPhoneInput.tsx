@@ -4,6 +4,7 @@ import PhoneInput from 'react-native-phone-number-input';
 import { useTheme } from '../context/ThemeContext';
 import AppColors from '../../constants/AppColors';
 import { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import i18n from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -23,7 +24,7 @@ const CustomPhoneInput = ({
   value,
   onChangeText,
   onChangeFormattedText,
-  placeholder = 'رقم الهاتف',
+  placeholder,
   defaultCode = 'IQ',
   layout = 'first',
   containerStyle,
@@ -32,7 +33,7 @@ const CustomPhoneInput = ({
 }: CustomPhoneInputProps) => {
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
   
   // تطبيق التحويل للاتجاه في iOS فقط
   const transformStyle = Platform.OS === 'ios' && isRTL

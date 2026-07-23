@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 import useInstallPrompt from '../hooks/useInstallPrompt';
 
@@ -28,7 +29,7 @@ export default function InstallBanner() {
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
 
   const { canPrompt, isInstalled, promptInstall } = useInstallPrompt();
   const [dismissed, setDismissed] = useState(true); // نبدأ مخفيًا حتى نقرأ التخزين

@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTheme } from './context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from './i18n';
+import useDirection from './hooks/useDirection';
 import AppColors from '../constants/AppColors';
 import useInstallPrompt, { detectPlatform } from './hooks/useInstallPrompt';
 import Logo from './components/Logo';
@@ -40,7 +41,7 @@ export default function InstallScreen() {
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
 
   const { canPrompt, isInstalled, promptInstall } = useInstallPrompt();
   const [promptResult, setPromptResult] = useState<string | null>(null);

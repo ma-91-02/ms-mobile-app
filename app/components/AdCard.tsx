@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 
 interface AdCardProps {
@@ -38,7 +39,7 @@ export default function AdCard({
 }: AdCardProps) {
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
 
   return (
     <TouchableOpacity 
@@ -89,7 +90,7 @@ export default function AdCard({
         </Text>
         <View style={[
           styles.adDetails,
-          { flexDirection: isRTL ? 'row-reverse' : 'row' }
+          { flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8 }
         ]}>
           <View style={[
             styles.adLocation,
@@ -98,9 +99,7 @@ export default function AdCard({
             <Ionicons name="location-outline" size={14} color={appColors.textSecondary} />
             <Text style={[
               styles.adLocationText,
-              { color: appColors.textSecondary },
-              { marginLeft: isRTL ? 0 : 4 },
-              { marginRight: isRTL ? 4 : 0 }
+              { color: appColors.textSecondary }
             ]}>
               {item.location}
             </Text>
@@ -158,10 +157,12 @@ const styles = StyleSheet.create({
   adLocation: {
     flexDirection: 'row',
     alignItems: 'center',
+    // فجوة صريحة بين الأيقونة والنص بدل هامش اتجاهي
+    gap: 4,
+    flexShrink: 1,
   },
   adLocationText: {
     fontSize: 12,
-    marginLeft: 4,
   },
   adDate: {
     fontSize: 12,

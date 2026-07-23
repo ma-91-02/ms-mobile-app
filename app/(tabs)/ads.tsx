@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 import AdCard from '../components/AdCard';
 import { router } from 'expo-router';
@@ -191,7 +192,7 @@ export default function AdsScreen() {
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   
   // تحديد ما إذا كانت اللغة الحالية هي RTL
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
 
   // التخطيط يتبع عرض النافذة لا نوع الجهاز
   const { columns, maxContentWidth, isPhone } = useResponsive();
@@ -544,11 +545,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    marginRight: 8,
+    marginInlineEnd: 8,
     borderRadius: 16,
   },
   filterButtonText: {
-    marginLeft: 4,
+    marginInlineStart: 4,
     fontSize: 14,
   },
   modalContainer: {
@@ -585,7 +586,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
-    right: 16,
+    insetInlineEnd: 16,
     bottom: 16,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -599,7 +600,7 @@ const styles = StyleSheet.create({
   },
   postAdText: {
     color: '#fff',
-    marginLeft: 6,
+    marginInlineStart: 6,
     fontWeight: '600',
   },
   adsListContainer: {

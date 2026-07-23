@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { RTL_LANGUAGES } from '../i18n';
+import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 import { View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,7 +36,7 @@ const CONTENT_HEIGHT =
 export default function TabLayout() {
   const { t, i18n } = useTranslation();
   const { isDarkMode } = useTheme();
-  const isRTL = RTL_LANGUAGES.includes(i18n.language);
+  const { isRTL } = useDirection();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const insets = useSafeAreaInsets();
   const { isPhone } = useResponsive();
