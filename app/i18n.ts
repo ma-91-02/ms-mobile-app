@@ -11,6 +11,15 @@ export const RTL_LANGUAGES = ['ar', 'ku'];
 const resources = {
   en: {
     translation: {
+      myAdsDescription: 'View and manage the ads you posted',
+      favoritesDescription: 'Ads you saved to come back to',
+      notificationsDescription: 'Matches and contact request updates',
+      noAdsYet: 'You have not posted any advertisement yet',
+      noNotifications: 'No notifications yet',
+      noFavorites: 'You have not saved any advertisement yet',
+      markAllRead: 'Mark all as read',
+      removeFromFavorites: 'Remove from favorites',
+      featureComingSoon: 'This screen is not available yet',
       // شاشتا إنشاء الإعلان وتفاصيله
       adType: 'Advertisement type',
       documentType: 'Document type',
@@ -216,6 +225,15 @@ const resources = {
   },
   ar: {
     translation: {
+      myAdsDescription: 'اعرض إعلاناتك المنشورة وأدرها',
+      favoritesDescription: 'الإعلانات التي حفظتها للرجوع إليها',
+      notificationsDescription: 'المطابقات وتحديثات طلبات التواصل',
+      noAdsYet: 'لم تنشر أي إعلان بعد',
+      noNotifications: 'لا توجد إشعارات بعد',
+      noFavorites: 'لم تحفظ أي إعلان بعد',
+      markAllRead: 'تعليم الكل كمقروء',
+      removeFromFavorites: 'إزالة من المفضلة',
+      featureComingSoon: 'هذه الشاشة غير متاحة بعد',
       // شاشتا إنشاء الإعلان وتفاصيله
       adType: 'نوع الإعلان',
       documentType: 'نوع المستمسك',
@@ -421,6 +439,15 @@ const resources = {
   },
   ku: {
     translation: {
+      myAdsDescription: 'ڕیکلامە بڵاوکراوەکانت ببینە و بەڕێوەیان ببە',
+      favoritesDescription: 'ئەو ڕیکلامانەی پاشەکەوتت کردوون',
+      notificationsDescription: 'دۆزینەوەکان و نوێکارییەکانی داواکاری پەیوەندی',
+      noAdsYet: 'هێشتا هیچ ڕیکلامێکت بڵاو نەکردووەتەوە',
+      noNotifications: 'هێشتا هیچ ئاگادارکردنەوەیەک نییە',
+      noFavorites: 'هێشتا هیچ ڕیکلامێکت پاشەکەوت نەکردووە',
+      markAllRead: 'هەمووی وەک خوێندراوە دیاری بکە',
+      removeFromFavorites: 'لابردن لە دڵخوازەکان',
+      featureComingSoon: 'ئەم ڕوونمایە هێشتا بەردەست نییە',
       // شاشتا إنشاء الإعلان وتفاصيله
       adType: 'جۆری ڕیکلام',
       documentType: 'جۆری بەڵگەنامە',

@@ -76,12 +76,28 @@ export default function ProfileScreen() {
     }
   };
 
-  // Navigate to specific screens
+  /**
+   * التنقّل بين شاشات الحساب.
+   *
+   * كانت هذه الدالة تعرض تنبيه `Navigate to ...` بدل التنقّل، فالأزرار
+   * الثلاثة (إعلاناتي · المفضلة · الإشعارات) لا تفعل شيئًا عند الضغط.
+   * الشاشات غير المبنية بعد تُعلَن صراحةً بدل الصمت.
+   */
   const navigateTo = (screen: string) => {
-    // For demo purposes, just show an alert
-    Alert.alert('Navigation', `Navigate to ${screen}`);
-    // In a real app, you would navigate to the screen
-    // router.push(`/${screen}`);
+    const routes: Record<string, string> = {
+      'my-ads': '/account/my-ads',
+      favorites: '/account/favorites',
+      notifications: '/account/notifications',
+      'edit-profile': '/account/edit',
+    };
+
+    const target = routes[screen];
+    if (target) {
+      router.push(target as any);
+      return;
+    }
+
+    Alert.alert(t('alert'), t('featureComingSoon'));
   };
 
   if (isLoading) {
@@ -144,8 +160,11 @@ export default function ProfileScreen() {
             
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{userData?.fullName || 'User'}</Text>
-              <Text style={styles.userEmail}>{userData?.email || 'user@example.com'}</Text>
-              <Text style={styles.userPhone}>{userData?.phoneNumber || '+1 (123) 456-7890'}</Text>
+              {/* لا نعرض بريدًا وهميًا حين لا يكون للمستخدم بريد */}
+              {userData?.email ? (
+                <Text style={styles.userEmail}>{userData.email}</Text>
+              ) : null}
+              <Text style={styles.userPhone}>{userData?.phoneNumber}</Text>
             </View>
           </View>
           
@@ -168,7 +187,7 @@ export default function ProfileScreen() {
             <View style={styles.optionInfo}>
               <Text style={[styles.optionTitle, { color: appColors.text }]}>{t('my_ads')}</Text>
               <Text style={[styles.optionDescription, { color: appColors.textSecondary }]}>
-                View and manage your posted ads
+                {t('myAdsDescription')}
               </Text>
             </View>
             <Ionicons 
@@ -189,7 +208,7 @@ export default function ProfileScreen() {
             <View style={styles.optionInfo}>
               <Text style={[styles.optionTitle, { color: appColors.text }]}>{t('favorites')}</Text>
               <Text style={[styles.optionDescription, { color: appColors.textSecondary }]}>
-                Access your saved favorite ads
+                {t('favoritesDescription')}
               </Text>
             </View>
             <Ionicons 
@@ -210,7 +229,7 @@ export default function ProfileScreen() {
             <View style={styles.optionInfo}>
               <Text style={[styles.optionTitle, { color: appColors.text }]}>{t('notifications')}</Text>
               <Text style={[styles.optionDescription, { color: appColors.textSecondary }]}>
-                View all your notifications
+                {t('notificationsDescription')}
               </Text>
             </View>
             <Ionicons 
