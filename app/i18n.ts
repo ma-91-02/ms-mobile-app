@@ -11,6 +11,16 @@ export const RTL_LANGUAGES = ['ar', 'ku'];
 const resources = {
   en: {
     translation: {
+      editProfile: 'Edit profile',
+      saveChanges: 'Save changes',
+      phoneCannotChange: 'Your phone number is your login and cannot be changed',
+      emailOptional: 'Email (optional)',
+      addressOptional: 'Address (optional)',
+      changePassword: 'Change password',
+      newPassword: 'New password',
+      leaveBlankToKeep: 'Leave blank to keep your current password',
+      profileUpdated: 'Your profile has been updated',
+      profileUpdateFailed: 'Could not save your changes',
       selectCountry: 'Select country',
       searchCountryHint: 'Search by name or code',
       noCountryFound: 'No country matches your search',
@@ -272,6 +282,16 @@ const resources = {
   },
   ar: {
     translation: {
+      editProfile: 'تعديل الملف الشخصي',
+      saveChanges: 'حفظ التغييرات',
+      phoneCannotChange: 'رقم هاتفك هو معرّف دخولك ولا يمكن تغييره',
+      emailOptional: 'البريد الإلكتروني (اختياري)',
+      addressOptional: 'العنوان (اختياري)',
+      changePassword: 'تغيير كلمة المرور',
+      newPassword: 'كلمة المرور الجديدة',
+      leaveBlankToKeep: 'اتركه فارغًا للإبقاء على كلمة المرور الحالية',
+      profileUpdated: 'حُفظت التغييرات',
+      profileUpdateFailed: 'تعذّر حفظ التغييرات',
       selectCountry: 'اختر الدولة',
       searchCountryHint: 'ابحث بالاسم أو رمز الاتصال',
       noCountryFound: 'لا توجد دولة مطابقة لبحثك',
@@ -533,6 +553,16 @@ const resources = {
   },
   ku: {
     translation: {
+      editProfile: 'دەستکاری پرۆفایل',
+      saveChanges: 'پاشەکەوتکردنی گۆڕانکارییەکان',
+      phoneCannotChange: 'ژمارەی مۆبایلەکەت ناسنامەی چوونەژوورەوەتە و ناگۆڕدرێت',
+      emailOptional: 'ئیمەیل (ئارەزوومەندانە)',
+      addressOptional: 'ناونیشان (ئارەزوومەندانە)',
+      changePassword: 'گۆڕینی وشەی نهێنی',
+      newPassword: 'وشەی نهێنی نوێ',
+      leaveBlankToKeep: 'بەتاڵی بهێڵەرەوە بۆ پاراستنی وشەی نهێنی ئێستا',
+      profileUpdated: 'گۆڕانکارییەکان پاشەکەوتکران',
+      profileUpdateFailed: 'نەتوانرا گۆڕانکارییەکان پاشەکەوت بکرێن',
       selectCountry: 'وڵات هەڵبژێرە',
       searchCountryHint: 'بە ناو یان کۆد بگەڕێ',
       noCountryFound: 'هیچ وڵاتێک نەدۆزرایەوە',
