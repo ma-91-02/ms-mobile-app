@@ -1,293 +1,393 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert, StatusBar, Dimensions, Platform, PixelRatio, ScaledSize } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Switch,
+  ScrollView,
+  StatusBar,
+  Modal,
+  Linking,
+  Platform,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useTheme } from '../context/ThemeContext';
-import { RTL_LANGUAGES } from '../i18n';
-import useDirection from '../hooks/useDirection';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
+import useDirection from '../hooks/useDirection';
+import useResponsive from '../hooks/useResponsive';
 import AppColors from '../../constants/AppColors';
-import { I18nManager } from 'react-native';
 import { changeLanguage } from '../i18n';
 
-// دالة مساعدة لحساب الأبعاد النسبية
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-// نحسب العامل المقياسي بناءً على حجم الشاشة
-const scale = SCREEN_WIDTH / 320; // 320 هو العرض المرجعي لـ iPhone 4
-
-const normalize = (size: number): number => {
-  const newSize = size * scale;
-  if (Platform.OS === 'ios') {
-    return Math.round(PixelRatio.roundToNearestPixel(newSize));
-  }
-  return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
-};
-
 /**
- * شاشة الإعدادات
+ * الإعدادات.
+ *
+ * ما كان معطّلًا قبل هذه المراجعة:
+ *  - اختيار اللغة كان يعتمد على `Alert.alert` بثلاثة أزرار. React Native
+ *    Web يحوّل `Alert` إلى `window.alert` الذي لا يدعم إلا زرًا واحدًا
+ *    ويتجاهل مصفوفة الأزرار — فالضغط على «اللغة» لا يفعل شيئًا إطلاقًا
+ *    على الويب، وهي الميزة الأساسية في هذه الشاشة.
+ *  - خمسة عناصر من ثمانية بلا `onPress`: ملفي الشخصي · الإشعارات ·
+ *    سياسة الخصوصية · شروط الخدمة · اتصل بنا.
+ *
+ * النوافذ هنا `Modal` من React Native — تعمل على المنصات الثلاث بسلوك
+ * واحد، بخلاف `Alert`.
  */
+
+const SUPPORT_EMAIL = 'support@ms-bg.com';
+
+interface LanguageOption {
+  code: string;
+  /** اسم اللغة بلغتها — لا يُترجم عمدًا ليتعرّف عليه الناطق بها */
+  nativeName: string;
+}
+
+const LANGUAGES: LanguageOption[] = [
+  { code: 'ar', nativeName: 'العربية' },
+  { code: 'en', nativeName: 'English' },
+  { code: 'ku', nativeName: 'کوردی' },
+];
+
 export default function Settings() {
   const { t, i18n } = useTranslation();
   const { isDarkMode, toggleTheme } = useTheme();
   const { isRTL } = useDirection();
-  
-  // استخدام ألوان التطبيق الجديدة
+  const { maxContentWidth, gutter } = useResponsive();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  
-  const [isChangingLanguage, setIsChangingLanguage] = useState(false);
 
-  const handleLanguageChange = async (newLanguage: string) => {
-    if (isChangingLanguage) return;
-    
-    setIsChangingLanguage(true);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const currentLanguage =
+    LANGUAGES.find((l) => l.code === i18n.language)?.nativeName ?? 'English';
+
+  const handleSelectLanguage = async (code: string) => {
+    if (busy || code === i18n.language) {
+      setLanguageOpen(false);
+      return;
+    }
+    setBusy(true);
     try {
-      await changeLanguage(newLanguage);
-      
-      // إظهار رسالة نجاح
-      Alert.alert(
-        t('success'),
-        t('languageChanged'),
-        [{ text: t('ok') }]
-      );
-    } catch (error) {
-      console.error('Error changing language:', error);
-      Alert.alert(
-        t('error'),
-        t('languageChangeError'),
-        [{ text: t('ok') }]
-      );
+      await changeLanguage(code);
+      setLanguageOpen(false);
     } finally {
-      setIsChangingLanguage(false);
+      setBusy(false);
     }
   };
 
-  // Function to show language selection
-  const showLanguageSelection = () => {
-    Alert.alert(
-      t('language'),
-      t('selectLanguage'),
-      [
-        { text: 'English', onPress: () => handleLanguageChange('en') },
-        { text: 'العربية', onPress: () => handleLanguageChange('ar') },
-        { text: 'کوردی', onPress: () => handleLanguageChange('ku') },
-        { text: t('cancel'), style: 'cancel' }
-      ]
-    );
+  const handleResetLanguage = async () => {
+    setResetOpen(false);
+    // إعادة الاختيار تعني العودة لشاشة اللغة الأولى
+    router.replace('/language-select');
   };
-  
-  // Function to reset language selection
-  const resetLanguageSelection = () => {
-    Alert.alert(
-      t('resetLanguageTitle'),
-      t('resetLanguageMessage'),
-      [
-        {
-          text: t('cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('resetButton'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // Remove the language selection flag
-              await AsyncStorage.removeItem('has-selected-language');
-              
-              Alert.alert(
-                t('settingsResetTitle'),
-                t('settingsResetMessage'),
-                [{ text: 'OK' }]
-              );
-            } catch (error) {
-              console.error('Error resetting language settings', error);
-              Alert.alert('Error', 'Failed to reset language settings');
-            }
-          }
-        }
-      ]
+
+  const handleContact = async () => {
+    const url = `mailto:${SUPPORT_EMAIL}`;
+    // على الويب قد لا يوجد عميل بريد مسجَّل، فنتحقق قبل الفتح
+    const supported = await Linking.canOpenURL(url).catch(() => false);
+    if (supported) Linking.openURL(url);
+  };
+
+  const chevron = isRTL ? 'chevron-back' : 'chevron-forward';
+
+  /** صف إعداد قابل للضغط */
+  const Row = ({
+    icon,
+    label,
+    detail,
+    onPress,
+    right,
+  }: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    detail?: string;
+    onPress?: () => void;
+    right?: React.ReactNode;
+  }) => {
+    const Wrapper: any = onPress ? TouchableOpacity : View;
+    return (
+      <Wrapper
+        style={[styles.row, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+        onPress={onPress}
+      >
+        <Ionicons name={icon} size={24} color={appColors.primary} />
+        <View style={styles.rowContent}>
+          <Text
+            style={[
+              styles.rowLabel,
+              { color: appColors.text, textAlign: isRTL ? 'right' : 'left' },
+            ]}
+          >
+            {label}
+          </Text>
+          {detail ? (
+            <Text
+              style={[
+                styles.rowDetail,
+                { color: appColors.textSecondary, textAlign: isRTL ? 'right' : 'left' },
+              ]}
+            >
+              {detail}
+            </Text>
+          ) : null}
+        </View>
+        {right ?? (onPress ? (
+          <Ionicons name={chevron} size={20} color={appColors.textSecondary} />
+        ) : null)}
+      </Wrapper>
     );
   };
 
+  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <View style={styles.section}>
+      <Text
+        style={[
+          styles.sectionTitle,
+          { color: appColors.text, textAlign: isRTL ? 'right' : 'left' },
+        ]}
+      >
+        {title}
+      </Text>
+      <View style={[styles.card, { backgroundColor: appColors.secondary }]}>{children}</View>
+    </View>
+  );
+
+  const Divider = () => (
+    <View style={[styles.divider, { backgroundColor: appColors.border }]} />
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: appColors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={appColors.background} />
-      
-      <ScrollView 
-        style={styles.scrollView} 
-        contentContainerStyle={styles.scrollViewContent}
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={appColors.background}
+      />
+
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingHorizontal: gutter,
+            maxWidth: maxContentWidth,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Account Settings Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: appColors.text }]}>{t('account_settings')}</Text>
-          
-          <View style={[styles.card, { backgroundColor: appColors.secondary }]}>
-            <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="person-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <Text style={[styles.settingText, { color: appColors.text }]}>{t('myProfile')}</Text>
-              <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={appColors.textSecondary} />
-            </TouchableOpacity>
-            
-            <View style={[styles.divider, { backgroundColor: appColors.border }]} />
-            
-            <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="notifications-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <Text style={[styles.settingText, { color: appColors.text }]}>{t('notifications')}</Text>
-              <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={appColors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        {/* App Settings Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: appColors.text }]}>{t('app_settings')}</Text>
-          
-          <View style={[styles.card, { backgroundColor: appColors.secondary }]}>
-            <TouchableOpacity style={styles.settingItem} onPress={showLanguageSelection}>
-              <Ionicons name="language-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <View style={styles.settingContent}>
-                <Text style={[styles.settingText, { color: appColors.text }]}>{t('language')}</Text>
-                <Text style={[styles.settingDetail, { color: appColors.textSecondary }]}>
-                  {i18n.language === 'ar' ? 'العربية' : i18n.language === 'ku' ? 'کوردی' : 'English'}
-                </Text>
-              </View>
-              <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={appColors.textSecondary} />
-            </TouchableOpacity>
-            
-            <View style={[styles.divider, { backgroundColor: appColors.border }]} />
-            
-            <View style={styles.settingItem}>
-              <Ionicons name="moon-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <Text style={[styles.settingText, { color: appColors.text }]}>{t('dark_mode')}</Text>
+        <Section title={t('account_settings')}>
+          <Row
+            icon="person-outline"
+            label={t('myProfile')}
+            onPress={() => router.push('/profile')}
+          />
+          <Divider />
+          <Row
+            icon="notifications-outline"
+            label={t('notifications')}
+            onPress={() => router.push('/account/notifications')}
+          />
+          <Divider />
+          <Row
+            icon="megaphone-outline"
+            label={t('my_ads')}
+            onPress={() => router.push('/account/my-ads')}
+          />
+          <Divider />
+          <Row
+            icon="heart-outline"
+            label={t('favorites')}
+            onPress={() => router.push('/account/favorites')}
+          />
+        </Section>
+
+        <Section title={t('app_settings')}>
+          <Row
+            icon="language-outline"
+            label={t('language')}
+            detail={currentLanguage}
+            onPress={() => setLanguageOpen(true)}
+          />
+          <Divider />
+          <Row
+            icon="moon-outline"
+            label={t('dark_mode')}
+            right={
               <Switch
                 value={isDarkMode}
                 onValueChange={toggleTheme}
                 trackColor={{ false: '#767577', true: appColors.primary + '80' }}
                 thumbColor={isDarkMode ? appColors.primary : '#f4f3f4'}
               />
-            </View>
-            
-            <View style={[styles.divider, { backgroundColor: appColors.border }]} />
-            
-            <TouchableOpacity style={styles.settingItem} onPress={resetLanguageSelection}>
-              <Ionicons name="refresh-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <Text style={[styles.settingText, { color: appColors.text }]}>{t('resetLanguageSelection')}</Text>
-              <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={appColors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        {/* About Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: appColors.text }]}>{t('about')}</Text>
-          
-          <View style={[styles.card, { backgroundColor: appColors.secondary }]}>
-            <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="shield-checkmark-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <Text style={[styles.settingText, { color: appColors.text }]}>{t('privacy_policy')}</Text>
-              <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={appColors.textSecondary} />
-            </TouchableOpacity>
-            
-            <View style={[styles.divider, { backgroundColor: appColors.border }]} />
-            
-            <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="document-text-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <Text style={[styles.settingText, { color: appColors.text }]}>{t('termsOfService')}</Text>
-              <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={appColors.textSecondary} />
-            </TouchableOpacity>
-            
-            <View style={[styles.divider, { backgroundColor: appColors.border }]} />
-            
-            <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="mail-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <Text style={[styles.settingText, { color: appColors.text }]}>{t('contactUs')}</Text>
-              <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={appColors.textSecondary} />
-            </TouchableOpacity>
-            
-            <View style={[styles.divider, { backgroundColor: appColors.border }]} />
-            
-            <View style={styles.settingItem}>
-              <Ionicons name="information-circle-outline" size={24} color={appColors.primary} style={styles.settingIcon} />
-              <Text style={[styles.settingText, { color: appColors.text }]}>{t('version')}</Text>
-              <Text style={[styles.settingDetail, { color: appColors.textSecondary }]}>1.0.0</Text>
-            </View>
-          </View>
-        </View>
+            }
+          />
+          <Divider />
+          <Row
+            icon="refresh-outline"
+            label={t('resetLanguageSelection')}
+            onPress={() => setResetOpen(true)}
+          />
+        </Section>
+
+        <Section title={t('about')}>
+          <Row
+            icon="shield-checkmark-outline"
+            label={t('privacy_policy')}
+            onPress={() => router.push('/legal/privacy')}
+          />
+          <Divider />
+          <Row
+            icon="document-text-outline"
+            label={t('termsOfService')}
+            onPress={() => router.push('/legal/terms')}
+          />
+          <Divider />
+          <Row
+            icon="mail-outline"
+            label={t('contactUs')}
+            detail={SUPPORT_EMAIL}
+            onPress={handleContact}
+          />
+          <Divider />
+          <Row icon="information-circle-outline" label={t('version')} right={
+            <Text style={[styles.rowDetail, { color: appColors.textSecondary }]}>1.0.0</Text>
+          } />
+        </Section>
       </ScrollView>
+
+      {/* اختيار اللغة — نافذة حقيقية بدل Alert الذي لا يعمل على الويب */}
+      <Modal visible={languageOpen} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={() => setLanguageOpen(false)}
+        >
+          <View style={[styles.dialog, { backgroundColor: appColors.background }]}>
+            <Text
+              style={[
+                styles.dialogTitle,
+                { color: appColors.text, textAlign: isRTL ? 'right' : 'left' },
+              ]}
+            >
+              {t('language')}
+            </Text>
+
+            {LANGUAGES.map((option) => {
+              const selected = option.code === i18n.language;
+              return (
+                <TouchableOpacity
+                  key={option.code}
+                  style={[
+                    styles.option,
+                    { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                    selected && { backgroundColor: appColors.secondary },
+                  ]}
+                  onPress={() => handleSelectLanguage(option.code)}
+                  disabled={busy}
+                >
+                  <Text style={[styles.optionText, { color: appColors.text }]}>
+                    {option.nativeName}
+                  </Text>
+                  {selected && (
+                    <Ionicons name="checkmark" size={20} color={appColors.primary} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+
+            <TouchableOpacity style={styles.dialogCancel} onPress={() => setLanguageOpen(false)}>
+              <Text style={[styles.dialogCancelText, { color: appColors.primary }]}>
+                {t('cancel')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* تأكيد إعادة اختيار اللغة */}
+      <Modal visible={resetOpen} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <View style={[styles.dialog, { backgroundColor: appColors.background }]}>
+            <Text
+              style={[
+                styles.dialogTitle,
+                { color: appColors.text, textAlign: isRTL ? 'right' : 'left' },
+              ]}
+            >
+              {t('resetLanguageSelection')}
+            </Text>
+            <Text
+              style={[
+                styles.dialogBody,
+                { color: appColors.textSecondary, textAlign: isRTL ? 'right' : 'left' },
+              ]}
+            >
+              {t('resetLanguageConfirm')}
+            </Text>
+
+            <View style={[styles.dialogActions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+              <TouchableOpacity
+                style={[styles.dialogButton, { borderColor: appColors.border }]}
+                onPress={() => setResetOpen(false)}
+              >
+                <Text style={{ color: appColors.text, fontWeight: '600' }}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.dialogButton, { backgroundColor: appColors.primary }]}
+                onPress={handleResetLanguage}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('ok')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1 },
+  content: { paddingVertical: 16, paddingBottom: 40 },
+  section: { marginBottom: 24 },
+  sectionTitle: { fontSize: 17, fontWeight: 'bold', marginBottom: 10 },
+  card: { borderRadius: 14, overflow: 'hidden' },
+  row: { alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 16 },
+  rowContent: { flex: 1 },
+  rowLabel: { fontSize: 16 },
+  rowDetail: { fontSize: 13, marginTop: 2 },
+  divider: { height: StyleSheet.hairlineWidth, marginHorizontal: 16 },
+  overlay: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    padding: normalize(16),
-    paddingBottom: normalize(32),
-  },
-  section: {
-    marginBottom: normalize(24),
-  },
-  sectionTitle: {
-    fontSize: normalize(16),
-    fontWeight: '600',
-    marginBottom: normalize(12),
-    marginInlineStart: normalize(12),
-  },
-  card: {
-    borderRadius: normalize(12),
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { 
-      width: 0, 
-      height: Platform.OS === 'ios' ? normalize(2) : 0 
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: normalize(4),
-    elevation: Platform.OS === 'android' ? normalize(3) : 0,
-    backgroundColor: 'transparent', // إضافة للتأكد من عدم وجود مشاكل في الشفافية
-  },
-  settingItem: {
-    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
-    paddingHorizontal: normalize(16),
-    paddingVertical: normalize(14),
-    minHeight: normalize(50), // إضافة ارتفاع أدنى
+    justifyContent: 'center',
+    padding: 24,
   },
-  settingIcon: {
-    marginInlineEnd: normalize(16),
-    width: normalize(24),
-    height: normalize(24),
+  dialog: { width: '100%', maxWidth: 400, borderRadius: 16, padding: 20, gap: 6 },
+  dialogTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  dialogBody: { fontSize: 14, lineHeight: 21, marginBottom: 10 },
+  option: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderRadius: 10,
   },
-  settingText: {
+  optionText: { fontSize: 16 },
+  dialogCancel: { alignItems: 'center', paddingVertical: 14, marginTop: 4 },
+  dialogCancelText: { fontSize: 15, fontWeight: '600' },
+  dialogActions: { gap: 10, marginTop: 6 },
+  dialogButton: {
     flex: 1,
-    fontSize: normalize(16),
-    marginVertical: normalize(2), // إضافة هامش عمودي
-  },
-  settingContent: {
-    flex: 1,
-    justifyContent: 'center', // إضافة لتحسين المحاذاة
-  },
-  settingDetail: {
-    fontSize: normalize(14),
-    marginTop: normalize(2),
-  },
-  divider: {
-    height: 1, // نترك ارتفاع الخط الفاصل ثابتاً
-    marginInlineStart: normalize(56),
-    opacity: 0.2, // تحسين مظهر الخط الفاصل
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
 });
-
-// إضافة مستمع لتغيير حجم الشاشة
-Dimensions.addEventListener('change', ({ window }: { window: ScaledSize }) => {
-  // تحديث المقياس عند تغيير اتجاه الشاشة
-  const newScale = window.width / 320;
-}); 

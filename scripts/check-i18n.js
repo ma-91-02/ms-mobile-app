@@ -47,13 +47,37 @@ for (const file of walk(APP_DIR)) {
 // 2) المفاتيح المعرّفة لكل لغة
 const i18nSrc = fs.readFileSync(I18N_FILE, 'utf8');
 const defined = {};
-for (const lang of LANGUAGES) {
-  const start = i18nSrc.indexOf(`  ${lang}: {\n    translation: {\n`);
-  if (start === -1) continue;
-  const end = i18nSrc.indexOf('\n    },', start);
-  defined[lang] = new Set(
+/**
+ * حدود القسم تُحسب بموازنة الأقواس لا بأول `},`.
+ *
+ * النسخة الأولى استخدمت `indexOf('\n    },')` وهي تقع على أول قوس إغلاق
+ * بذلك التطابق أيًّا كان موضعه، فتمتدّ حدود القسم إلى ما بعده وتُحسب
+ * مفاتيح لغة أخرى ضمنه. النتيجة كانت فحصًا يمرّ بينما الإنجليزية تنقصها
+ * 24 مفتاحًا فعلًا — فحص يطمئن كذبًا أسوأ من غيابه.
+ */
+const sectionKeys = (lang) => {
+  const marker = `  ${lang}: {`;
+  const start = i18nSrc.indexOf(marker);
+  if (start === -1) return new Set();
+
+  let depth = 0;
+  let i = start + marker.length - 1; // عند `{` الافتتاحي
+  let end = i18nSrc.length;
+  for (; i < i18nSrc.length; i++) {
+    if (i18nSrc[i] === '{') depth++;
+    else if (i18nSrc[i] === '}') {
+      depth--;
+      if (depth === 0) { end = i; break; }
+    }
+  }
+
+  return new Set(
     [...i18nSrc.slice(start, end).matchAll(/^\s+(\w+):/gm)].map((m) => m[1])
   );
+};
+
+for (const lang of LANGUAGES) {
+  defined[lang] = sectionKeys(lang);
 }
 
 let failed = false;

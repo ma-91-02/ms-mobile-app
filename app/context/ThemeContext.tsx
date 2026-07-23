@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '../../constants/Colors';
@@ -36,15 +36,34 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
+/** مفتاح تخزين تفضيل السمة */
+const THEME_KEY = 'theme-preference';
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
+  /**
+   * التفضيل كان يعيش في الذاكرة فقط: المستخدم يُفعّل الوضع الداكن ثم
+   * يعود التطبيق فاتحًا عند أول إعادة تحميل. يُقرأ الآن عند الإقلاع
+   * ويُحفظ عند كل تبديل.
+   */
+  useEffect(() => {
+    AsyncStorage.getItem(THEME_KEY)
+      .then((value) => {
+        if (value !== null) setIsDarkMode(value === 'dark');
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const persist = (value: boolean) => {
+    setIsDarkMode(value);
+    AsyncStorage.setItem(THEME_KEY, value ? 'dark' : 'light').catch(() => undefined);
   };
 
+  const toggleTheme = () => persist(!isDarkMode);
+
   // النوع يعرّف theme و setDarkMode أيضًا، وكانا ناقصَين في القيمة الممرّرة
-  const setDarkMode = (value: boolean) => setIsDarkMode(value);
+  const setDarkMode = (value: boolean) => persist(value);
 
   return (
     <ThemeContext.Provider
