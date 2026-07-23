@@ -15,7 +15,7 @@ import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import CustomPhoneInput from '../components/CustomPhoneInput';
+import PhoneField, { isValidPhone } from '../components/PhoneField';
 import { useTheme } from '../context/ThemeContext';
 import AppColors from '../../constants/AppColors';
 import * as auth from '../services/auth';
@@ -28,7 +28,6 @@ export default function LoginScreen() {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
-  const phoneInput = useRef<any>(null);
   const { t } = useTranslation();
   // المحاذاة تتبع اللغة المختارة لا العربية دائمًا
   const { isRTL } = useDirection();
@@ -53,7 +52,7 @@ export default function LoginScreen() {
     }
 
     // التحقق من صحة رقم الهاتف
-    if (phoneInput.current?.isValidNumber(phoneNumber)) {
+    if (isValidPhone(phoneNumber)) {
       try {
         setLoading(true);
         // الخدمة تتولى تخزين التوكن وبيانات المستخدم بمفاتيح موحّدة —
@@ -122,10 +121,10 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             {/* مكون إدخال رقم الهاتف */}
-            <CustomPhoneInput
+            <PhoneField
               value={phoneNumber}
               onChangeText={setPhoneNumber}
-              onChangeFormattedText={setFormattedPhoneNumber}
+              onChangeFormatted={setFormattedPhoneNumber}
               placeholder={t('phoneNumber')}
               defaultCode="IQ"
               containerStyle={styles.phoneInputContainer}

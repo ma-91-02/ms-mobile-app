@@ -11,6 +11,9 @@ export const RTL_LANGUAGES = ['ar', 'ku'];
 const resources = {
   en: {
     translation: {
+      selectCountry: 'Select country',
+      searchCountryHint: 'Search by name or code',
+      noCountryFound: 'No country matches your search',
       resetLanguageConfirm: 'You will return to the language selection screen to choose again.',
       lastUpdated: 'Last updated: July 2026',
       privacyIntro: 'This policy explains what data Mustamsakati collects and how it is used. The guiding principle: we collect only what the service needs to return a document to its owner.',
@@ -269,6 +272,9 @@ const resources = {
   },
   ar: {
     translation: {
+      selectCountry: 'اختر الدولة',
+      searchCountryHint: 'ابحث بالاسم أو رمز الاتصال',
+      noCountryFound: 'لا توجد دولة مطابقة لبحثك',
       resetLanguageConfirm: 'ستعود إلى شاشة اختيار اللغة لتختار من جديد.',
       lastUpdated: 'آخر تحديث: تموز 2026',
       privacyIntro: 'تشرح هذه السياسة البيانات التي يجمعها تطبيق مستمسكاتي وكيف تُستخدم. المبدأ الحاكم: لا نجمع إلا ما تحتاجه الخدمة لإعادة المستمسك إلى صاحبه.',
@@ -527,6 +533,9 @@ const resources = {
   },
   ku: {
     translation: {
+      selectCountry: 'وڵات هەڵبژێرە',
+      searchCountryHint: 'بە ناو یان کۆد بگەڕێ',
+      noCountryFound: 'هیچ وڵاتێک نەدۆزرایەوە',
       resetLanguageConfirm: 'دەگەڕێیتەوە بۆ ڕوونمای هەڵبژاردنی زمان.',
       lastUpdated: 'دوایین نوێکردنەوە: تەمووزی ٢٠٢٦',
       privacyIntro: 'ئەم سیاسەتە ڕوون دەکاتەوە چ زانیارییەک کۆدەکرێتەوە و چۆن بەکاردێت. بنەما: تەنها ئەوەی پێویستە بۆ گەڕاندنەوەی بەڵگەنامە.',

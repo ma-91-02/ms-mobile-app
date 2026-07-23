@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import PhoneInput from 'react-native-phone-number-input';
+import PhoneField, { isValidPhone } from '../components/PhoneField';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import useDirection from '../hooks/useDirection';
@@ -39,7 +39,6 @@ export default function RegisterScreen() {
   const appColors = isDarkMode ? AppColors.dark : AppColors.light;
   const { isRTL } = useDirection();
 
-  const phoneInput = useRef<PhoneInput>(null);
 
   const [configLoading, setConfigLoading] = useState(true);
   const [otpRequired, setOtpRequired] = useState(true);
@@ -63,7 +62,7 @@ export default function RegisterScreen() {
   }, []);
 
   const validate = (): string | null => {
-    if (!phoneInput.current?.isValidNumber(phoneNumber)) return t('invalidPhone');
+    if (!isValidPhone(phoneNumber)) return t('invalidPhone');
     if (!fullName.trim()) return t('fullNameRequired');
     if (password.length < 6) return t('passwordTooShort');
     if (password !== confirmPassword) return t('passwordsDoNotMatch');
@@ -145,17 +144,12 @@ export default function RegisterScreen() {
           <Text style={[styles.label, { color: appColors.text, textAlign: isRTL ? 'right' : 'left' }]}>
             {t('phoneNumber')}
           </Text>
-          <PhoneInput
-            ref={phoneInput}
-            defaultValue={phoneNumber}
-            defaultCode={'IQ' as any}
-            layout="first"
+          <PhoneField
+            value={phoneNumber}
             onChangeText={setPhoneNumber}
-            onChangeFormattedText={setFormattedPhone}
-            containerStyle={[styles.phoneContainer, { backgroundColor: appColors.secondary }]}
-            textContainerStyle={{ backgroundColor: appColors.secondary }}
-            textInputStyle={{ color: appColors.text }}
-            codeTextStyle={{ color: appColors.text }}
+            onChangeFormatted={setFormattedPhone}
+            placeholder={t('phoneNumber')}
+            defaultCode="IQ"
           />
 
           <Text style={[styles.label, { color: appColors.text, textAlign: isRTL ? 'right' : 'left' }]}>
