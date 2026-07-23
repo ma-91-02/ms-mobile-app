@@ -18,7 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomPhoneInput from '../components/CustomPhoneInput';
 import { useTheme } from '../context/ThemeContext';
 import AppColors from '../../constants/AppColors';
-import { authAPI } from '../services/api';
+import * as auth from '../services/auth';
 import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
@@ -50,14 +50,10 @@ export default function LoginScreen() {
     if (phoneInput.current?.isValidNumber(phoneNumber)) {
       try {
         setLoading(true);
-        const response = await authAPI.login({ 
-          phoneNumber: formattedPhoneNumber, 
-          password 
-        });
-        
-        await AsyncStorage.setItem('userToken', response.token);
-        await AsyncStorage.setItem('userData', JSON.stringify(response.user));
-        
+        // الخدمة تتولى تخزين التوكن وبيانات المستخدم بمفاتيح موحّدة —
+        // كانت الشاشة تكتبها بمفاتيح (userToken/userData) تخالف ما تقرأه
+        // بقية الشاشات، فتبدو الجلسة منتهية رغم نجاح الدخول
+        await auth.login(formattedPhoneNumber, password);
         router.replace('/(tabs)/ads');
       } catch (error: any) {
         Alert.alert('خطأ', error.message);

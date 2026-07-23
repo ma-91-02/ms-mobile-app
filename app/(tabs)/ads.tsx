@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -12,7 +12,9 @@ import {
   ImageErrorEventData,
   NativeSyntheticEvent,
   Modal,
-  I18nManager
+  I18nManager,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +23,9 @@ import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
 import AdCard from '../components/AdCard';
+import { router } from 'expo-router';
+import useAdvertisements from '../hooks/useAdvertisements';
+import { toCardItem, CATEGORY_IDS } from '../utils/adPresenter';
 
 // Define interfaces for type safety
 interface Ad {
@@ -69,54 +74,7 @@ const CATEGORIES: Category[] = [
   }
 ];
 
-// تحديث بيانات الإعلانات
-const DUMMY_ADS: Ad[] = [
-  {
-    id: '1',
-    title: 'فقدان جواز سفر باسم احمد محمد',
-    price: 'مكافأة 100$',
-    location: 'بغداد - الكرادة',
-    image: require('../../assets/images/dummy/placeholder.png'),
-    date: 'قبل ساعتين',
-    category: '1',
-  },
-  {
-    id: '2',
-    title: 'بطاقة وطنية باسم علي حسين',
-    price: 'مكافأة 50$',
-    location: 'البصرة - العشار',
-    image: require('../../assets/images/dummy/placeholder.png'),
-    date: 'قبل 5 ساعات',
-    category: '2',
-  },
-  {
-    id: '3',
-    title: 'اجازة سوق مفقودة',
-    price: 'مكافأة 75$',
-    location: 'اربيل - عنكاوة',
-    image: require('../../assets/images/dummy/placeholder.png'),
-    date: 'امس',
-    category: '3',
-  },
-  {
-    id: '4',
-    title: 'فقدان هوية موظف',
-    price: 'مكافأة 30$',
-    location: 'الموصل - الدواسة',
-    image: require('../../assets/images/dummy/placeholder.png'),
-    date: 'قبل 3 ايام',
-    category: '4',
-  },
-  {
-    id: '5',
-    title: 'جواز سفر اجنبي مفقود',
-    price: 'مكافأة 200$',
-    location: 'النجف - الكوفة',
-    image: require('../../assets/images/dummy/placeholder.png'),
-    date: 'قبل اسبوع',
-    category: '1',
-  },
-];
+// الإعلانات تأتي الآن من الخادم عبر useAdvertisements — لا بيانات وهمية
 
 // قائمة المحافظات العراقية
 const PROVINCES: Province[] = [
@@ -126,7 +84,7 @@ const PROVINCES: Province[] = [
   { id: 'najaf', name: 'najaf' },
   { id: 'karbala', name: 'karbala' },
   { id: 'erbil', name: 'erbil' },
-  { id: 'mosul', name: 'nineveh' },
+  { id: 'nineveh', name: 'nineveh' },
   { id: 'kirkuk', name: 'kirkuk' },
   { id: 'duhok', name: 'duhok' },
   { id: 'sulaymaniyah', name: 'sulaymaniyah' },
@@ -135,7 +93,7 @@ const PROVINCES: Province[] = [
   { id: 'wasit', name: 'wasit' },
   { id: 'maysan', name: 'maysan' },
   { id: 'diwaniyah', name: 'diwaniyah' },
-  { id: 'thiqar', name: 'dhiqar' },
+  { id: 'dhiqar', name: 'dhiqar' },
   { id: 'muthanna', name: 'muthanna' },
   { id: 'anbar', name: 'anbar' },
   { id: 'saladin', name: 'salahuddin' },
@@ -240,36 +198,41 @@ export default function AdsScreen() {
     textAlign: isRTL ? 'right' : 'left',
   };
 
-  // تحديث وظيفة التصفية
-  const filteredAds = DUMMY_ADS.filter(ad => {
-    // تصفية حسب البحث
-    const matchesSearch = ad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         ad.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // تصفية حسب الفئة
-    const matchesCategory = !selectedCategory || ad.category === selectedCategory;
-    
-    // تصفية حسب المحافظة - تحسين المقارنة
-    const matchesProvince = () => {
-      if (selectedProvince === 'all') return true;
-      
-      // الحصول على اسم المحافظة المختارة بجميع اللغات
-      const selectedProvinceName = PROVINCES.find(p => p.id === selectedProvince)?.name || '';
-      
-      // الحصول على الترجمات لاسم المحافظة
-      const provinceNameAr = t(selectedProvinceName, { lng: 'ar' }).toLowerCase();
-      const provinceNameEn = t(selectedProvinceName, { lng: 'en' }).toLowerCase();
-      const provinceNameKu = t(selectedProvinceName, { lng: 'ku' }).toLowerCase();
-      
-      // مقارنة موقع الإعلان مع جميع الترجمات
-      const adLocation = ad.location.toLowerCase();
-      return adLocation.includes(provinceNameAr) || 
-             adLocation.includes(provinceNameEn) || 
-             adLocation.includes(provinceNameKu);
-    };
-    
-    return matchesSearch && matchesCategory && matchesProvince();
-  });
+  /**
+   * التصفية تجري على الخادم الآن.
+   *
+   * النسخة السابقة كانت تُطابق المحافظة بمقارنة نص الموقع مع ترجمات الاسم
+   * في اللغات الثلاث — أسلوب هشّ يفشل مع أي اختلاف إملائي. صار الخادم
+   * يستقبل قيمة التعداد مباشرةً (`baghdad`) فتنتفي المقارنة النصية.
+   */
+  const filters = useMemo(
+    () => ({
+      category: selectedCategory ? CATEGORY_IDS[selectedCategory] : undefined,
+      governorate: selectedProvince === 'all' ? undefined : (selectedProvince as any),
+      isResolved: false,
+    }),
+    [selectedCategory, selectedProvince]
+  );
+
+  const { items, loading, refreshing, loadingMore, error, refresh, loadMore } =
+    useAdvertisements(filters);
+
+  /**
+   * البحث النصي يبقى محليًا ضمن الصفحة المحمَّلة: الخادم لا يوفّر بحثًا
+   * نصيًا على هذا المسار بعد. يُنقل إليه حين يُضاف معامل `keyword`.
+   */
+  const visibleAds = useMemo(() => {
+    const cards = items.map((ad) => toCardItem(ad, t, i18n.language));
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) return cards;
+
+    return cards.filter(
+      (ad) =>
+        ad.title.toLowerCase().includes(query) ||
+        ad.location.toLowerCase().includes(query)
+    );
+  }, [items, searchQuery, t, i18n.language]);
 
   // Handle image loading errors
   const handleImageError = (id: string) => {
@@ -279,12 +242,15 @@ export default function AdsScreen() {
     }));
   };
 
-  // Get category icon for placeholder based on ad id (just a simple mapping for now)
-  const getPlaceholderIcon = (id: string): string => {
-    const categoryId = (parseInt(id) % CATEGORIES.length).toString();
-    const category = CATEGORIES.find(cat => cat.id === categoryId) || CATEGORIES[0];
-    return category.icon;
-  };
+  /**
+   * أيقونة العنصر النائب حسب فئة الإعلان.
+   *
+   * كانت تُشتق من `parseInt(id) % CATEGORIES.length` — يصلح مع المعرّفات
+   * الرقمية الوهمية القديمة، ويعطي NaN مع معرّفات UUID الحقيقية فتظهر
+   * أيقونة الجواز لكل الإعلانات.
+   */
+  const getPlaceholderIcon = (categoryId: string): string =>
+    (CATEGORIES.find((cat) => cat.id === categoryId) || CATEGORIES[0]).icon;
 
   // تحديث وظيفة اختيار المحافظة
   const handleProvinceSelect = (provinceId: string) => {
@@ -423,24 +389,67 @@ export default function AdsScreen() {
       </TouchableOpacity>
       
       {/* Ads List */}
-      <FlatList
-        data={filteredAds}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.adsListContainer}
-        renderItem={({ item }) => (
-          <AdCard
-            item={item}
-            hasImageError={imageErrors[item.id]}
-            onImageError={() => handleImageError(item.id)}
-            placeholderIcon={getPlaceholderIcon(item.id)}
-            onPress={() => {
-              // يمكنك إضافة وظيفة عند الضغط على الإعلان هنا
-              console.log('Ad pressed:', item.id);
-            }}
-          />
-        )}
-      />
+      {loading ? (
+        <View style={styles.stateContainer}>
+          <ActivityIndicator size="large" color={appColors.primary} />
+        </View>
+      ) : error ? (
+        <View style={styles.stateContainer}>
+          <Ionicons name="cloud-offline-outline" size={48} color={appColors.textSecondary} />
+          <Text style={[styles.stateText, { color: appColors.text }]}>{error}</Text>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: appColors.primary }]}
+            onPress={refresh}
+          >
+            <Text style={styles.retryText}>{t('retry')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={visibleAds}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.adsListContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              tintColor={appColors.primary}
+            />
+          }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            <View style={styles.stateContainer}>
+              <Ionicons
+                name="search-outline"
+                size={48}
+                color={appColors.textSecondary}
+              />
+              <Text style={[styles.stateText, { color: appColors.textSecondary }]}>
+                {t('noAdsFound')}
+              </Text>
+            </View>
+          }
+          ListFooterComponent={
+            loadingMore ? (
+              <ActivityIndicator
+                style={{ marginVertical: 16 }}
+                color={appColors.primary}
+              />
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <AdCard
+              item={item}
+              hasImageError={imageErrors[item.id]}
+              onImageError={() => handleImageError(item.id)}
+              placeholderIcon={getPlaceholderIcon(item.category)}
+              onPress={() => router.push(`/ad/${item.id}` as any)}
+            />
+          )}
+        />
+      )}
       
       {/* Province Filter Modal */}
       <ProvinceFilterModal />
@@ -451,6 +460,30 @@ export default function AdsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  // حالات التحميل والخطأ والفراغ — لم تكن موجودة حين كانت البيانات وهمية
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 48,
+    gap: 12,
+  },
+  stateText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  retryText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   header: {
     padding: 16,

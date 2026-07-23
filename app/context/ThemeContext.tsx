@@ -43,8 +43,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsDarkMode(!isDarkMode);
   };
 
+  // النوع يعرّف theme و setDarkMode أيضًا، وكانا ناقصَين في القيمة الممرّرة
+  const setDarkMode = (value: boolean) => setIsDarkMode(value);
+
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider
+      value={{ isDarkMode, toggleTheme, setDarkMode, theme: isDarkMode ? Colors.dark : Colors.light }}
+    >
       {children}
     </ThemeContext.Provider>
   );

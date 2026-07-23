@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!--
+  قالب الصفحة الجذرية للويب.
+
+  مع `web.output: "single"` يتجاهل Expo ملف `app/+html.tsx` (وهو خاص
+  بالتصيير الساكن) ويستخدم هذا القالب بدلًا منه، فحُقنت فيه وسوم الـ PWA.
+
+  تنبيه: يحقن Expo وسم حزمة JavaScript قبل وسم إغلاق الجسم، ويبحث عنه
+  كنص حرفي — فلا تكتب وسوم إغلاق داخل التعليقات هنا وإلا حُقن داخلها.
+-->
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover يملأ المنطقة الآمنة في أجهزة الحافة المنحنية -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+    />
+
+    <title>مستمسكاتي</title>
+    <meta
+      name="description"
+      content="منصة الإبلاغ عن المستمسكات المفقودة والعثور عليها في العراق"
+    />
+
+    <!-- بيان التطبيق — يجعل الصفحة قابلة للتثبيت -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#5C4EE5" />
+
+    <!-- iOS لا يقرأ manifest.json بالكامل، فيحتاج هذه الوسوم صراحةً -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="مستمسكاتي" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- إعادة ضبط أنماط react-native-web -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        overflow: hidden;
+        margin: 0;
+        background-color: #fff;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #000;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>يتطلب هذا التطبيق تفعيل JavaScript.</noscript>
+    <div id="root"></div>
+
+    <!-- التسجيل بعد اكتمال التحميل حتى لا يُزاحم التصيير الأول -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function (err) {
+            console.warn('تعذّر تسجيل عامل الخدمة:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

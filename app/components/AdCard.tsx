@@ -18,6 +18,7 @@ interface AdCardProps {
     title: string;
     price: string;
     location: string;
+    /** `{ uri }` من الخادم، أو null حين لا صورة للإعلان */
     image: any;
     date: string;
     category: string;
@@ -49,12 +50,14 @@ export default function AdCard({
       onPress={onPress}
     >
       {/* Image with fallback to placeholder icon */}
-      {hasImageError ? (
+      {/* الإعلانات الحقيقية قد تأتي بلا صور، فالعنصر النائب يظهر أيضًا حين
+          يكون المصدر فارغًا لا عند فشل التحميل فقط */}
+      {hasImageError || !item.image ? (
         <View style={[styles.adImagePlaceholder, { backgroundColor: appColors.background }]}>
-          <Ionicons 
-            name={placeholderIcon as any} 
-            size={40} 
-            color={appColors.primary} 
+          <Ionicons
+            name={placeholderIcon as any}
+            size={40}
+            color={appColors.primary}
           />
         </View>
       ) : (

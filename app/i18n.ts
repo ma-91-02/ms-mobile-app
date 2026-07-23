@@ -11,6 +11,17 @@ export const RTL_LANGUAGES = ['ar', 'ku'];
 const resources = {
   en: {
     translation: {
+      // حالات ونوع الإعلان — تُستخدم بعد الربط بالخادم
+      retry: 'Retry',
+      noAdsFound: 'No advertisements found',
+      lostItem: 'Lost',
+      foundItem: 'Found',
+      pending: 'Under review',
+      approved: 'Approved',
+      rejected: 'Rejected',
+      resolved: 'Recovered',
+      national_id: 'National ID',
+      driving_license: 'Driving license',
       // عام
       welcome: 'Welcome',
       continue: 'Continue',
@@ -121,6 +132,17 @@ const resources = {
   },
   ar: {
     translation: {
+      // حالات ونوع الإعلان — تُستخدم بعد الربط بالخادم
+      retry: 'إعادة المحاولة',
+      noAdsFound: 'لا توجد إعلانات',
+      lostItem: 'مفقود',
+      foundItem: 'موجود',
+      pending: 'قيد المراجعة',
+      approved: 'معتمد',
+      rejected: 'مرفوض',
+      resolved: 'تم الاسترجاع',
+      national_id: 'بطاقة وطنية',
+      driving_license: 'إجازة سوق',
       // عام
       welcome: 'مرحباً بك',
       continue: 'متابعة',
@@ -231,6 +253,17 @@ const resources = {
   },
   ku: {
     translation: {
+      // حالات ونوع الإعلان — تُستخدم بعد الربط بالخادم
+      retry: 'دووبارە هەوڵبدەرەوە',
+      noAdsFound: 'هیچ ڕیکلامێک نەدۆزرایەوە',
+      lostItem: 'ون بوو',
+      foundItem: 'دۆزرایەوە',
+      pending: 'لە پێداچوونەوەدایە',
+      approved: 'پەسەندکرا',
+      rejected: 'ڕەتکرایەوە',
+      resolved: 'گەڕێندرایەوە',
+      national_id: 'ناسنامەی نیشتمانی',
+      driving_license: 'مۆڵەتی شۆفێری',
       // عام
       welcome: 'بەخێر بێیت',
       continue: 'بەردەوامبوون',
@@ -361,7 +394,6 @@ const i18n = i18next.createInstance();
 i18n
   .use(initReactI18next)
   .init({
-    compatibilityJSON: 'v3',
     resources,
     lng: DEFAULT_LANGUAGE,
     fallbackLng: DEFAULT_LANGUAGE,

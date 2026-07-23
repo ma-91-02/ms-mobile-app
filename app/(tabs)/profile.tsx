@@ -8,7 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import AppColors from '../../constants/AppColors';
-import { User } from '../types/auth';
+import type { User } from '../types/api';
+import * as auth from '../services/auth';
 
 /**
  * شاشة الملف الشخصي
@@ -31,21 +32,28 @@ export default function ProfileScreen() {
 
   const checkLoginStatus = async () => {
     try {
-      const userToken = await AsyncStorage.getItem('userToken');
-      const storedUserData = await AsyncStorage.getItem('userData');
-      
-      if (userToken && storedUserData) {
-        setIsLoggedIn(true);
-        setUserData(JSON.parse(storedUserData));
-      } else {
+      const authenticated = await auth.isAuthenticated();
+
+      if (!authenticated) {
         setIsLoggedIn(false);
         setUserData(null);
+        return;
+      }
+
+      setIsLoggedIn(true);
+      // نعرض المخزَّن فورًا ثم نُحدّثه من الخادم — النقاط وحالة الملف
+      // الشخصي تتغيّران خارج التطبيق فلا يصحّ الاعتماد على النسخة المحلية
+      setUserData(await auth.getStoredUser());
+
+      try {
+        setUserData(await auth.getProfile());
+      } catch {
+        // تعذّر التحديث (شبكة مثلًا) — نبقي البيانات المخزَّنة
       }
     } catch (err) {
       console.error('Error checking login status:', err);
       setIsLoggedIn(false);
       setUserData(null);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تحميل بيانات المستخدم');
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +67,7 @@ export default function ProfileScreen() {
   // Handle logout
   const handleLogout = async () => {
     try {
-      await AsyncStorage.multiRemove(['userToken', 'userData']);
+      await auth.logout();
       setIsLoggedIn(false);
       setUserData(null);
     } catch (err) {
@@ -123,8 +131,8 @@ export default function ProfileScreen() {
         <View style={[styles.profileHeader, { backgroundColor: appColors.primary }]}>
           <View style={styles.profileInfo}>
             <View style={styles.avatarContainer}>
-              {userData?.avatar ? (
-                <Image source={{ uri: userData.avatar }} style={styles.avatar} />
+              {userData?.profileImage ? (
+                <Image source={{ uri: userData.profileImage }} style={styles.avatar} />
               ) : (
                 <View style={[styles.avatarPlaceholder, { backgroundColor: appColors.secondary }]}>
                   <Text style={[styles.avatarInitial, { color: appColors.primary }]}>

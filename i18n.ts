@@ -154,7 +154,9 @@ export const initI18n = async () => {
   const defaultLanguage = savedLanguage || deviceLocale;
   
   // استخدام اللغة العربية إذا كانت متوفرة، وإلا استخدام الإنجليزية
-  const fallbackLanguage = resources[defaultLanguage] ? defaultLanguage : 'en';
+  // اللغة القادمة من الجهاز نص حر، فنتحقق من وجودها قبل الفهرسة
+  const fallbackLanguage =
+    defaultLanguage in resources ? (defaultLanguage as keyof typeof resources) : 'en';
 
   // تهيئة i18next مع الإعدادات
   await i18n
@@ -163,7 +165,6 @@ export const initI18n = async () => {
       resources,
       lng: fallbackLanguage,
       fallbackLng: 'en',
-      compatibilityJSON: 'v3',
       interpolation: {
         escapeValue: false,
       },
