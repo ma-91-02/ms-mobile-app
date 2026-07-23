@@ -11,6 +11,7 @@ import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
 import type { User } from '../types/api';
 import * as auth from '../services/auth';
+import { showAlert } from '../utils/alert';
 
 /**
  * شاشة الملف الشخصي
@@ -73,7 +74,7 @@ export default function ProfileScreen() {
       setUserData(null);
     } catch (err) {
       console.error('Error logging out:', err);
-      Alert.alert(t('error'), t('logoutError'));
+      showAlert(t('error'), t('logoutError'));
     }
   };
 
@@ -98,7 +99,7 @@ export default function ProfileScreen() {
       return;
     }
 
-    Alert.alert(t('alert'), t('featureComingSoon'));
+    showAlert(t('alert'), t('featureComingSoon'));
   };
 
   if (isLoading) {

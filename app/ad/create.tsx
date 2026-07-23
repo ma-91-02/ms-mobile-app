@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Switch,
@@ -32,6 +31,7 @@ import type {
   Governorate,
   AppConstants,
 } from '../types/api';
+import { showAlert } from '../utils/alert';
 
 /**
  * إنشاء إعلان عن مستمسك مفقود أو موجود.
@@ -86,7 +86,7 @@ export default function CreateAdScreen() {
 
   const handleSubmit = async () => {
     if (validationError) {
-      Alert.alert(t('alert'), validationError);
+      showAlert(t('alert'), validationError);
       return;
     }
 
@@ -107,11 +107,11 @@ export default function CreateAdScreen() {
         images
       );
 
-      Alert.alert(t('done'), t('adPendingReview'), [
+      showAlert(t('done'), t('adPendingReview'), [
         { text: t('ok'), onPress: () => router.replace('/(tabs)/ads') },
       ]);
     } catch (e: any) {
-      Alert.alert(t('error'), e.message);
+      showAlert(t('error'), e.message);
     } finally {
       setSubmitting(false);
     }

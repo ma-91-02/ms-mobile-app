@@ -9,6 +9,7 @@ import { View, I18nManager, Platform } from 'react-native';
 import { ThemeProvider } from './context/ThemeContext';
 import i18n, { loadSavedLanguage, RTL_LANGUAGES } from './i18n';
 import useDocumentDirection from './hooks/useDocumentDirection';
+import AlertHost from './components/AlertHost';
 
 // منع إخفاء شاشة السبلاش تلقائياً
 SplashScreen.preventAutoHideAsync();
@@ -82,6 +83,8 @@ export default function RootLayout() {
             />
           </Stack>
         </NavigationThemeProvider>
+        {/* عارض التنبيهات: يُركَّب مرّة واحدة ويستمع لمخزن `utils/alert` */}
+        <AlertHost />
       </ThemeProvider>
     </I18nextProvider>
   );

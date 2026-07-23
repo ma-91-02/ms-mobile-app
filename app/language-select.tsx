@@ -11,9 +11,7 @@ import {
   useWindowDimensions,
   I18nManager,
   Platform,
-  Image,
-  Alert
-} from 'react-native';
+  Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './context/ThemeContext';
 import i18n, { RTL_LANGUAGES, loadSavedLanguage, changeLanguage } from './i18n';
+import { showAlert } from './utils/alert';
 
 // التحقق إذا كان التطبيق في وضع التطوير
 const isDevelopment = __DEV__;
@@ -126,7 +125,7 @@ export default function LanguageSelect() {
       router.replace('/(tabs)/ads');
     } catch (error) {
       console.error('Error in handleContinue:', error);
-      Alert.alert(
+      showAlert(
         'خطأ',
         'حدث خطأ أثناء حفظ اللغة',
         [{ text: 'حسناً' }]

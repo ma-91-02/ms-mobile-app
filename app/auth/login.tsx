@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StatusBar,
@@ -25,6 +24,7 @@ import i18n, { RTL_LANGUAGES } from '../i18n';
 import useDirection from '../hooks/useDirection';
 import useResponsive from '../hooks/useResponsive';
 import ScreenHeader from '../components/ScreenHeader';
+import { showAlert } from '../utils/alert';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
-      Alert.alert(t('alert'), t('enterPhoneAndPassword'));
+      showAlert(t('alert'), t('enterPhoneAndPassword'));
       return;
     }
 
@@ -64,12 +64,12 @@ export default function LoginScreen() {
         await auth.login(formattedPhoneNumber, password);
         router.replace('/(tabs)/ads');
       } catch (error: any) {
-        Alert.alert(t('error'), error.message);
+        showAlert(t('error'), error.message);
       } finally {
         setLoading(false);
       }
     } else {
-      Alert.alert(t('error'), t('invalidPhone'));
+      showAlert(t('error'), t('invalidPhone'));
     }
   };
 

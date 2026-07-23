@@ -7,7 +7,6 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Modal,
   TextInput,
 } from 'react-native';
@@ -26,6 +25,7 @@ import * as auth from '../services/auth';
 import { toImageUrl, relativeTime } from '../utils/adPresenter';
 import type { Advertisement } from '../types/api';
 import ScreenHeader from '../components/ScreenHeader';
+import { showAlert } from '../utils/alert';
 
 /**
  * تفاصيل الإعلان.
@@ -66,7 +66,7 @@ export default function AdDetailsScreen() {
 
   const requireLogin = (): boolean => {
     if (authed) return false;
-    Alert.alert(t('loginRequired'), t('loginToContact'), [
+    showAlert(t('loginRequired'), t('loginToContact'), [
       { text: t('cancel'), style: 'cancel' },
       { text: t('login'), onPress: () => router.push('/auth/login') },
     ]);
@@ -75,7 +75,7 @@ export default function AdDetailsScreen() {
 
   const handleSendRequest = async () => {
     if (reason.trim().length < 5) {
-      Alert.alert(t('alert'), t('reasonTooShort'));
+      showAlert(t('alert'), t('reasonTooShort'));
       return;
     }
 
@@ -84,9 +84,9 @@ export default function AdDetailsScreen() {
       await createContactRequest(id!, reason.trim());
       setRequestOpen(false);
       setReason('');
-      Alert.alert(t('done'), t('contactRequestSent'));
+      showAlert(t('done'), t('contactRequestSent'));
     } catch (e: any) {
-      Alert.alert(t('error'), e.message);
+      showAlert(t('error'), e.message);
     } finally {
       setSending(false);
     }
@@ -96,9 +96,9 @@ export default function AdDetailsScreen() {
     if (requireLogin()) return;
     try {
       await addFavorite(id!);
-      Alert.alert(t('done'), t('addedToFavorites'));
+      showAlert(t('done'), t('addedToFavorites'));
     } catch (e: any) {
-      Alert.alert(t('error'), e.message);
+      showAlert(t('error'), e.message);
     }
   };
 

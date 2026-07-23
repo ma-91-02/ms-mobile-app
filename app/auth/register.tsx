@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -24,6 +23,7 @@ import AppColors from '../../constants/AppColors';
 import * as auth from '../services/auth';
 import Logo from '../components/Logo';
 import ScreenHeader from '../components/ScreenHeader';
+import { showAlert } from '../utils/alert';
 
 /**
  * إنشاء حساب.
@@ -75,7 +75,7 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     const error = validate();
     if (error) {
-      Alert.alert(t('alert'), error);
+      showAlert(t('alert'), error);
       return;
     }
 
@@ -95,7 +95,7 @@ export default function RegisterScreen() {
       await auth.register({ phoneNumber: formattedPhone, password, fullName });
       router.replace('/(tabs)/ads');
     } catch (e: any) {
-      Alert.alert(t('error'), e.message);
+      showAlert(t('error'), e.message);
     } finally {
       setLoading(false);
     }

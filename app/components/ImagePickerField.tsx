@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import i18n, { RTL_LANGUAGES } from '../i18n';
 import useDirection from '../hooks/useDirection';
 import AppColors from '../../constants/AppColors';
+import { showAlert } from '../utils/alert';
 
 /**
  * اختيار صور الإعلان.
@@ -38,7 +39,7 @@ export default function ImagePickerField({ images, onChange, max = 5 }: Props) {
 
   const pick = async () => {
     if (images.length >= max) {
-      Alert.alert(t('alert'), t('maxImagesReached', { count: max }));
+      showAlert(t('alert'), t('maxImagesReached', { count: max }));
       return;
     }
 
@@ -46,7 +47,7 @@ export default function ImagePickerField({ images, onChange, max = 5 }: Props) {
     if (Platform.OS !== 'web') {
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
-        Alert.alert(t('alert'), t('galleryPermissionDenied'));
+        showAlert(t('alert'), t('galleryPermissionDenied'));
         return;
       }
     }
